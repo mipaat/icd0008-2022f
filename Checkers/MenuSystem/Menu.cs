@@ -9,13 +9,15 @@ public class Menu
     public Menu? ParentMenu = null;
 
     private static MenuItem _exit = new MenuItem("Exit", s => throw new ExitMenuException(), "x");
-    private MenuItem _back = new MenuItem("Back", s => throw new BackMenuException(), "b");
+    private MenuItem _back = new MenuItem("Back", s => throw new BackMenuException());
+    private MenuItem _main = new MenuItem("Main Menu", s => throw new MainMenuException());
     private List<MenuItem> _menuItems = new List<MenuItem>();
 
     public List<MenuItem> MenuItems()
     {
         var result = new List<MenuItem>(_menuItems);
         if (ParentMenu is not null) result.Add(_back);
+        if (GetHierarchy().Count > 2) result.Add(_main);
         result.Add(_exit);
         return result;
     }
@@ -98,6 +100,10 @@ public class Menu
                         break;
                     case ExitMenuException:
                         throw;
+                    case MainMenuException:
+                        throw;
+                    default:
+                        throw;
                 }
             }
         } while (!exit);
@@ -113,6 +119,22 @@ public class Menu
         {
             if (ParentMenu is not null) throw;
         }
+        catch (MainMenuException e)
+        {
+            if (ParentMenu is not null) throw;
+            RunMenu();
+        }
+    }
+
+    public List<Menu> GetHierarchy()
+    {
+        var result = new List<Menu>();
+        if (ParentMenu is not null)
+        {
+            result.AddRange(ParentMenu.GetHierarchy());
+        }
+        result.Add(this);
+        return result;
     }
 
     public string GetMenuPath()
@@ -133,5 +155,10 @@ public class Menu
 
             return resultMenu;
         };
+    }
+
+    public override string ToString()
+    {
+        return Title;
     }
 }

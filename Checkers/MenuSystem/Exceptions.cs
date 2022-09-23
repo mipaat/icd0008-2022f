@@ -4,6 +4,8 @@ public class ExitMenuException : Exception {}
 
 public class BackMenuException : Exception {}
 
+public class MainMenuException : Exception {}
+
 public class SelectMenuException : Exception
 {
     private Action<Menu> _action;
