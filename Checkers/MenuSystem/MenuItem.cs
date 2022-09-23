@@ -3,35 +3,27 @@
 public class MenuItem
 {
     public readonly string Text;
-    public string Shortcut { get; set; }
-    public Action<string> Action;
+    public Action Action;
 
-    public MenuItem(string text, Action<string> action, string? preferredShortcut = null)
+    public MenuItem(string text, Action action)
     {
         Text = text;
-        preferredShortcut ??= GeneratePreferredShortcut(text);
-        Shortcut = preferredShortcut.ToLower();
         Action = action;
     }
 
-    private static string GeneratePreferredShortcut(string text)
+    public void Run()
     {
-        return text.ElementAt(0).ToString();
-    }
-
-    public void Run(string input)
-    {
-        Action(input);
+        Action();
     }
 
     public override string ToString()
     {
-        return Shortcut + ") " + Text;
+        return Text;
     }
 
-    public static Func<MenuItem> MenuItemCreator(string text, Func<Menu?, Menu> menuCreator, string? preferredShortcut = null)
+    public static Func<MenuItem> MenuItemCreator(string text, Func<Menu?, Menu> menuCreator)
     {
-        void CreateAndRunMenu(string s)
+        void CreateAndRunMenu()
         {
             throw new SelectMenuException((parentMenu =>
             {
@@ -40,11 +32,11 @@ public class MenuItem
             }));
         }
 
-        return MenuItemCreator(text, CreateAndRunMenu, preferredShortcut);
+        return MenuItemCreator(text, CreateAndRunMenu);
     }
 
-    public static Func<MenuItem> MenuItemCreator(string text, Action<string> action, string? preferredShortcut = null)
+    public static Func<MenuItem> MenuItemCreator(string text, Action action)
     {
-        return () => new MenuItem(text, action, preferredShortcut);
+        return () => new MenuItem(text, action);
     }
 }

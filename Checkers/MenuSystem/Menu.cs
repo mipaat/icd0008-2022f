@@ -4,59 +4,54 @@ public class Menu
 {
     public string Title { get; set; }
 
-    private int _maxShortcutAttempts = 5;
-
     public Menu? ParentMenu = null;
 
-    private static MenuItem _exit = new MenuItem("Exit", s => throw new ExitMenuException(), "x");
-    private MenuItem _back = new MenuItem("Back", s => throw new BackMenuException());
-    private MenuItem _main = new MenuItem("Main Menu", s => throw new MainMenuException());
+    private static MenuItem _exit = new MenuItem("Exit", () => throw new ExitMenuException());
+    private MenuItem _back = new MenuItem("Back", () => throw new BackMenuException());
+    private MenuItem _main = new MenuItem("Main Menu", () => throw new MainMenuException());
     private List<MenuItem> _menuItems = new List<MenuItem>();
-
-    public List<MenuItem> MenuItems()
-    {
-        var result = new List<MenuItem>(_menuItems);
-        if (ParentMenu is not null) result.Add(_back);
-        if (GetHierarchy().Count > 2) result.Add(_main);
-        result.Add(_exit);
-        return result;
+    public List<MenuItem> MenuItems {
+        get
+        {
+            var result = new List<MenuItem>(_menuItems);
+            if (ParentMenu is not null) result.Add(_back);
+            if (GetHierarchy().Count > 2) result.Add(_main);
+            result.Add(_exit);
+            return result;
+        }
+        set => _menuItems = value;
     }
 
-    public MenuItem? GetMenuItem(string shortcut)
+    private int _cursorPosition;
+    public int CursorPosition
     {
-        foreach (var menuItem in MenuItems().Where(menuItem => menuItem.Shortcut.Equals(shortcut)))
+        get => _cursorPosition;
+        set
         {
-            return menuItem;
+            var menuItems = MenuItems;
+            if (value < 0 || value >= menuItems.Count) throw new ArgumentOutOfRangeException(
+                $"Can't move cursor from {_cursorPosition} to {value} - out of Menu bounds ({0} - {menuItems.Count - 1})!");
+            _cursorPosition = value;
         }
+    }
 
-        return null;
+    public int IncrementCursorPosition(int amount = 1)
+    {
+        var menuItems = MenuItems;
+        if (amount < 0) amount = menuItems.Count + amount;
+        amount %= menuItems.Count;
+        CursorPosition = (CursorPosition + amount) % MenuItems.Count;
+        return CursorPosition;
+    }
+
+    public int DecrementCursorPosition(int amount = 1)
+    {
+        return IncrementCursorPosition(-amount);
     }
 
     public void AddMenuItem(MenuItem menuItem)
     {
-        var i = 0;
-        var shortcut = menuItem.Shortcut;
-        var usedShortcuts = UsedShortcuts();
-        while (usedShortcuts.Contains(shortcut))
-        {
-            if (i >= _maxShortcutAttempts) throw new NoValidShortcutException(menuItem, i);
-            shortcut = menuItem.Shortcut + i;
-            i++;
-        }
-
-        menuItem.Shortcut = shortcut;
         _menuItems.Add(menuItem);
-    }
-
-    private HashSet<string> UsedShortcuts()
-    {
-        var result = new HashSet<string>();
-        foreach (var menuItem in MenuItems())
-        {
-            result.Add(menuItem.Shortcut);
-        }
-
-        return result;
     }
 
     public Menu(string title, Menu? parentMenu = null)
@@ -75,37 +70,64 @@ public class Menu
             var menuPath = GetMenuPath();
             if (menuPath.Length > 0) Console.WriteLine(menuPath);
             Console.WriteLine("========================");
-            foreach (var menuItem in MenuItems())
-            {
-                Console.WriteLine(menuItem);
-            }
 
-            var input = Console.ReadLine() ?? "";
+            var menuItems = MenuItems;
 
-            try
+            for (var i = 0; i < menuItems.Count; i++)
             {
-                var menuItem = GetMenuItem(input.Trim().ToLower());
-                if (menuItem is null) {continue;}
-                menuItem.Run(input);
-            }
-            catch (Exception e)
-            {
-                switch (e)
+                var menuItem = menuItems[i];
+
+                if (i == CursorPosition)
                 {
-                    case BackMenuException:
-                        exit = true;
-                        break;
-                    case SelectMenuException selectMenuException:
-                        selectMenuException.Run(this);
-                        break;
-                    case ExitMenuException:
-                        throw;
-                    case MainMenuException:
-                        throw;
-                    default:
-                        throw;
+                    var previousBackgroundColor = Console.BackgroundColor;
+                    Console.BackgroundColor = ConsoleColor.White;
+                    Console.WriteLine(menuItem);
+                    Console.BackgroundColor = previousBackgroundColor;
+                }
+                else
+                {
+                    Console.WriteLine(menuItem);                    
                 }
             }
+
+            var pressedKey = Console.ReadKey(true).Key;
+            switch (pressedKey)
+            {
+                case ConsoleKey.DownArrow:
+                    IncrementCursorPosition();
+                    break;
+                case ConsoleKey.UpArrow:
+                    DecrementCursorPosition();
+                    break;
+                case ConsoleKey.Enter:
+                    try
+                    {
+                        var menuItem = menuItems[CursorPosition];
+                        menuItem.Run();
+                    }
+                    catch (Exception e)
+                    {
+                        switch (e)
+                        {
+                            case BackMenuException:
+                                exit = true;
+                                break;
+                            case SelectMenuException selectMenuException:
+                                selectMenuException.Run(this);
+                                break;
+                            case ExitMenuException:
+                                throw;
+                            case MainMenuException:
+                                throw;
+                            default:
+                                throw;
+                        }
+                    }
+
+                    break;
+            }
+
+
         } while (!exit);
     }
     
@@ -115,11 +137,11 @@ public class Menu
         {
             MenuLoop();
         }
-        catch (ExitMenuException e)
+        catch (ExitMenuException)
         {
             if (ParentMenu is not null) throw;
         }
-        catch (MainMenuException e)
+        catch (MainMenuException)
         {
             if (ParentMenu is not null) throw;
             RunMenu();
@@ -144,7 +166,7 @@ public class Menu
 
     public static Func<Menu?, Menu> MenuCreator(string title, params Func<MenuItem>[] menuItemCreators)
     {
-        return (Menu? parentMenu) =>
+        return parentMenu =>
         {
             var resultMenu = new Menu(title, parentMenu);
 

@@ -20,10 +20,3 @@ public class SelectMenuException : Exception
         _action(menu);
     }
 }
-
-public class NoValidShortcutException : Exception
-{
-    public NoValidShortcutException(MenuItem menuItem, int attempts) : base(
-        $"Unable to find valid shortcut for {menuItem.GetType().Name} {menuItem} in {attempts} attempts"
-        ) {} 
-}
