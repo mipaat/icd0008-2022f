@@ -1,4 +1,8 @@
-﻿namespace MenuSystem;
+﻿using System.Runtime.InteropServices;
+using System.Security;
+using static System.Console;
+
+namespace MenuSystem;
 
 public class ConsoleMenuFactory : MenuFactory
 {
@@ -10,7 +14,7 @@ public class ConsoleMenuFactory : MenuFactory
     {
     }
 
-    public ConsoleMenuFactory(string title, params MenuItem[] menuItems) : this(title, _consoleMenuLoop, menuItems)
+    public ConsoleMenuFactory(string title, params MenuItem[] menuItems) : this(title, ConsoleMenuLoop, menuItems)
     {
     }
 
@@ -32,12 +36,12 @@ public class ConsoleMenuFactory : MenuFactory
 
     private static void OverWriteLine(string text = "", bool highlight = false)
     {
-        var previousBackgroundColor = Console.BackgroundColor;
-        if (highlight) Console.BackgroundColor = ConsoleColor.White;
-        var processedText = text.Length > Console.WindowWidth ? text[..(Console.WindowWidth - 3)] + "..." : text;
-        Console.Write(processedText);
-        Console.BackgroundColor = previousBackgroundColor;
-        Console.Write(new string(' ', Console.WindowWidth - processedText.Length));
+        var previousBackgroundColor = BackgroundColor;
+        if (highlight) BackgroundColor = ConsoleColor.White;
+        var processedText = text.Length > WindowWidth ? text[..(WindowWidth - 3)] + "..." : text;
+        Write(processedText);
+        BackgroundColor = previousBackgroundColor;
+        Write(new string(' ', WindowWidth - processedText.Length));
     }
 
     private static void OverWriteLine(char pattern, int amount = LineSeparatorWidth)
@@ -45,14 +49,43 @@ public class ConsoleMenuFactory : MenuFactory
         OverWriteLine(new string(pattern, amount));
     }
 
-    private static Func<Menu, EMenuFunction> _consoleMenuLoop = menu =>
+    private static readonly Func<Menu, EMenuFunction> ConsoleMenuLoop = menu =>
     {
-        Console.CursorVisible = false; // TODO: Make visible again when done
-        var initialCursorTop = Console.CursorTop;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            try
+            {
+                var previousCursorVisible = CursorVisible;
+                menu.AddClosingCallback(_ => CursorVisible = previousCursorVisible);
+                CursorVisible = false;
+            }
+            catch (SecurityException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+            catch (PlatformNotSupportedException)
+            {
+            }
+        }
+
+        var initialCursorTop = CursorTop;
+
+        menu.AddClosingCallback(_ =>
+        {
+            for (var i = 0; i < MaxMenuHeight; i++)
+            {
+                OverWriteLine();
+            }
+
+            CursorTop = initialCursorTop;
+        });
+
         do
         {
             var headerHeight = WriteMenuHeader(menu);
-            var menuItemsHeight = MaxMenuHeight - headerHeight - 2;  // -2 for the surrounding separator lines
+            var menuItemsHeight = MaxMenuHeight - headerHeight - 2; // -2 for the surrounding separator lines
 
             var page = menu.CursorPosition / menuItemsHeight;
             var menuItemsStart = page * menuItemsHeight;
@@ -63,9 +96,9 @@ public class ConsoleMenuFactory : MenuFactory
             var maxPage = (menu.MenuItems.Count - 1) / menuItemsHeight;
             OverWriteLine(page < maxPage ? '▼' : '_');
 
-            Console.SetCursorPosition(0, initialCursorTop);
+            SetCursorPosition(0, initialCursorTop);
 
-            var pressedKey = Console.ReadKey(true).Key;
+            var pressedKey = ReadKey(true).Key;
             switch (pressedKey)
             {
                 case ConsoleKey.DownArrow:
@@ -90,8 +123,8 @@ public class ConsoleMenuFactory : MenuFactory
 
                     break;
             }
-            
-            Console.SetCursorPosition(0, initialCursorTop);
+
+            SetCursorPosition(0, initialCursorTop);
         } while (true);
     };
 

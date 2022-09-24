@@ -10,6 +10,7 @@ public class Menu
     private static readonly MenuItem Back = new("Back", EMenuFunction.Back);
     private static readonly MenuItem Main = new("Main Menu", EMenuFunction.MainMenu);
     private readonly List<MenuItem> _menuItems = new();
+    private readonly List<Action<Menu>> _closingCallbacks;
 
     public List<MenuItem> MenuItems
     {
@@ -55,15 +56,21 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    private Func<Menu, EMenuFunction> _menuLoop;
-    
+    private readonly Func<Menu, EMenuFunction> _menuLoop;
+
     public Menu(string title, Func<Menu, EMenuFunction> menuLoop, Menu? parentMenu = null, params MenuItem[] menuItems)
     {
         Title = title;
         ParentMenu = parentMenu;
         _menuLoop = menuLoop;
+        _closingCallbacks = new List<Action<Menu>>();
 
         AddMenuItems(menuItems);
+    }
+
+    public void AddClosingCallback(Action<Menu> callback)
+    {
+        _closingCallbacks.Add(callback);
     }
 
     public int IncrementCursorPosition(int amount = 1)
@@ -80,12 +87,12 @@ public class Menu
         return IncrementCursorPosition(-amount);
     }
 
-    public void AddMenuItem(MenuItem menuItem)
+    private void AddMenuItem(MenuItem menuItem)
     {
         _menuItems.Add(menuItem);
     }
 
-    public void AddMenuItems(params MenuItem[] menuItems)
+    private void AddMenuItems(params MenuItem[] menuItems)
     {
         foreach (var menuItem in menuItems)
         {
@@ -95,7 +102,20 @@ public class Menu
 
     public EMenuFunction Run()
     {
-        return _menuLoop(this);
+        EMenuFunction result;
+        try
+        {
+            result = _menuLoop(this);
+        }
+        finally
+        {
+            foreach (var callback in _closingCallbacks)
+            {
+                callback(this);
+            }
+        }
+
+        return result;
     }
 
     public override string ToString()
