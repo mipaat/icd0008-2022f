@@ -3,7 +3,7 @@
 public class MenuItem
 {
     public readonly string Text;
-    private readonly Func<Menu?, EMenuFunction> _action;
+    private readonly Func<Menu, EMenuFunction> _action;
 
     public MenuItem(string text, EMenuFunction type) : this(text, _ => type)
     {
@@ -17,23 +17,23 @@ public class MenuItem
     {
     }
 
-    public MenuItem(string text, Func<Menu?, EMenuFunction> action)
+    public MenuItem(string text, Func<Menu, EMenuFunction> action)
     {
         Text = text;
         _action = action;
     }
 
-    public MenuItem(string text, Func<Menu?, Menu> menuCreator)
+    public MenuItem(string text, MenuFactory menuFactory)
     {
         Text = text;
         _action = parentMenu =>
         {
-            var newMenu = menuCreator(parentMenu);
+            var newMenu = menuFactory.Create(parentMenu);
             return newMenu.Run();
         };
     }
 
-    public EMenuFunction Run(Menu? menu = null)
+    public EMenuFunction Run(Menu menu)
     {
         return _action(menu);
     }

@@ -55,10 +55,13 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    public Menu(string title, Menu? parentMenu = null, params MenuItem[] menuItems)
+    private Func<Menu, EMenuFunction> _menuLoop;
+    
+    public Menu(string title, Func<Menu, EMenuFunction> menuLoop, Menu? parentMenu = null, params MenuItem[] menuItems)
     {
         Title = title;
         ParentMenu = parentMenu;
+        _menuLoop = menuLoop;
 
         AddMenuItems(menuItems);
     }
@@ -92,73 +95,7 @@ public class Menu
 
     public EMenuFunction Run()
     {
-        do
-        {
-            Console.WriteLine("\n");
-            var menuPath = MenuPath;
-            if (menuPath.Length > 0) Console.WriteLine(menuPath);
-            Console.WriteLine("========================");
-
-            var menuItems = MenuItems;
-
-            for (var i = 0; i < menuItems.Count; i++)
-            {
-                var menuItem = menuItems[i];
-
-                if (i == CursorPosition)
-                {
-                    var previousBackgroundColor = Console.BackgroundColor;
-                    Console.BackgroundColor = ConsoleColor.White;
-                    Console.WriteLine(menuItem);
-                    Console.BackgroundColor = previousBackgroundColor;
-                }
-                else
-                {
-                    Console.WriteLine(menuItem);
-                }
-            }
-
-            var pressedKey = Console.ReadKey(true).Key;
-            switch (pressedKey)
-            {
-                case ConsoleKey.DownArrow:
-                    IncrementCursorPosition();
-                    break;
-                case ConsoleKey.UpArrow:
-                    DecrementCursorPosition();
-                    break;
-                case ConsoleKey.Enter:
-                    var menuItem = menuItems[CursorPosition];
-                    var menuFunction = menuItem.Run(this);
-                    switch (menuFunction)
-                    {
-                        case EMenuFunction.Back:
-                            return EMenuFunction.Continue;
-                        case EMenuFunction.Exit:
-                            return menuFunction;
-                        case EMenuFunction.MainMenu:
-                            if (ParentMenu is not null) return menuFunction;
-                            break;
-                    }
-
-                    break;
-            }
-        } while (true);
-    }
-
-    public static Func<Menu?, Menu> MenuCreator(string title, params MenuItem[] menuItems)
-    {
-        return parentMenu =>
-        {
-            var resultMenu = new Menu(title, parentMenu);
-
-            foreach (var menuItem in menuItems)
-            {
-                resultMenu.AddMenuItem(menuItem);
-            }
-
-            return resultMenu;
-        };
+        return _menuLoop(this);
     }
 
     public override string ToString()

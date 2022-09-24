@@ -10,13 +10,13 @@ var l = new MenuItem("Load game", () => Console.WriteLine("LOADGAME"));
 var a = new MenuItem("Aadsfasdf", () => Console.WriteLine("ASDHGSJHDGASJ"));
 var b = new MenuItem("Brgagaf", () => Console.WriteLine("BDFGJDHFHJKA"));
 
-var extraMenuCreator = Menu.MenuCreator("Extra", n, l, a);
+var extraMenuCreator = new ConsoleMenuFactory("Extra", n, l, a);
 var extraItemCreator = new MenuItem("Extra", extraMenuCreator);
-var optionsMenuCreator = Menu.MenuCreator("Options", a, b, l, extraItemCreator);
+var optionsMenuCreator = new ConsoleMenuFactory("Options", a, b, l, extraItemCreator);
 var optionsItemCreator = new MenuItem("Options", optionsMenuCreator);
 
-var mainMenuCreator = Menu.MenuCreator("Main menu", n, l, optionsItemCreator);
+var mainMenuCreator = new ConsoleMenuFactory("Main menu", n, l, optionsItemCreator);
 
-var mainMenu = mainMenuCreator(null);
+var mainMenu = mainMenuCreator.Create();
 
 mainMenu.Run();
