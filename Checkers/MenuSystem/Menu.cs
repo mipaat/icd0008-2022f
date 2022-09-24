@@ -2,26 +2,40 @@
 
 public class Menu
 {
-    public string Title { get; set; }
+    public string Title { get; }
 
-    public Menu? ParentMenu = null;
+    public readonly Menu? ParentMenu;
 
-    private static MenuItem _exit = new MenuItem("Exit", m => EMenuFunction.Exit);
-    private MenuItem _back = new MenuItem("Back", m => EMenuFunction.Back);
-    private MenuItem _main = new MenuItem("Main Menu", m => EMenuFunction.Main);
-    private List<MenuItem> _menuItems = new List<MenuItem>();
+    private static readonly MenuItem Exit = new("Exit", EMenuFunction.Exit);
+    private static readonly MenuItem Back = new("Back", EMenuFunction.Back);
+    private static readonly MenuItem Main = new("Main Menu", EMenuFunction.MainMenu);
+    private readonly List<MenuItem> _menuItems = new();
 
     public List<MenuItem> MenuItems
     {
         get
         {
             var result = new List<MenuItem>(_menuItems);
-            if (ParentMenu is not null) result.Add(_back);
-            if (GetHierarchy().Count > 2) result.Add(_main);
-            result.Add(_exit);
+            if (ParentMenu is not null) result.Add(Back);
+            if (Hierarchy.Count > 2) result.Add(Main);
+            result.Add(Exit);
             return result;
         }
-        set => _menuItems = value;
+    }
+
+    public List<Menu> Hierarchy
+    {
+        get
+        {
+            var result = new List<Menu>();
+            if (ParentMenu is not null)
+            {
+                result.AddRange(ParentMenu.Hierarchy);
+            }
+
+            result.Add(this);
+            return result;
+        }
     }
 
     private int _cursorPosition;
@@ -37,6 +51,16 @@ public class Menu
                     $"Can't move cursor from {_cursorPosition} to {value} - out of Menu bounds ({0} - {menuItems.Count - 1})!");
             _cursorPosition = value;
         }
+    }
+
+    public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
+
+    public Menu(string title, Menu? parentMenu = null, params MenuItem[] menuItems)
+    {
+        Title = title;
+        ParentMenu = parentMenu;
+
+        AddMenuItems(menuItems);
     }
 
     public int IncrementCursorPosition(int amount = 1)
@@ -66,20 +90,12 @@ public class Menu
         }
     }
 
-    public Menu(string title, Menu? parentMenu = null, params MenuItem[] menuItems)
-    {
-        Title = title;
-        ParentMenu = parentMenu;
-
-        AddMenuItems(menuItems);
-    }
-
     public EMenuFunction Run()
     {
         do
         {
             Console.WriteLine("\n");
-            var menuPath = GetMenuPath();
+            var menuPath = MenuPath;
             if (menuPath.Length > 0) Console.WriteLine(menuPath);
             Console.WriteLine("========================");
 
@@ -120,7 +136,7 @@ public class Menu
                             return EMenuFunction.Continue;
                         case EMenuFunction.Exit:
                             return menuFunction;
-                        case EMenuFunction.Main:
+                        case EMenuFunction.MainMenu:
                             if (ParentMenu is not null) return menuFunction;
                             break;
                     }
@@ -128,23 +144,6 @@ public class Menu
                     break;
             }
         } while (true);
-    }
-
-    public List<Menu> GetHierarchy()
-    {
-        var result = new List<Menu>();
-        if (ParentMenu is not null)
-        {
-            result.AddRange(ParentMenu.GetHierarchy());
-        }
-
-        result.Add(this);
-        return result;
-    }
-
-    public string GetMenuPath()
-    {
-        return (ParentMenu?.GetMenuPath() ?? "") + Title + "/";
     }
 
     public static Func<Menu?, Menu> MenuCreator(string title, params MenuItem[] menuItems)

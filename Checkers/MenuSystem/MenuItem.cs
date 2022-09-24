@@ -3,20 +3,29 @@
 public class MenuItem
 {
     public readonly string Text;
-    private Func<Menu?, EMenuFunction> _action;
-    public EMenuFunction Type;
+    private readonly Func<Menu?, EMenuFunction> _action;
 
-    public MenuItem(string text, Func<Menu?, EMenuFunction> action, EMenuFunction type = EMenuFunction.Continue)
+    public MenuItem(string text, EMenuFunction type) : this(text, _ => type)
+    {
+    }
+
+    public MenuItem(string text, Action action) : this(text, _ =>
+    {
+        action();
+        return EMenuFunction.Continue;
+    })
+    {
+    }
+
+    public MenuItem(string text, Func<Menu?, EMenuFunction> action)
     {
         Text = text;
         _action = action;
-        Type = type;
     }
 
     public MenuItem(string text, Func<Menu?, Menu> menuCreator)
     {
         Text = text;
-        Type = EMenuFunction.Continue;
         _action = parentMenu =>
         {
             var newMenu = menuCreator(parentMenu);
@@ -26,7 +35,7 @@ public class MenuItem
 
     public EMenuFunction Run(Menu? menu = null)
     {
-        return Type is EMenuFunction.Back or EMenuFunction.Exit or EMenuFunction.Main ? Type : _action(menu);
+        return _action(menu);
     }
 
     public override string ToString()

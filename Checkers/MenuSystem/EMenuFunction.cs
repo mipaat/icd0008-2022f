@@ -3,7 +3,7 @@
 public enum EMenuFunction
 {
     Back,
-    Main,
+    MainMenu,
     Exit,
     Continue
 }
