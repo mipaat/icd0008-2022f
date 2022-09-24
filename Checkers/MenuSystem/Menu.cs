@@ -6,11 +6,13 @@ public class Menu
 
     public Menu? ParentMenu = null;
 
-    private static MenuItem _exit = new MenuItem("Exit", () => throw new ExitMenuException());
-    private MenuItem _back = new MenuItem("Back", () => throw new BackMenuException());
-    private MenuItem _main = new MenuItem("Main Menu", () => throw new MainMenuException());
+    private static MenuItem _exit = new MenuItem("Exit", m => EMenuFunction.Exit);
+    private MenuItem _back = new MenuItem("Back", m => EMenuFunction.Back);
+    private MenuItem _main = new MenuItem("Main Menu", m => EMenuFunction.Main);
     private List<MenuItem> _menuItems = new List<MenuItem>();
-    public List<MenuItem> MenuItems {
+
+    public List<MenuItem> MenuItems
+    {
         get
         {
             var result = new List<MenuItem>(_menuItems);
@@ -23,14 +25,16 @@ public class Menu
     }
 
     private int _cursorPosition;
+
     public int CursorPosition
     {
         get => _cursorPosition;
         set
         {
             var menuItems = MenuItems;
-            if (value < 0 || value >= menuItems.Count) throw new ArgumentOutOfRangeException(
-                $"Can't move cursor from {_cursorPosition} to {value} - out of Menu bounds ({0} - {menuItems.Count - 1})!");
+            if (value < 0 || value >= menuItems.Count)
+                throw new ArgumentOutOfRangeException(
+                    $"Can't move cursor from {_cursorPosition} to {value} - out of Menu bounds ({0} - {menuItems.Count - 1})!");
             _cursorPosition = value;
         }
     }
@@ -54,16 +58,24 @@ public class Menu
         _menuItems.Add(menuItem);
     }
 
-    public Menu(string title, Menu? parentMenu = null)
+    public void AddMenuItems(params MenuItem[] menuItems)
+    {
+        foreach (var menuItem in menuItems)
+        {
+            AddMenuItem(menuItem);
+        }
+    }
+
+    public Menu(string title, Menu? parentMenu = null, params MenuItem[] menuItems)
     {
         Title = title;
         ParentMenu = parentMenu;
 
+        AddMenuItems(menuItems);
     }
 
-    private void MenuLoop()
+    public EMenuFunction Run()
     {
-        var exit = false;
         do
         {
             Console.WriteLine("\n");
@@ -86,7 +98,7 @@ public class Menu
                 }
                 else
                 {
-                    Console.WriteLine(menuItem);                    
+                    Console.WriteLine(menuItem);
                 }
             }
 
@@ -100,52 +112,22 @@ public class Menu
                     DecrementCursorPosition();
                     break;
                 case ConsoleKey.Enter:
-                    try
+                    var menuItem = menuItems[CursorPosition];
+                    var menuFunction = menuItem.Run(this);
+                    switch (menuFunction)
                     {
-                        var menuItem = menuItems[CursorPosition];
-                        menuItem.Run();
-                    }
-                    catch (Exception e)
-                    {
-                        switch (e)
-                        {
-                            case BackMenuException:
-                                exit = true;
-                                break;
-                            case SelectMenuException selectMenuException:
-                                selectMenuException.Run(this);
-                                break;
-                            case ExitMenuException:
-                                throw;
-                            case MainMenuException:
-                                throw;
-                            default:
-                                throw;
-                        }
+                        case EMenuFunction.Back:
+                            return EMenuFunction.Continue;
+                        case EMenuFunction.Exit:
+                            return menuFunction;
+                        case EMenuFunction.Main:
+                            if (ParentMenu is not null) return menuFunction;
+                            break;
                     }
 
                     break;
             }
-
-
-        } while (!exit);
-    }
-    
-    public void RunMenu()
-    {
-        try
-        {
-            MenuLoop();
-        }
-        catch (ExitMenuException)
-        {
-            if (ParentMenu is not null) throw;
-        }
-        catch (MainMenuException)
-        {
-            if (ParentMenu is not null) throw;
-            RunMenu();
-        }
+        } while (true);
     }
 
     public List<Menu> GetHierarchy()
@@ -155,6 +137,7 @@ public class Menu
         {
             result.AddRange(ParentMenu.GetHierarchy());
         }
+
         result.Add(this);
         return result;
     }
@@ -164,15 +147,15 @@ public class Menu
         return (ParentMenu?.GetMenuPath() ?? "") + Title + "/";
     }
 
-    public static Func<Menu?, Menu> MenuCreator(string title, params Func<MenuItem>[] menuItemCreators)
+    public static Func<Menu?, Menu> MenuCreator(string title, params MenuItem[] menuItems)
     {
         return parentMenu =>
         {
             var resultMenu = new Menu(title, parentMenu);
 
-            foreach (var menuItemCreator in menuItemCreators)
+            foreach (var menuItem in menuItems)
             {
-                resultMenu.AddMenuItem(menuItemCreator());
+                resultMenu.AddMenuItem(menuItem);
             }
 
             return resultMenu;

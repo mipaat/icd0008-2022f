@@ -3,40 +3,34 @@
 public class MenuItem
 {
     public readonly string Text;
-    public Action Action;
+    private Func<Menu?, EMenuFunction> _action;
+    public EMenuFunction Type;
 
-    public MenuItem(string text, Action action)
+    public MenuItem(string text, Func<Menu?, EMenuFunction> action, EMenuFunction type = EMenuFunction.Continue)
     {
         Text = text;
-        Action = action;
+        _action = action;
+        Type = type;
     }
 
-    public void Run()
+    public MenuItem(string text, Func<Menu?, Menu> menuCreator)
     {
-        Action();
+        Text = text;
+        Type = EMenuFunction.Continue;
+        _action = parentMenu =>
+        {
+            var newMenu = menuCreator(parentMenu);
+            return newMenu.Run();
+        };
+    }
+
+    public EMenuFunction Run(Menu? menu = null)
+    {
+        return Type is EMenuFunction.Back or EMenuFunction.Exit or EMenuFunction.Main ? Type : _action(menu);
     }
 
     public override string ToString()
     {
         return Text;
-    }
-
-    public static Func<MenuItem> MenuItemCreator(string text, Func<Menu?, Menu> menuCreator)
-    {
-        void CreateAndRunMenu()
-        {
-            throw new SelectMenuException((parentMenu =>
-            {
-                var menu = menuCreator(parentMenu);
-                menu.RunMenu();
-            }));
-        }
-
-        return MenuItemCreator(text, CreateAndRunMenu);
-    }
-
-    public static Func<MenuItem> MenuItemCreator(string text, Action action)
-    {
-        return () => new MenuItem(text, action);
     }
 }
