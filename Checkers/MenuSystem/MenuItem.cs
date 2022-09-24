@@ -40,6 +40,6 @@ public class MenuItem
 
     public override string ToString()
     {
-        return Text;
+        return $"MenuItem('{Text}')";
     }
 }

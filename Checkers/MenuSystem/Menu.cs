@@ -100,6 +100,6 @@ public class Menu
 
     public override string ToString()
     {
-        return Title;
+        return $"Menu({Title}, MenuItems: {MenuItems.Count})";
     }
 }
