@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ConsoleMenuSystem;
 
@@ -7,11 +8,6 @@ public record ConsoleLine(string Content = "", ConsoleColor? BackgroundColor = n
     public readonly string Content = Content;
     public readonly EAlignment Align = Align;
     public readonly ConsoleColor? BackgroundColor = BackgroundColor;
-
-    public ConsoleLine(string content, bool highlight = false, EAlignment align = EAlignment.Left) : this(content,
-        highlight ? ConsoleColor.White : null, align)
-    {
-    }
 }
 
 public class ConsoleWindow
@@ -20,6 +16,17 @@ public class ConsoleWindow
     public readonly int Width;
     public readonly int Height;
     private ConsoleColor _highlightColor = ConsoleColor.White;
+    private bool _cursorVisible;
+
+    public bool CursorVisible
+    {
+        get => _cursorVisible;
+        set
+        {
+            Console.CursorVisible = value;
+            _cursorVisible = value;
+        }
+    }
 
     private List<ConsoleLine>? _renderQueue;
 
@@ -30,13 +37,19 @@ public class ConsoleWindow
         Height = height;
     }
 
-    public void DiscardRenderQueue()
+    private void SyncCursorVisibility()
+    {
+        Console.CursorVisible = CursorVisible;
+    }
+
+    private void DiscardRenderQueue()
     {
         _renderQueue = null;
     }
 
     public void Render()
     {
+        SyncCursorVisibility();
         var initialCursorTop = Console.CursorTop;
 
         Console.WriteLine(Title);
@@ -59,7 +72,7 @@ public class ConsoleWindow
         DiscardRenderQueue();
     }
 
-    public static string CheckStringValid(string content)
+    private static string CheckStringValid(string content)
     {
         if (content.Contains('\n') || content.Contains('\r'))
         {
@@ -105,7 +118,7 @@ public class ConsoleWindow
             throw new RenderQueueFullException(content);
         }
 
-        _renderQueue.Add(new ConsoleLine(content, highlight));
+        _renderQueue.Add(new ConsoleLine(content, highlight ? _highlightColor : null));
     }
 
     public void AddLine(char pattern, int? amount = null)
@@ -116,7 +129,11 @@ public class ConsoleWindow
 
     public int LinesLeft()
     {
-        return Height - _renderQueue?.Count ?? 0;
+        if (_renderQueue is not null)
+        {
+            return Height - _renderQueue.Count;
+        }
+        return Height;
     }
 
     private void WriteLine(ConsoleLine? line = null)
@@ -145,5 +162,53 @@ public class ConsoleWindow
         }
 
         Console.WriteLine(result.ToString());
+    }
+
+    private static bool? ConsoleCursorVisible()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return Console.CursorVisible;
+        return null;
+    }
+
+    public string? PromptTextInput(string prompt, string? rePrompt = null)
+    {
+        DiscardRenderQueue();
+
+        if (rePrompt is not null && rePrompt.Trim().Length > 0) AddLine(CheckStringValid(rePrompt));
+        AddLine(CheckStringValid(prompt));
+
+        var inputCursorPosition = Console.GetCursorPosition();
+        inputCursorPosition.Top += 2;
+        Render();
+        var finalCursorPosition = Console.GetCursorPosition();
+        var previousCursorVisible = CursorVisible;
+
+        Console.SetCursorPosition(inputCursorPosition.Left, inputCursorPosition.Top);
+        CursorVisible = true;
+
+        var result = Console.ReadLine();
+
+        CursorVisible = previousCursorVisible;
+        Console.SetCursorPosition(finalCursorPosition.Left, finalCursorPosition.Top);
+
+        return result;
+    }
+
+    public void MessageBox(string message)
+    {
+        DiscardRenderQueue();
+        var messageLines = message.Split("\n");
+        if (messageLines.Length > LinesLeft() - 1)
+            throw new ArgumentOutOfRangeException(
+                $"Message '{message}' contains too many lines ({messageLines.Length} > {LinesLeft() - 1})!");
+
+        foreach (var line in messageLines)
+        {
+            AddLine(line);
+        }
+
+        AddLine("Press any key to continue");
+        Render();
+        Console.ReadKey();
     }
 }
