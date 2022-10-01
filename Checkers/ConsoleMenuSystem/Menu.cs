@@ -1,4 +1,4 @@
-﻿namespace MenuSystem;
+﻿namespace ConsoleMenuSystem;
 
 public class Menu
 {
@@ -11,6 +11,8 @@ public class Menu
     private static readonly MenuItem Main = new("Main Menu", EMenuFunction.MainMenu);
     private readonly List<MenuItem> _menuItems = new();
     private readonly List<Action<Menu>> _closingCallbacks;
+
+    public readonly ConsoleWindow ConsoleWindow;
 
     public List<MenuItem> MenuItems
     {
@@ -56,13 +58,11 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    private readonly Func<Menu, EMenuFunction> _menuLoop;
-
-    public Menu(string title, Func<Menu, EMenuFunction> menuLoop, Menu? parentMenu = null, params MenuItem[] menuItems)
+    public Menu(string title, ConsoleWindow consoleWindow, Menu? parentMenu = null, params MenuItem[] menuItems)
     {
         Title = title;
+        ConsoleWindow = consoleWindow;
         ParentMenu = parentMenu;
-        _menuLoop = menuLoop;
         _closingCallbacks = new List<Action<Menu>>();
 
         AddMenuItems(menuItems);
@@ -100,22 +100,75 @@ public class Menu
         }
     }
 
-    public EMenuFunction Run()
+    private void WriteMenuItems(int start, int end)
     {
-        EMenuFunction result;
-        try
+        var menuItems = MenuItems;
+        for (var i = start; i < end; i++)
         {
-            result = _menuLoop(this);
-        }
-        finally
-        {
-            foreach (var callback in _closingCallbacks)
+            if (i < menuItems.Count)
             {
-                callback(this);
+                var menuItem = menuItems[i];
+                ConsoleWindow.AddLine(menuItem.Text, i == CursorPosition);
+            }
+            else
+            {
+                ConsoleWindow.AddLine();
             }
         }
+    }
+    
+    private EMenuFunction MenuLoop()
+    {
+        Console.CursorVisible = false;
+        do
+        {
+            ConsoleWindow.AddLine(MenuPath.Length > 0 ? MenuPath : "MENU PATH NOT FOUND???",
+                conformLength: true, preferRight: true);
+            
+            var menuItemsHeight = ConsoleWindow.LinesLeft() - 2; // -2 for the surrounding separator lines
 
-        return result;
+            var page = CursorPosition / menuItemsHeight;
+            var menuItemsStart = page * menuItemsHeight;
+
+            ConsoleWindow.AddLine(page == 0 ? '_' : '▲');
+            WriteMenuItems(menuItemsStart, menuItemsStart + menuItemsHeight);
+
+            var maxPage = (MenuItems.Count - 1) / menuItemsHeight;
+            ConsoleWindow.AddLine(page < maxPage ? '▼' : '_');
+            
+            ConsoleWindow.Render();
+
+            var pressedKey = Console.ReadKey(true).Key;
+            switch (pressedKey)
+            {
+                case ConsoleKey.DownArrow:
+                    IncrementCursorPosition();
+                    break;
+                case ConsoleKey.UpArrow:
+                    DecrementCursorPosition();
+                    break;
+                case ConsoleKey.Enter:
+                    var menuItem = MenuItems[CursorPosition];
+                    var menuFunction = menuItem.Run(this);
+                    switch (menuFunction)
+                    {
+                        case EMenuFunction.Back:
+                            return EMenuFunction.Continue;
+                        case EMenuFunction.Exit:
+                            return menuFunction;
+                        case EMenuFunction.MainMenu:
+                            if (ParentMenu is not null) return menuFunction;
+                            break;
+                    }
+                
+                    break;
+            }
+        } while (true);
+    }
+
+    public EMenuFunction Run()
+    {
+        return MenuLoop();
     }
 
     public override string ToString()

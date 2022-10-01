@@ -1,4 +1,4 @@
-﻿namespace MenuSystem;
+﻿namespace ConsoleMenuSystem;
 
 public class MenuItem
 {
@@ -28,7 +28,7 @@ public class MenuItem
         Text = text;
         _action = parentMenu =>
         {
-            var newMenu = menuFactory.Create(parentMenu);
+            var newMenu = menuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
             return newMenu.Run();
         };
     }

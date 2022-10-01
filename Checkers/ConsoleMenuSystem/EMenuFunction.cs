@@ -1,4 +1,4 @@
-﻿namespace MenuSystem;
+﻿namespace ConsoleMenuSystem;
 
 public enum EMenuFunction
 {
