@@ -15,6 +15,7 @@ public class ConsoleWindow
     public string Title;
     public readonly int Width;
     public readonly int Height;
+    public readonly Encoding OutputEncoding = Encoding.UTF8;
 
     private List<ConsoleLine> _renderQueue;
 
@@ -54,6 +55,9 @@ public class ConsoleWindow
 
     public void Render(bool resetCursorPosition = true)
     {
+        var previousOutputEncoding = Console.OutputEncoding;
+        Console.OutputEncoding = OutputEncoding;
+
         SyncCursorVisibility();
 
         WriteLine(new ConsoleLine(Title));
@@ -74,6 +78,8 @@ public class ConsoleWindow
 
         if (resetCursorPosition) ResetCursorPosition();
         ClearRenderQueue();
+
+        Console.OutputEncoding = previousOutputEncoding;
     }
 
     private void ResetCursorPosition()
