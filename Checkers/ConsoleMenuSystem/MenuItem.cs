@@ -3,34 +3,34 @@
 public class MenuItem
 {
     public readonly string Text;
+    public readonly string? Id;
     private readonly Func<Menu, EMenuFunction> _action;
 
-    public MenuItem(string text, EMenuFunction type) : this(text, _ => type)
-    {
-    }
-
-    public MenuItem(string text, Action action) : this(text, _ =>
-    {
-        action();
-        return EMenuFunction.Continue;
-    })
-    {
-    }
-
-    public MenuItem(string text, Func<Menu, EMenuFunction> action)
+    public MenuItem(string text, Func<Menu, EMenuFunction> action, string? id = null)
     {
         Text = text;
         _action = action;
+        Id = id;
     }
 
-    public MenuItem(string text, MenuFactory menuFactory)
+    public MenuItem(string text, EMenuFunction type, string? id = null) : this(text, _ => type, id)
     {
-        Text = text;
-        _action = parentMenu =>
-        {
-            var newMenu = menuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
-            return newMenu.Run();
-        };
+    }
+
+    public MenuItem(string text, Action action, string? id = null) : this(text, _ =>
+    {
+        action();
+        return EMenuFunction.Continue;
+    }, id)
+    {
+    }
+
+    public MenuItem(string text, MenuFactory menuFactory, string? id = null) : this(text, parentMenu =>
+    {
+        var newMenu = menuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
+        return newMenu.Run();
+    }, id)
+    {
     }
 
     public EMenuFunction Run(Menu menu)

@@ -1,8 +1,11 @@
-﻿namespace ConsoleMenuSystem;
+﻿using ConsoleUI;
+
+namespace ConsoleMenuSystem;
 
 public class Menu
 {
     public string Title { get; }
+    public string? Id { get; }
 
     public readonly Menu? ParentMenu;
 
@@ -10,7 +13,8 @@ public class Menu
     private static readonly MenuItem Back = new("Back", EMenuFunction.Back);
     private static readonly MenuItem Main = new("Main Menu", EMenuFunction.MainMenu);
     private readonly List<MenuItem> _menuItems = new();
-    private readonly List<Action<Menu>> _closingCallbacks;
+
+    public MenuItem SelectedItem => MenuItems[CursorPosition];
 
     public readonly ConsoleWindow ConsoleWindow;
 
@@ -58,19 +62,30 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    public Menu(string title, ConsoleWindow consoleWindow, Menu? parentMenu = null, params MenuItem[] menuItems)
+    public Menu(string title, ConsoleWindow consoleWindow, string? id = null, Menu? parentMenu = null,
+        params MenuItem[] menuItems)
     {
         Title = title;
+        Id = id;
         ConsoleWindow = consoleWindow;
         ParentMenu = parentMenu;
-        _closingCallbacks = new List<Action<Menu>>();
 
         AddMenuItems(menuItems);
     }
 
-    public void AddClosingCallback(Action<Menu> callback)
+    public MenuItem? GetSelectedItem(string menuId)
     {
-        _closingCallbacks.Add(callback);
+        if (Id == menuId && _menuItems.Contains(SelectedItem))
+        {
+            return SelectedItem;
+        }
+
+        return ParentMenu?.GetSelectedItem(menuId);
+    }
+
+    public string? GetSelectedItemId(string menuId)
+    {
+        return GetSelectedItem(menuId)?.Id;
     }
 
     public int IncrementCursorPosition(int amount = 1)
@@ -116,7 +131,7 @@ public class Menu
             }
         }
     }
-    
+
     private EMenuFunction MenuLoop()
     {
         Console.CursorVisible = false;
@@ -124,18 +139,18 @@ public class Menu
         {
             ConsoleWindow.AddLine(MenuPath.Length > 0 ? MenuPath : "MENU PATH NOT FOUND???",
                 conformLength: true, preferRight: true);
-            
+
             var menuItemsHeight = ConsoleWindow.LinesLeft() - 2; // -2 for the surrounding separator lines
 
-            var page = CursorPosition / menuItemsHeight;
+            var page = menuItemsHeight != 0 ? CursorPosition / menuItemsHeight : 0;
             var menuItemsStart = page * menuItemsHeight;
 
             ConsoleWindow.AddLine(page == 0 ? '_' : '▲');
             WriteMenuItems(menuItemsStart, menuItemsStart + menuItemsHeight);
 
-            var maxPage = (MenuItems.Count - 1) / menuItemsHeight;
+            var maxPage = menuItemsHeight != 0 ? (MenuItems.Count - 1) / menuItemsHeight : page;
             ConsoleWindow.AddLine(page < maxPage ? '▼' : '_');
-            
+
             ConsoleWindow.Render();
 
             var pressedKey = Console.ReadKey(true).Key;
@@ -160,7 +175,7 @@ public class Menu
                             if (ParentMenu is not null) return menuFunction;
                             break;
                     }
-                
+
                     break;
             }
         } while (true);
