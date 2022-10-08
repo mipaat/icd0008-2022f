@@ -18,8 +18,16 @@ EMenuFunction RunConsoleGame(int x, int y, Menu menu)
         Width = x,
         Height = y
     };
-    var consoleGame = new ConsoleGame(menu.ConsoleWindow, new GameBrain(gameOptions));
-    consoleGame.Run();
+    try
+    {
+        var consoleGame = new ConsoleGame(menu.ConsoleWindow, new GameBrain(gameOptions));
+        consoleGame.Run();
+    }
+    catch (ArgumentOutOfRangeException e)
+    {
+        menu.ConsoleWindow.MessageBox("An error occurred when attempting to run Checkers game!", e.Message);
+    }
+    
     return EMenuFunction.MainMenu;
 }
 
@@ -41,9 +49,7 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
         return EMenuFunction.Continue;
     }
 
-    RunConsoleGame(x, y, menu);
-
-    return EMenuFunction.Continue;
+    return RunConsoleGame(x, y, menu);
 });
 
 var boardSizeMenuFactory = new MenuFactory("Board size", eightByEight, tenByTen, customBoardSize);
