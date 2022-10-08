@@ -7,7 +7,7 @@ public class Menu
     public string Title { get; }
     public string? Id { get; }
 
-    private readonly int _height;
+    private const int Height = 12;
 
     public readonly Menu? ParentMenu;
 
@@ -64,12 +64,11 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    public Menu(string title, ConsoleWindow consoleWindow, string? id = null, Menu? parentMenu = null, int height = 12,
+    public Menu(string title, ConsoleWindow consoleWindow, string? id = null, Menu? parentMenu = null,
         params MenuItem[] menuItems)
     {
         Title = title;
         Id = id;
-        _height = height;
         ConsoleWindow = consoleWindow;
         ParentMenu = parentMenu;
 
@@ -142,7 +141,7 @@ public class Menu
             ConsoleWindow.AddLine(MenuPath.Length > 0 ? MenuPath : "MENU PATH NOT FOUND???",
                 truncationPreferRight: true);
 
-            var menuItemsHeight = _height - 2; // -2 for the surrounding separator lines
+            var menuItemsHeight = Height - 2; // -2 for the surrounding separator lines
 
             var page = menuItemsHeight != 0 ? CursorPosition / menuItemsHeight : 0;
             var menuItemsStart = page * menuItemsHeight;
