@@ -56,8 +56,14 @@ public class ConsoleGame
 
     public void Run()
     {
-        AddBoardToRenderQueue();
-        _consoleWindow.RenderAndAwaitTextInput("Press any key to quit");
+        string? input = null;
+
+        while ((input ?? "").ToLower() != "q")
+        {
+            AddBoardToRenderQueue();
+            input = _consoleWindow.RenderAndAwaitTextInput("Type Q (and hit Enter) to quit!", keepRenderQueue: true);
+            _consoleWindow.ClearRenderQueue();
+        }
     }
 
     private static string BoundaryLine(int cells)

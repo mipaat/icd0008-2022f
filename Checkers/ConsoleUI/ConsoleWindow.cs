@@ -34,6 +34,8 @@ public class ConsoleWindow
         }
     }
 
+    private (int Left, int Top) _cursorPosition;
+
     public ConsoleWindow(string title = "ConsoleWindow", int width = 72, int height = 12)
     {
         Title = CheckStringValid(title);
@@ -43,12 +45,28 @@ public class ConsoleWindow
         _renderQueue = new List<ConsoleLine>();
     }
 
+    public (int Left, int Top) GetCursorPosition()
+    {
+        return (_cursorPosition.Left, _cursorPosition.Top);
+    }
+
+    public void SetCursorPosition(int left, int top)
+    {
+        _cursorPosition = (left, top);
+        SyncCursorPosition();
+    }
+
+    private void SyncCursorPosition()
+    {
+        Console.SetCursorPosition(InitialCursorPosition.Left + _cursorPosition.Left, InitialCursorPosition.Top + _cursorPosition.Top);
+    }
+    
     private void SyncCursorVisibility()
     {
         Console.CursorVisible = CursorVisible;
     }
 
-    private void ClearRenderQueue()
+    public void ClearRenderQueue()
     {
         _renderQueue.Clear();
     }
@@ -59,9 +77,10 @@ public class ConsoleWindow
         Console.OutputEncoding = OutputEncoding;
 
         SyncCursorVisibility();
+        SyncCursorPosition();
 
         WriteLine(new ConsoleLine(Title));
-        for (var i = 0; i < Height; i++)
+        for (var i = 0; i < Math.Min(Height, Console.WindowHeight - Console.WindowTop - 2); i++)
         {
             var previousBackgroundColor = Console.BackgroundColor;
             if (_renderQueue is not null && i < _renderQueue.Count)
@@ -82,9 +101,9 @@ public class ConsoleWindow
         Console.OutputEncoding = previousOutputEncoding;
     }
 
-    private void ResetCursorPosition()
+    public void ResetCursorPosition()
     {
-        Console.SetCursorPosition(InitialCursorPosition.Left, InitialCursorPosition.Top);
+        SetCursorPosition(0, 0);
     }
 
     private static string CheckStringValid(string content)
@@ -203,7 +222,7 @@ public class ConsoleWindow
         return result;
     }
 
-    public string? RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = true)
+    public string? RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)
     {
         var previousRenderQueue = new List<ConsoleLine>(_renderQueue);
 
@@ -214,6 +233,7 @@ public class ConsoleWindow
         CursorVisible = true;
         var result = Console.ReadLine();
         CursorVisible = previousCursorVisible;
+        ResetCursorPosition();
 
         if (keepRenderQueue) _renderQueue.AddRange(previousRenderQueue);
 
@@ -236,5 +256,12 @@ public class ConsoleWindow
         AddLine("Press any key to continue");
         Render();
         Console.ReadKey();
+    }
+
+    public void Close()
+    {
+        ClearRenderQueue();
+        Render();
+        ResetCursorPosition();
     }
 }

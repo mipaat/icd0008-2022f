@@ -65,3 +65,4 @@ var window = new ConsoleWindow("Checkers", 50, 20);
 var mainMenu = mainMenuCreator.Create(window);
 
 mainMenu.Run();
+window.Close();
