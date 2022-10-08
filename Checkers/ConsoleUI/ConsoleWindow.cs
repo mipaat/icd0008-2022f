@@ -226,7 +226,7 @@ public class ConsoleWindow
         AddLine(CheckStringValid(prompt));
 
         var inputCursorPosition = Console.GetCursorPosition();
-        inputCursorPosition.Top += 2;
+        inputCursorPosition.Top += RenderQueue.Count;
         Render();
         var finalCursorPosition = Console.GetCursorPosition();
         var previousCursorVisible = CursorVisible;
