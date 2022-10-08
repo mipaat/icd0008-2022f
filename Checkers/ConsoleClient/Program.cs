@@ -27,7 +27,7 @@ EMenuFunction RunConsoleGame(int x, int y, Menu menu)
     {
         menu.ConsoleWindow.MessageBox("An error occurred when attempting to run Checkers game!", e.Message);
     }
-    
+
     return EMenuFunction.MainMenu;
 }
 
@@ -54,18 +54,20 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
 
 var boardSizeMenuFactory = new MenuFactory("Board size", eightByEight, tenByTen, customBoardSize);
 
-var versusAi = new MenuItem("VS AI", boardSizeMenuFactory, OpponentType.Ai.ToString());
-var versusPlayer = new MenuItem("VS Player", boardSizeMenuFactory, OpponentType.Player.ToString());
-var opponentMenuFactory = new MenuFactory("Opponent", nameof(OpponentType), versusAi, versusPlayer);
+// var versusAi = new MenuItem("VS AI", boardSizeMenuFactory, OpponentType.Ai.ToString());
+// var versusPlayer = new MenuItem("VS Player", boardSizeMenuFactory, OpponentType.Player.ToString());
+// var opponentMenuFactory = new MenuFactory("Opponent", nameof(OpponentType), versusAi, versusPlayer);
+//
+// var local = new MenuItem("Local", opponentMenuFactory, GameType.Local.ToString());
+// // var online = new MenuItem("Online", opponentMenuFactory, GameType.Online.ToString());
+// var online = new MenuItem("Online (Not implemented)", notImplemented);
+// var newGameMenuFactory = new MenuFactory("Game type", nameof(GameType), local, online);
+//
+// var n = new MenuItem("New game", newGameMenuFactory);
+//
+// var mainMenuCreator = new MenuFactory("Main menu", n);
 
-var local = new MenuItem("Local", opponentMenuFactory, GameType.Local.ToString());
-// var online = new MenuItem("Online", opponentMenuFactory, GameType.Online.ToString());
-var online = new MenuItem("Online (Not implemented)", notImplemented);
-var newGameMenuFactory = new MenuFactory("Game type", nameof(GameType), local, online);
-
-var n = new MenuItem("New game", newGameMenuFactory);
-
-var mainMenuCreator = new MenuFactory("Main menu", n);
+var mainMenuCreator = new MenuFactory("Main menu", new MenuItem("New game", boardSizeMenuFactory));
 
 var window = new ConsoleWindow("Checkers", 50, 20);
 var mainMenu = mainMenuCreator.Create(window);

@@ -7,16 +7,17 @@ public class ConsoleLine
 {
     private readonly string _content;
     public readonly EAlignment Align;
-    public readonly ConsoleColor? _backgroundColor;
-    public ConsoleColor BackgroundColor => _backgroundColor ?? Console.BackgroundColor;
+    public readonly ConsoleColor? BackgroundColor;
     private readonly bool _truncationPreferRight;
-    private readonly int _patternRepetitionAmount;
+    private readonly int? _patternRepetitionAmount;
+
+    private int PatternRepetitionAmount => _patternRepetitionAmount ?? Console.WindowWidth / _content.Length + 1;
 
     public ConsoleLine(string content = "", ConsoleColor? backgroundColor = null, EAlignment align = EAlignment.Left,
-        bool truncationPreferRight = false, int patternRepetitionAmount = 1)
+        bool truncationPreferRight = false, int? patternRepetitionAmount = 1)
     {
         _content = content;
-        _backgroundColor = backgroundColor;
+        BackgroundColor = backgroundColor;
         Align = align;
         _truncationPreferRight = truncationPreferRight;
         _patternRepetitionAmount = patternRepetitionAmount;
@@ -25,13 +26,14 @@ public class ConsoleLine
     public string Content()
     {
         {
-            if (_patternRepetitionAmount > 1)
+            if (PatternRepetitionAmount > 1)
             {
-                var repeatingStringBuilder = new StringBuilder(_content.Length * _patternRepetitionAmount).Insert(0,
+                var repeatingStringBuilder = new StringBuilder(_content.Length * PatternRepetitionAmount).Insert(0,
                     _content,
-                    _patternRepetitionAmount); //TODO: Optimize
+                    PatternRepetitionAmount); //TODO: Optimize
 
-                return repeatingStringBuilder.ToString()[..Console.WindowWidth];
+                var result = repeatingStringBuilder.ToString();
+                return result[..Math.Min(Console.WindowWidth, result.Length)];
             }
 
             return _content.Length > Console.WindowWidth
@@ -50,7 +52,6 @@ public class ConsoleWindow
 
     private List<ConsoleLine> _renderQueue;
 
-    private const ConsoleColor HighlightColor = ConsoleColor.White;
     private bool _cursorVisible;
 
     public bool CursorVisible
@@ -102,6 +103,20 @@ public class ConsoleWindow
         _renderQueue.Clear();
     }
 
+    public List<ConsoleLine> RenderQueue
+    {
+        get
+        {
+            var result = new List<ConsoleLine>(_renderQueue);
+            var titleHorizontalBorder = new ConsoleLine(new string('-', Title.Length + 4));
+            result.Insert(0, titleHorizontalBorder);
+            result.Insert(1, new ConsoleLine("| " + Title + " |"));
+            result.Insert(2, titleHorizontalBorder);
+            result.Insert(0, new ConsoleLine());
+            return result;
+        }
+    }
+
     public void Render(bool resetCursorPosition = true)
     {
         var previousOutputEncoding = Console.OutputEncoding;
@@ -110,11 +125,16 @@ public class ConsoleWindow
         SyncCursorVisibility();
         SyncCursorPosition();
 
-        WriteLine(new ConsoleLine(Title));
-        for (var i = 0; i < Math.Min(_renderQueue.Count, Console.WindowHeight - 2); i++)
+        var windowIsCutOff = Console.WindowHeight - 1 <= RenderQueue.Count;
+
+        var maxRenderedLines = windowIsCutOff ? Console.WindowHeight - 1 : RenderQueue.Count;
+        
+        for (var i = 0; i < maxRenderedLines; i++)
         {
-            WriteLine(_renderQueue[i]);
+            WriteLine(RenderQueue[i]);
         }
+        
+        if (windowIsCutOff) WriteLine(new ConsoleLine("▲▼", patternRepetitionAmount: null));
 
         var afterContentCursorPosition = CursorPosition;
 
@@ -147,34 +167,35 @@ public class ConsoleWindow
         return content;
     }
 
-    public void AddLine(string content = "", bool highlight = false, bool truncationPreferRight = false)
+    public void AddLine(string content = "", ConsoleColor? backgroundColor = null, bool truncationPreferRight = false)
     {
         CheckStringValid(content);
 
-        _renderQueue.Add(new ConsoleLine(content, highlight ? HighlightColor : null,
+        _renderQueue.Add(new ConsoleLine(content, backgroundColor,
             truncationPreferRight: truncationPreferRight));
     }
 
-    public void AddLine(char pattern, int? amount = null)
+    public void AddLinePattern(string pattern, int? amount = null)
     {
-        if (amount != null)
-        {
-            AddLine(new string(pattern, amount.Value));
-        }
-        else
-        {
-        }
+        CheckStringValid(pattern);
+
+        _renderQueue.Add(new ConsoleLine(pattern, patternRepetitionAmount: amount));
     }
 
-    private void WriteLine(ConsoleLine? line = null)
+    private void WriteLine(ConsoleLine? line)
     {
-        var content = line?.Content() ?? "";
+        WriteLine(line?.Content(), line?.Align, line?.BackgroundColor);
+    }
+
+    private void WriteLine(string? line = null, EAlignment? align = null, ConsoleColor? backgroundColor = null)
+    {
+        var content = line ?? "";
 
         var result = new StringBuilder(content);
 
         var totalSpaceToAdd = Console.WindowWidth - content.Length;
 
-        switch (line?.Align)
+        switch (align)
         {
             default:
             case EAlignment.Left:
@@ -191,7 +212,7 @@ public class ConsoleWindow
         }
 
         var previousBackgroundColor = Console.BackgroundColor;
-        if (line is not null) Console.BackgroundColor = line.BackgroundColor;
+        Console.BackgroundColor = backgroundColor ?? previousBackgroundColor;
         Console.WriteLine(result.ToString()); //TODO: Highlight only actual line content?
         CursorPosition++;
         Console.BackgroundColor = previousBackgroundColor;
@@ -263,8 +284,9 @@ public class ConsoleWindow
     public void Close()
     {
         ClearRenderQueue();
-        Render();
         ResetCursorPosition();
-        Console.WriteLine($"{Title} closed");
+        FillRemainingSpace();
+        ResetCursorPosition();
+        WriteLine($"{Title} closed");
     }
 }

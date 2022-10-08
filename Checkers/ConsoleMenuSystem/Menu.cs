@@ -125,7 +125,7 @@ public class Menu
             if (i < menuItems.Count)
             {
                 var menuItem = menuItems[i];
-                ConsoleWindow.AddLine(menuItem.Text, i == CursorPosition);
+                ConsoleWindow.AddLine(menuItem.Text, i == CursorPosition ? ConsoleColor.White : null);
             }
             else
             {
@@ -134,23 +134,27 @@ public class Menu
         }
     }
 
+    private int LongestLine()
+    {
+        return Math.Max(MenuItems.Aggregate(0, (i, item) => Math.Max(i, item.Text.Length)), Title.Length);
+    }
+
     private EMenuFunction MenuLoop()
     {
         do
         {
-            ConsoleWindow.AddLine(MenuPath.Length > 0 ? MenuPath : "MENU PATH NOT FOUND???",
-                truncationPreferRight: true);
+            ConsoleWindow.AddLine(Title);
 
             var menuItemsHeight = Height - 2; // -2 for the surrounding separator lines
 
             var page = menuItemsHeight != 0 ? CursorPosition / menuItemsHeight : 0;
             var menuItemsStart = page * menuItemsHeight;
 
-            ConsoleWindow.AddLine(page == 0 ? '_' : '▲');
+            ConsoleWindow.AddLinePattern(page == 0 ? "_" : "▲", Math.Max(LongestLine(), 20));
             WriteMenuItems(menuItemsStart, menuItemsStart + menuItemsHeight);
 
             var maxPage = menuItemsHeight != 0 ? (MenuItems.Count - 1) / menuItemsHeight : page;
-            ConsoleWindow.AddLine(page < maxPage ? '▼' : '_');
+            ConsoleWindow.AddLinePattern(page < maxPage ? "▼" : "_", Math.Max(LongestLine(), 20));
 
             ConsoleWindow.Render();
 
