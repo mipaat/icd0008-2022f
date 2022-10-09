@@ -44,14 +44,7 @@ public class ConsoleGame
             var charId = i % 26;
             var charMultiplier = i / 26 + 1;
             var letter = (char)('A' + charId);
-            if (charMultiplier > 3)
-            {
-                result.Append("N/A");
-            }
-            else
-            {
-                result.Append((new string(letter, charMultiplier)).PadLeft(2).PadRight(3));
-            }
+            result.Append(charMultiplier > 3 ? "N/A" : (new string(letter, charMultiplier)).PadLeft(2).PadRight(3));
 
             result.Append(" ");
         }

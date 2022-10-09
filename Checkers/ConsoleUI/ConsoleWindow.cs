@@ -128,12 +128,12 @@ public class ConsoleWindow
         var windowIsCutOff = Console.WindowHeight - 1 <= RenderQueue.Count;
 
         var maxRenderedLines = windowIsCutOff ? Console.WindowHeight - 1 : RenderQueue.Count;
-        
+
         for (var i = 0; i < maxRenderedLines; i++)
         {
             WriteLine(RenderQueue[i]);
         }
-        
+
         if (windowIsCutOff) WriteLine(new ConsoleLine("▲▼", patternRepetitionAmount: null));
 
         var afterContentCursorPosition = CursorPosition;
@@ -195,6 +195,8 @@ public class ConsoleWindow
 
         var totalSpaceToAdd = Console.WindowWidth - content.Length;
 
+        var leftAddedSpace = 0;
+
         switch (align)
         {
             default:
@@ -205,17 +207,27 @@ public class ConsoleWindow
                 var leftSpace = totalSpaceToAdd / 2;
                 var rightSpace = totalSpaceToAdd - leftSpace;
                 result.Insert(0, " ", leftSpace).Append(' ', rightSpace);
+                leftAddedSpace += leftSpace;
                 break;
             case EAlignment.Right:
                 result.Insert(0, " ", totalSpaceToAdd);
+                leftAddedSpace += totalSpaceToAdd;
                 break;
         }
 
+        var resultString = result.ToString();
+        Console.Write(resultString[..leftAddedSpace]);
+
         var previousBackgroundColor = Console.BackgroundColor;
         Console.BackgroundColor = backgroundColor ?? previousBackgroundColor;
-        Console.WriteLine(result.ToString()); //TODO: Highlight only actual line content?
-        CursorPosition++;
+
+        Console.Write(resultString[leftAddedSpace..(leftAddedSpace + content.Length)]);
+
         Console.BackgroundColor = previousBackgroundColor;
+
+        Console.Write(resultString[(leftAddedSpace + content.Length)..]);
+
+        CursorPosition++;
     }
 
     public string? PopupPromptTextInput(string prompt, string? rePrompt = null)
