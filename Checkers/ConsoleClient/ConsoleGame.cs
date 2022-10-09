@@ -36,8 +36,32 @@ public class ConsoleGame
         return " " + pieceIcon + " ";
     }
 
+    private static string LettersLine(int width)
+    {
+        var result = new StringBuilder(" ");
+        for (var i = 0; i < width; i++)
+        {
+            var charId = i % 26;
+            var charMultiplier = i / 26 + 1;
+            var letter = (char)('A' + charId);
+            if (charMultiplier > 3)
+            {
+                result.Append("N/A");
+            }
+            else
+            {
+                result.Append((new string(letter, charMultiplier)).PadLeft(2).PadRight(3));
+            }
+
+            result.Append(" ");
+        }
+
+        return result.ToString();
+    }
+
     private void AddBoardToRenderQueue()
     {
+        _consoleWindow.AddLine(LettersLine(_gameBrain.Width));
         for (var y = 0; y < _gameBrain.Height; y++)
         {
             _consoleWindow.AddLine(BoundaryLine(_gameBrain.Width));
@@ -47,6 +71,8 @@ public class ConsoleGame
                 line.Append(GetPieceDisplay(_gameBrain[x, y]));
                 line.Append('|');
             }
+
+            line.Append($" {_gameBrain.Height - y}");
 
             _consoleWindow.AddLine(line.ToString());
         }
