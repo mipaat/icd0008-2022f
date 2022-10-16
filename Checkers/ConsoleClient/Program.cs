@@ -7,24 +7,27 @@ using DAL.FileSystem;
 using Domain;
 using GameBrain;
 
-// Func<Menu, EMenuFunction> notImplemented = menu =>
-// {
-//     menu.ConsoleWindow.MessageBox("Not implemented!");
-//     return EMenuFunction.Continue;
-// };
-
 var selectedCheckersOptions = new CheckersOptions();
+CheckersGame? selectedCheckersGame = null;
+var ctx = new RepositoryContext();
 
 EMenuFunction RunConsoleGame(Menu menu)
 {
     try
     {
-        var consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersOptions));
+        var consoleGame = selectedCheckersGame != null
+            ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), ctx)
+            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersOptions), ctx);
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)
     {
         menu.ConsoleWindow.MessageBox("An error occurred when attempting to run Checkers game!", e.Message);
+    }
+    finally
+    {
+        selectedCheckersOptions = null;
+        selectedCheckersGame = null;
     }
 
     return EMenuFunction.MainMenu;
@@ -46,24 +49,74 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
         return EMenuFunction.Continue;
     }
 
-    selectedCheckersOptions.Width = x;
-    selectedCheckersOptions.Height = y;
+    selectedCheckersOptions = new CheckersOptions { Width = x, Height = y, Title = $"{x}x{y}", Saved = false };
     return RunConsoleGame(menu);
 });
 
-var ctx = new RepositoryContext();
-var loadGameOptionsMenuFactory = new MenuFactory("Pick a game options preset");
-foreach (var checkersOptions in ctx.CheckersOptionsRepository.GetAll())
+var loadGameOptionsMenuFactory = new MenuFactory("Pick a game options preset")
 {
-    loadGameOptionsMenuFactory.MenuItems.Add(new MenuItem(checkersOptions.Title, m =>
+    MenuItemsFunc = () =>
     {
-        selectedCheckersOptions = checkersOptions;
-        return RunConsoleGame(m);
-    }));
-}
-loadGameOptionsMenuFactory.MenuItems.Add(customBoardSize);
+        var gameOptionsPresets = new List<MenuItem>();
+        foreach (var checkersOptions in ctx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+        {
+            gameOptionsPresets.Add(new MenuItem(checkersOptions.Title, m =>
+            {
+                selectedCheckersOptions = checkersOptions;
+                return RunConsoleGame(m);
+            }));
+        }
 
-var mainMenuCreator = new MenuFactory("Main menu", new MenuItem("New game", loadGameOptionsMenuFactory));
+        gameOptionsPresets.Add(customBoardSize);
+
+        return gameOptionsPresets;
+    }
+};
+
+var loadGameMenuFactory = new MenuFactory("Load game")
+{
+    MenuItemsFunc = () =>
+    {
+        var gamesToLoad = new List<MenuItem>();
+        foreach (var checkersGame in ctx.CheckersGameRepository.GetAll())
+        {
+            gamesToLoad.Add(new MenuItem(
+                $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt ?? checkersGame.StartedAt}",
+                m =>
+                {
+                    selectedCheckersGame = checkersGame;
+                    return RunConsoleGame(m);
+                }));
+        }
+
+        return gamesToLoad;
+    }
+};
+
+var deleteGameMenuFactory = new MenuFactory("Delete game")
+{
+    MenuItemsFunc = () =>
+    {
+        var gamesToDelete = new List<MenuItem>();
+        foreach (var checkersGame in ctx.CheckersGameRepository.GetAll())
+        {
+            gamesToDelete.Add(new MenuItem(
+                $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt ?? checkersGame.StartedAt}",
+                m =>
+                {
+                    ctx.CheckersGameRepository.Remove(checkersGame.Id);
+                    return EMenuFunction.MainMenu;
+                }));
+        }
+
+        return gamesToDelete;
+    }
+};
+
+var mainMenuCreator = new MenuFactory("Main menu",
+    new MenuItem("New game", loadGameOptionsMenuFactory),
+    new MenuItem("Load game", loadGameMenuFactory),
+    new MenuItem("Delete game", deleteGameMenuFactory));
 
 var window = new ConsoleWindow("Checkers", 50, 20);
 var mainMenu = mainMenuCreator.Create(window);

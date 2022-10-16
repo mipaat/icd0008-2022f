@@ -6,7 +6,9 @@ public class MenuFactory
 {
     public readonly string Title;
     public readonly string? Id;
-    public List<MenuItem> MenuItems;
+    public List<MenuItem> StaticMenuItems;
+    public Func<List<MenuItem>>? MenuItemsFunc;
+    public List<MenuItem> MenuItems => MenuItemsFunc != null ? MenuItemsFunc() : StaticMenuItems;
 
     public MenuFactory(string title, params MenuItem[] menuItems) : this(title, null, menuItems)
     {
@@ -16,7 +18,7 @@ public class MenuFactory
     {
         Title = title;
         Id = id;
-        MenuItems = menuItems.ToList();
+        StaticMenuItems = menuItems.ToList();
     }
 
     public Menu Create(ConsoleWindow consoleWindow, Menu? parentMenu = null)

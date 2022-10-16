@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using ConsoleUI;
+using DAL.FileSystem;
 using Domain;
 using GameBrain;
 
@@ -9,14 +11,17 @@ public class ConsoleGame
 {
     private readonly AbstractCheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
+    private readonly RepositoryContext _repositoryContext;
 
     private string _player1Id;
     private string? _player2Id;
 
-    public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain)
+    public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain,
+        RepositoryContext repositoryContext)
     {
         _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;
+        _repositoryContext = repositoryContext;
         _player1Id = "1";
         _player2Id = null;
     }
@@ -39,15 +44,30 @@ public class ConsoleGame
         var result = new StringBuilder(" ");
         for (var i = 0; i < width; i++)
         {
-            var charId = i % 26;
-            var charMultiplier = i / 26 + 1;
-            var letter = (char)('A' + charId);
-            result.Append(charMultiplier > 3 ? "N/A" : (new string(letter, charMultiplier)).PadLeft(2).PadRight(3));
-
+            var coordsString = EncodeLetterCoords(i);
+            var conformedCoordsString = coordsString.Length > 3 ? "N/A" : coordsString.PadLeft(2).PadRight(3);
+            result.Append(conformedCoordsString);
             result.Append(" ");
         }
 
         return result.ToString();
+    }
+
+    public static string EncodeLetterCoords(int letterCoords)
+    {
+        var charId = letterCoords % 26;
+        var charMultiplier = letterCoords / 26 + 1;
+        var letter = (char)('A' + charId);
+        return new string(letter, charMultiplier);
+    }
+
+    public static int DecodeLetterCoords(string letterCoords)
+    {
+        const int baseOffset = 'A';
+
+        if (letterCoords.Length == 0) throw new ArgumentOutOfRangeException();
+
+        return (letterCoords.Length - 1) * 26 + (letterCoords[0] - baseOffset);
     }
 
     private void AddBoardToRenderQueue()
@@ -73,13 +93,68 @@ public class ConsoleGame
 
     public void Run()
     {
-        string? input = null;
-
-        while ((input ?? "").ToLower() != "q")
+        var breakControl = true;
+        var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
+        while (breakControl)
         {
             AddBoardToRenderQueue();
-            input = _consoleWindow.RenderAndAwaitTextInput("Type Q (and hit Enter) to quit!", keepRenderQueue: true);
+            var input = _consoleWindow
+                .RenderAndAwaitTextInput(
+                    "Q to quit! Coordinate pairs (e.g A4D7) to move (currently no game logic/rules implemented)!",
+                    keepRenderQueue: true)?.ToLower() ?? "";
+            switch (input)
+            {
+                case "q":
+                    breakControl = false;
+                    break;
+                default:
+                    var matches = rx.Matches(input);
+                    if (matches.Count == 1)
+                    {
+                        try
+                        {
+                            var groups = matches[0].Groups;
+                            var x1 = DecodeLetterCoords(groups[1].Value.ToUpper());
+                            var y1 = _checkersBrain.Height - int.Parse(groups[2].Value);
+                            var x2 = DecodeLetterCoords(groups[3].Value.ToUpper());
+                            var y2 = _checkersBrain.Height - int.Parse(groups[4].Value);
+                            if (_checkersBrain.IsMoveValid(x1, y1, x2, y2))
+                            {
+                                _checkersBrain.Move(x1, y1, x2, y2);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            _consoleWindow.PopupPromptTextInput("Input caused the following error: " + e.ToString().Split("\n")[0]);
+                        }
+                    }
+
+                    break;
+            }
+
             _consoleWindow.ClearRenderQueue();
+        }
+
+        var saveGameInput = _consoleWindow.PopupPromptTextInput("Save game? (y/n)")?.ToLower() ?? "";
+
+        var breakFor = false;
+        for (var i = 0; i < 3 && !breakFor; i++)
+        {
+            switch (saveGameInput)
+            {
+                case "y":
+                    _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.GetSaveGameState());
+                    breakFor = true;
+                    break;
+                case "n":
+                    breakFor = true;
+                    break;
+                default:
+                    saveGameInput = _consoleWindow.PopupPromptTextInput("Save game? (y/n)",
+                            $"Input '{saveGameInput}' not recognized! Auto-quitting without saving in {3 - i} more failed attempts!")
+                        ?.ToLower() ?? "";
+                    break;
+            }
         }
     }
 

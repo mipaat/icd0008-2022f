@@ -28,9 +28,19 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
         foreach (var checkersState in entity.CheckersStates)
         {
             checkersState.CheckersGameId = entity.Id;
-            RepositoryContext.CheckersStateRepository.Add(checkersState);
+            RepositoryContext.CheckersStateRepository.Upsert(checkersState);
         }
 
         return base.Serialize(entity);
+    }
+
+    public new CheckersGame Remove(int id)
+    {
+        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(id))
+        {
+            RepositoryContext.CheckersStateRepository.Remove(checkersState.Id);
+        }
+
+        return base.Remove(id);
     }
 }

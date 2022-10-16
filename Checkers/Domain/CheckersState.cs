@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -13,13 +12,20 @@ public class CheckersState : AbstractDatabaseEntity
     [JsonIgnore] public GamePiece?[,] GamePieces { get; set; } = default!;
     public string SerializedGamePieces { get; set; } = default!;
 
+    public TimeSpan MoveElapsedTime { get; set; }
+    public TimeSpan GameElapsedTime { get; set; }
+
+    public int WhiteMoves { get; set; }
+    public int BlackMoves { get; set; }
+
     private record CompressedGamePieces(int X, int Y)
     {
         public record GamePieceWithPosition
         {
             public int X { get; init; }
             public int Y { get; init; }
-            public GamePiece GamePiece { get; init; }
+            public EPlayerColor Player { get; init; }
+            public bool IsCrowned { get; init; }
         }
 
         public List<GamePieceWithPosition> GamePiecesWithPosition { get; init; } = new();
@@ -39,7 +45,8 @@ public class CheckersState : AbstractDatabaseEntity
                 {
                     X = x,
                     Y = y,
-                    GamePiece = actualGamePiece
+                    Player = actualGamePiece.Player,
+                    IsCrowned = actualGamePiece.IsCrowned
                 });
             }
         }
@@ -55,13 +62,8 @@ public class CheckersState : AbstractDatabaseEntity
         GamePieces = new GamePiece?[compressedGamePieces.X, compressedGamePieces.Y];
         foreach (var gamePieceWithPosition in compressedGamePieces.GamePiecesWithPosition)
         {
-            GamePieces[gamePieceWithPosition.X, gamePieceWithPosition.Y] = gamePieceWithPosition.GamePiece;
+            GamePieces[gamePieceWithPosition.X, gamePieceWithPosition.Y] =
+                new GamePiece(gamePieceWithPosition.Player, gamePieceWithPosition.IsCrowned);
         }
     }
-
-    public TimeSpan MoveElapsedTime { get; set; }
-    public TimeSpan GameElapsedTime { get; set; }
-
-    public int WhiteMoves { get; set; } = 0;
-    public int BlackMoves { get; set; } = 0;
 }
