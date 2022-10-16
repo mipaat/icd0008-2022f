@@ -81,6 +81,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
             result.Add(entity);
         }
 
+        result.Sort((o1, o2) => o1.Id - o2.Id);
         return result;
     }
 
