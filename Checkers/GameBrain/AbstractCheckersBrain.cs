@@ -1,6 +1,8 @@
-﻿namespace Game;
+﻿using Domain;
 
-public abstract class AbstractGameBrain
+namespace GameBrain;
+
+public abstract class AbstractCheckersBrain
 {
     public abstract int Width { get; }
     public abstract int Height { get; }

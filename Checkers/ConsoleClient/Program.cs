@@ -3,7 +3,9 @@
 using ConsoleClient;
 using ConsoleMenuSystem;
 using ConsoleUI;
-using Game;
+using DAL.FileSystem;
+using Domain;
+using GameBrain;
 
 Func<Menu, EMenuFunction> notImplemented = menu =>
 {
@@ -13,14 +15,14 @@ Func<Menu, EMenuFunction> notImplemented = menu =>
 
 EMenuFunction RunConsoleGame(int x, int y, Menu menu)
 {
-    var gameOptions = new GameOptions
+    var gameOptions = new CheckersOptions
     {
         Width = x,
         Height = y
     };
     try
     {
-        var consoleGame = new ConsoleGame(menu.ConsoleWindow, new GameBrain(gameOptions));
+        var consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(gameOptions));
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)

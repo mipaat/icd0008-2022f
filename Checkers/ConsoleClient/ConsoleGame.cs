@@ -1,23 +1,21 @@
 ﻿using System.Text;
 using ConsoleUI;
-using Game;
+using Domain;
+using GameBrain;
 
 namespace ConsoleClient;
 
 public class ConsoleGame
 {
-    private readonly AbstractGameBrain _gameBrain;
+    private readonly AbstractCheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
-
-    private const string WhitePieceDisplay = "W";
-    private const string BlackPieceDisplay = "B";
 
     private string _player1Id;
     private string? _player2Id;
 
-    public ConsoleGame(ConsoleWindow consoleWindow, AbstractGameBrain gameBrain)
+    public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain)
     {
-        _gameBrain = gameBrain;
+        _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;
         _player1Id = "1";
         _player2Id = null;
@@ -54,23 +52,23 @@ public class ConsoleGame
 
     private void AddBoardToRenderQueue()
     {
-        _consoleWindow.AddLine(LettersLine(_gameBrain.Width));
-        for (var y = 0; y < _gameBrain.Height; y++)
+        _consoleWindow.AddLine(LettersLine(_checkersBrain.Width));
+        for (var y = 0; y < _checkersBrain.Height; y++)
         {
-            _consoleWindow.AddLine(BoundaryLine(_gameBrain.Width));
+            _consoleWindow.AddLine(BoundaryLine(_checkersBrain.Width));
             var line = new StringBuilder("|");
-            for (var x = 0; x < _gameBrain.Width; x++)
+            for (var x = 0; x < _checkersBrain.Width; x++)
             {
-                line.Append(GetPieceDisplay(_gameBrain[x, y]));
+                line.Append(GetPieceDisplay(_checkersBrain[x, y]));
                 line.Append('|');
             }
 
-            line.Append($" {_gameBrain.Height - y}");
+            line.Append($" {_checkersBrain.Height - y}");
 
             _consoleWindow.AddLine(line.ToString());
         }
 
-        _consoleWindow.AddLine(BoundaryLine(_gameBrain.Width));
+        _consoleWindow.AddLine(BoundaryLine(_checkersBrain.Width));
     }
 
     public void Run()

@@ -1,10 +1,12 @@
-﻿namespace Game;
+﻿using Domain;
 
-public class GameBrain : AbstractGameBrain
+namespace GameBrain;
+
+public class CheckersBrain : AbstractCheckersBrain
 {
-    public readonly GameOptions GameOptions;
-    public override int Width => GameOptions.Width;
-    public override int Height => GameOptions.Height;
+    public readonly CheckersOptions CheckersOptions;
+    public override int Width => CheckersOptions.Width;
+    public override int Height => CheckersOptions.Height;
 
     private GamePiece?[,] _pieces;
 
@@ -18,11 +20,11 @@ public class GameBrain : AbstractGameBrain
     private string? _whitePlayerId;
     private string? _blackPlayerId;
 
-    public GameBrain(GameOptions gameOptions)
+    public CheckersBrain(CheckersOptions checkersOptions)
     {
-        CheckDimensionsValid(gameOptions.Width, gameOptions.Height);
-        GameOptions = gameOptions;
-        _pieces = new GamePiece?[gameOptions.Width, gameOptions.Height];
+        CheckDimensionsValid(checkersOptions.Width, checkersOptions.Height);
+        CheckersOptions = checkersOptions;
+        _pieces = new GamePiece?[checkersOptions.Width, checkersOptions.Height];
         InitializePieces();
     }
 
@@ -52,7 +54,7 @@ public class GameBrain : AbstractGameBrain
             {
                 if (IsSquareBlack(x, y))
                 {
-                    _pieces[x, y] = new GamePiece(x, y, playerColor);                    
+                    _pieces[x, y] = new GamePiece(playerColor);                    
                 }
             }
         }

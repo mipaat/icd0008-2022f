@@ -9,7 +9,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ConsoleMenuSystem\ConsoleMenuSystem.csproj" />
-      <ProjectReference Include="..\Game\Game.csproj" />
+      <ProjectReference Include="..\DAL.FileSystem\DAL.FileSystem.csproj" />
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
     </ItemGroup>
 
 </Project>

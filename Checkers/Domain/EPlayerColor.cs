@@ -1,4 +1,4 @@
-﻿namespace Game;
+﻿namespace Domain;
 
 public enum EPlayerColor
 {
