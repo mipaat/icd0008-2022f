@@ -158,7 +158,7 @@ var createOptions = new MenuItem("Create new custom options", m =>
                     {
                         customOptions.MustCapture =
                             m2.ConsoleWindow.PopupPromptBoolInput(
-                                "If a player can capture a piece, must the capture it?");
+                                "If a player can capture a piece, must they capture it?");
                         return EMenuFunction.Refresh;
                     }),
                     new MenuItem("Backwards jumps: " + (customOptions.CanJumpBackwards ? "yes" : "no"), m2 =>
@@ -176,12 +176,12 @@ var createOptions = new MenuItem("Create new custom options", m =>
                                     "Can regular pieces jump backwards during a multi-capture jump?");
                             return EMenuFunction.Refresh;
                         }),
-                    new MenuItem("Options title", m2 =>
+                    new MenuItem("Options title: " + customOptions.Title, m2 =>
                     {
                         customOptions.Title = m2.ConsoleWindow.PopupPromptTextInput("Enter a title for your Menu!");
                         return EMenuFunction.Refresh;
                     }),
-                    new MenuItem("Optional description", m2 =>
+                    new MenuItem("Options description: " + customOptions.Description, m2 =>
                     {
                         customOptions.Description =
                             m2.ConsoleWindow.PopupPromptTextInput(
