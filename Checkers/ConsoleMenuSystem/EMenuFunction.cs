@@ -5,5 +5,6 @@ public enum EMenuFunction
     Back,
     MainMenu,
     Exit,
-    Continue
+    Continue,
+    Refresh
 }

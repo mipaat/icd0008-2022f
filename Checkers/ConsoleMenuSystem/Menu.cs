@@ -179,6 +179,8 @@ public class Menu
                         case EMenuFunction.MainMenu:
                             if (ParentMenu is not null) return menuFunction;
                             break;
+                        case EMenuFunction.Refresh:
+                            return menuFunction;
                     }
 
                     break;

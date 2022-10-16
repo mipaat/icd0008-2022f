@@ -41,6 +41,10 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
             RepositoryContext.CheckersStateRepository.Remove(checkersState.Id);
         }
 
-        return base.Remove(id);
+        var result = base.Remove(id);
+
+        RepositoryContext.CheckersOptionsRepository.Remove(result.CheckersOptionsId);
+
+        return result;
     }
 }

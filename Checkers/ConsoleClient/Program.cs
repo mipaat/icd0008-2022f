@@ -17,7 +17,20 @@ EMenuFunction RunConsoleGame(Menu menu)
     {
         var consoleGame = selectedCheckersGame != null
             ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), ctx)
-            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersOptions), ctx);
+            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersOptions()
+            {
+                Id = default,
+                BuiltIn = false,
+                Saved = false,
+                Width = selectedCheckersOptions.Width,
+                Height = selectedCheckersOptions.Height,
+                Title = selectedCheckersOptions.Title,
+                Description = selectedCheckersOptions.Description,
+                BlackMovesFirst = selectedCheckersOptions.BlackMovesFirst,
+                MustCapture = selectedCheckersOptions.MustCapture,
+                CanJumpBackwards = selectedCheckersOptions.CanJumpBackwards,
+                CanJumpBackwardsDuringMultiCapture = selectedCheckersOptions.CanJumpBackwardsDuringMultiCapture
+            }), ctx);
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)
@@ -102,7 +115,7 @@ var deleteGameMenuFactory = new MenuFactory("Delete game")
         {
             gamesToDelete.Add(new MenuItem(
                 $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt ?? checkersGame.StartedAt}",
-                m =>
+                _ =>
                 {
                     ctx.CheckersGameRepository.Remove(checkersGame.Id);
                     return EMenuFunction.MainMenu;
@@ -113,10 +126,141 @@ var deleteGameMenuFactory = new MenuFactory("Delete game")
     }
 };
 
+var createOptions = new MenuItem("Create new custom options", m =>
+{
+    var customOptions = new CheckersOptions();
+
+    while (true)
+    {
+        try
+        {
+            var result = EMenuFunction.Refresh;
+            while (result == EMenuFunction.Refresh)
+            {
+                result = new Menu("Customize options", m.ConsoleWindow, null, m,
+                    new MenuItem($"Game board width: {customOptions.Width}", m2 =>
+                    {
+                        customOptions.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem($"Game board height: {customOptions.Height}", m2 =>
+                    {
+                        customOptions.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem($"Black moves first: {customOptions.BlackMovesFirst}", m2 =>
+                    {
+                        customOptions.BlackMovesFirst =
+                            m2.ConsoleWindow.PopupPromptBoolInput("Should black pieces start the game?");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem($"Must capture piece if able: {customOptions.MustCapture}", m2 =>
+                    {
+                        customOptions.MustCapture =
+                            m2.ConsoleWindow.PopupPromptBoolInput(
+                                "If a player can capture a piece, must the capture it?");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem("Backwards jumps: " + (customOptions.CanJumpBackwards ? "yes" : "no"), m2 =>
+                    {
+                        customOptions.CanJumpBackwards =
+                            m2.ConsoleWindow.PopupPromptBoolInput("Can regular pieces jump backwards?");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem(
+                        "Multi-capture backwards jumps: " +
+                        (customOptions.CanJumpBackwardsDuringMultiCapture ? "yes" : "no"), m2 =>
+                        {
+                            customOptions.CanJumpBackwardsDuringMultiCapture =
+                                m2.ConsoleWindow.PopupPromptBoolInput(
+                                    "Can regular pieces jump backwards during a multi-capture jump?");
+                            return EMenuFunction.Refresh;
+                        }),
+                    new MenuItem("Options title", m2 =>
+                    {
+                        customOptions.Title = m2.ConsoleWindow.PopupPromptTextInput("Enter a title for your Menu!");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem("Optional description", m2 =>
+                    {
+                        customOptions.Description =
+                            m2.ConsoleWindow.PopupPromptTextInput(
+                                "You may enter a description for your options preset");
+                        return EMenuFunction.Refresh;
+                    }),
+                    new MenuItem("Save", _ =>
+                    {
+                        ctx.CheckersOptionsRepository.Add(customOptions);
+                        return EMenuFunction.Back;
+                    })
+                ).Run();
+            }
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            m.ConsoleWindow.MessageBox($"An error occurred: {e.ToString().Split("\n")[0]}");
+        }
+    }
+});
+
+var viewOptionsMenuFactory = new MenuFactory("View options")
+{
+    MenuItemsFunc = () =>
+    {
+        var checkersOptionsToView = new List<MenuItem>();
+        foreach (var checkersOptions in ctx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+        {
+            checkersOptionsToView.Add(new MenuItem($"{checkersOptions.Title}",
+                m =>
+                {
+                    m.ConsoleWindow.MessageBox("Title: " + checkersOptions.Title,
+                        "Description: " + checkersOptions.Description,
+                        "Width: " + checkersOptions.Width,
+                        "Height: " + checkersOptions.Height,
+                        "BlackMovesFirst: " + checkersOptions.BlackMovesFirst,
+                        "MustCapture: " + checkersOptions.MustCapture,
+                        "CanJumpBackwards: " + checkersOptions.CanJumpBackwards,
+                        "CanJumpBackwardsDuringMultiCapture: " + checkersOptions.CanJumpBackwardsDuringMultiCapture
+                    );
+                    return EMenuFunction.Continue;
+                }));
+        }
+
+        return checkersOptionsToView;
+    }
+};
+
+var deleteOptionsMenuFactory = new MenuFactory("Delete options")
+{
+    MenuItemsFunc = () =>
+    {
+        var checkersOptionsToDelete = new List<MenuItem>();
+        foreach (var checkersOption in ctx.CheckersOptionsRepository.GetAll().Where(co => !co.BuiltIn && co.Saved))
+        {
+            checkersOptionsToDelete.Add(new MenuItem($"{checkersOption.Title}",
+                _ =>
+                {
+                    ctx.CheckersOptionsRepository.Remove(checkersOption.Id);
+                    return EMenuFunction.Back;
+                }));
+        }
+
+        return checkersOptionsToDelete;
+    }
+};
+
+var optionsManagerMenuCreator = new MenuFactory("Options",
+    createOptions,
+    new MenuItem("View", viewOptionsMenuFactory),
+    new MenuItem("Delete", deleteOptionsMenuFactory));
+
 var mainMenuCreator = new MenuFactory("Main menu",
     new MenuItem("New game", loadGameOptionsMenuFactory),
     new MenuItem("Load game", loadGameMenuFactory),
-    new MenuItem("Delete game", deleteGameMenuFactory));
+    new MenuItem("Delete game", deleteGameMenuFactory),
+    new MenuItem("Options", optionsManagerMenuCreator));
 
 var window = new ConsoleWindow("Checkers", 50, 20);
 var mainMenu = mainMenuCreator.Create(window);

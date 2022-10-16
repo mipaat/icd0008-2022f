@@ -230,7 +230,7 @@ public class ConsoleWindow
         CursorPosition++;
     }
 
-    public string? PopupPromptTextInput(string prompt, string? rePrompt = null)
+    public string PopupPromptTextInput(string prompt, string? rePrompt = null)
     {
         ClearRenderQueue();
 
@@ -246,12 +246,28 @@ public class ConsoleWindow
         Console.SetCursorPosition(inputCursorPosition.Left, inputCursorPosition.Top);
         CursorVisible = true;
 
-        var result = Console.ReadLine();
+        var result = Console.ReadLine() ?? "";
 
         CursorVisible = previousCursorVisible;
         Console.SetCursorPosition(finalCursorPosition.Left, finalCursorPosition.Top);
 
         return result;
+    }
+
+    public bool PopupPromptBoolInput(string prompt, string? rePrompt = null)
+    {
+        var input = PopupPromptTextInput(prompt + " (y/n)", rePrompt);
+        return input.Trim().ToLower() switch
+        {
+            "y" => true,
+            "n" => false,
+            _ => throw new FormatException($"Input '{input}' is not a valid boolean string!")
+        };
+    }
+
+    public int PopupPromptIntInput(string prompt, string? rePrompt = null)
+    {
+        return int.Parse(PopupPromptTextInput(prompt, rePrompt));
     }
 
     public string? RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)

@@ -2,7 +2,7 @@ namespace Domain;
 
 public class CheckersOptions : AbstractDatabaseEntity
 {
-    public bool BuiltIn { get; set; } = false;
+    public bool BuiltIn { get; set; }
     public bool Saved { get; set; } = true;
     public int Width { get; set; } = 8;
     public int Height { get; set; } = 8;
@@ -12,8 +12,8 @@ public class CheckersOptions : AbstractDatabaseEntity
 
     public bool BlackMovesFirst { get; set; } = true;
     public bool MustCapture { get; set; } = true;
-    public bool CanJumpBackwards { get; set; } = false;
-    public bool CanJumpBackwardsDuringMultiCapture { get; set; } = false;
+    public bool CanJumpBackwards { get; set; }
+    public bool CanJumpBackwardsDuringMultiCapture { get; set; }
 
     public bool IsEquivalent(CheckersOptions other)
     {
