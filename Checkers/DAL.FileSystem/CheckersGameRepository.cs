@@ -25,7 +25,7 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
         RepositoryContext.CheckersOptionsRepository.Upsert(entity.CheckersOptions);
         entity.CheckersOptionsId = entity.CheckersOptions.Id;
 
-        foreach (var checkersState in entity.CheckersStates)
+        foreach (var checkersState in entity.AssertSufficientCheckersStates())
         {
             checkersState.CheckersGameId = entity.Id;
             RepositoryContext.CheckersStateRepository.Upsert(checkersState);

@@ -162,18 +162,9 @@ public class CheckersBrain : AbstractCheckersBrain
 
     public override CheckersGame GetSaveGameState()
     {
+        if (_checkersGame.CheckersStates == null) throw new InsufficientCheckersStatesException(_checkersGame);
         _checkersGame.CheckersStates.Add(GetCheckersState());
 
-        return new CheckersGame
-        {
-            Id = _checkersGame.Id,
-            WhitePlayerId = WhitePlayerId,
-            BlackPlayerId = BlackPlayerId,
-            CheckersOptions = _checkersOptions,
-            CheckersStates = new List<CheckersState>(_checkersGame.CheckersStates),
-            StartedAt = _checkersGame.StartedAt,
-            EndedAt = _checkersGame.EndedAt,
-            Winner = _checkersGame.Winner
-        };
+        return _checkersGame;
     }
 }

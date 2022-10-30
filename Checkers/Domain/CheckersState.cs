@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,7 +10,7 @@ public class CheckersState : AbstractDatabaseEntity
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-    [JsonIgnore] public GamePiece?[,] GamePieces { get; set; } = default!;
+    [JsonIgnore] [NotMapped] public GamePiece?[,] GamePieces { get; set; } = default!;
     public string SerializedGamePieces { get; set; } = default!;
 
     public TimeSpan MoveElapsedTime { get; set; }

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using ConsoleUI;
-using DAL.FileSystem;
+using DAL;
 using Domain;
 using GameBrain;
 
@@ -11,13 +11,13 @@ public class ConsoleGame
 {
     private readonly AbstractCheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
-    private readonly RepositoryContext _repositoryContext;
+    private readonly IRepositoryContext _repositoryContext;
 
     private string _player1Id;
     private string? _player2Id;
 
     public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain,
-        RepositoryContext repositoryContext)
+        IRepositoryContext repositoryContext)
     {
         _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;

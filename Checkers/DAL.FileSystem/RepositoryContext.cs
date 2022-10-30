@@ -1,6 +1,6 @@
 namespace DAL.FileSystem;
 
-public class RepositoryContext
+public class RepositoryContext : IRepositoryContext
 {
     public RepositoryContext()
     {
@@ -12,4 +12,5 @@ public class RepositoryContext
     public ICheckersGameRepository CheckersGameRepository { get; }
     public ICheckersOptionsRepository CheckersOptionsRepository { get; }
     public ICheckersStateRepository CheckersStateRepository { get; }
+    public string Name => "FileSystem";
 }

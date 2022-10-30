@@ -68,7 +68,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         RepositoryContext = repositoryContext;
     }
 
-    public List<T> GetAll()
+    public ICollection<T> GetAll()
     {
         EnsureDirectoryExists();
 
@@ -137,10 +137,14 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     public T Remove(int id)
     {
-        var result = GetById(id);
-        File.Delete(GetFilePath(id));
+        return Remove(GetById(id));
+    }
 
-        return result;
+    public T Remove(T entity)
+    {
+        File.Delete(GetFilePath(entity.Id));
+        entity.Id = 0;
+        return entity;
     }
 
     public bool Exists(int id)

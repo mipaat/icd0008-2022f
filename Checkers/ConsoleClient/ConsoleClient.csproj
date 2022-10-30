@@ -9,9 +9,18 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ConsoleMenuSystem\ConsoleMenuSystem.csproj" />
+      <ProjectReference Include="..\DAL.Db\DAL.Db.csproj" />
       <ProjectReference Include="..\DAL.FileSystem\DAL.FileSystem.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
       <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.10" />
     </ItemGroup>
 
 </Project>

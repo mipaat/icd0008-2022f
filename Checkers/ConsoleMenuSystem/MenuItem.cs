@@ -2,7 +2,7 @@
 
 public class MenuItem
 {
-    public readonly string Text;
+    public string Text;
     public readonly string? Id;
     private readonly Func<Menu, EMenuFunction> _action;
 

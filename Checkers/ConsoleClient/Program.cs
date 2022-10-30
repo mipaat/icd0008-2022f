@@ -3,20 +3,30 @@
 using ConsoleClient;
 using ConsoleMenuSystem;
 using ConsoleUI;
-using DAL.FileSystem;
+using DAL;
+using DAL.Db;
 using Domain;
 using GameBrain;
+using Microsoft.EntityFrameworkCore;
+
+var window = new ConsoleWindow("Checkers", 50, 20);
 
 var selectedCheckersOptions = new CheckersOptions();
 CheckersGame? selectedCheckersGame = null;
-var ctx = new RepositoryContext();
+
+using var ctx = AppDbContextFactory.CreateDbContext();
+ctx.Database.Migrate();
+
+var repoDb = new RepositoryContext(ctx);
+var repoFs = new DAL.FileSystem.RepositoryContext();
+IRepositoryContext repoCtx = repoDb;
 
 EMenuFunction RunConsoleGame(Menu menu)
 {
     try
     {
         var consoleGame = selectedCheckersGame != null
-            ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), ctx)
+            ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx)
             : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersOptions()
             {
                 Id = default,
@@ -30,7 +40,7 @@ EMenuFunction RunConsoleGame(Menu menu)
                 MustCapture = selectedCheckersOptions.MustCapture,
                 CanJumpBackwards = selectedCheckersOptions.CanJumpBackwards,
                 CanJumpBackwardsDuringMultiCapture = selectedCheckersOptions.CanJumpBackwardsDuringMultiCapture
-            }), ctx);
+            }), repoCtx);
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)
@@ -71,7 +81,7 @@ var loadGameOptionsMenuFactory = new MenuFactory("Pick a game options preset")
     MenuItemsFunc = () =>
     {
         var gameOptionsPresets = new List<MenuItem>();
-        foreach (var checkersOptions in ctx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+        foreach (var checkersOptions in repoCtx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
         {
             gameOptionsPresets.Add(new MenuItem(checkersOptions.Title, m =>
             {
@@ -91,7 +101,7 @@ var loadGameMenuFactory = new MenuFactory("Load game")
     MenuItemsFunc = () =>
     {
         var gamesToLoad = new List<MenuItem>();
-        foreach (var checkersGame in ctx.CheckersGameRepository.GetAll())
+        foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
         {
             gamesToLoad.Add(new MenuItem(
                 $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt ?? checkersGame.StartedAt}",
@@ -111,13 +121,13 @@ var deleteGameMenuFactory = new MenuFactory("Delete game")
     MenuItemsFunc = () =>
     {
         var gamesToDelete = new List<MenuItem>();
-        foreach (var checkersGame in ctx.CheckersGameRepository.GetAll())
+        foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
         {
             gamesToDelete.Add(new MenuItem(
                 $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt ?? checkersGame.StartedAt}",
                 _ =>
                 {
-                    ctx.CheckersGameRepository.Remove(checkersGame.Id);
+                    repoCtx.CheckersGameRepository.Remove(checkersGame.Id);
                     return EMenuFunction.MainMenu;
                 }));
         }
@@ -190,7 +200,7 @@ var createOptions = new MenuItem("Create new custom options", m =>
                     }),
                     new MenuItem("Save", _ =>
                     {
-                        ctx.CheckersOptionsRepository.Add(customOptions);
+                        repoCtx.CheckersOptionsRepository.Add(customOptions);
                         return EMenuFunction.Back;
                     })
                 ).Run();
@@ -210,7 +220,7 @@ var viewOptionsMenuFactory = new MenuFactory("View options")
     MenuItemsFunc = () =>
     {
         var checkersOptionsToView = new List<MenuItem>();
-        foreach (var checkersOptions in ctx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+        foreach (var checkersOptions in repoCtx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
         {
             checkersOptionsToView.Add(new MenuItem($"{checkersOptions.Title}",
                 m =>
@@ -237,12 +247,12 @@ var deleteOptionsMenuFactory = new MenuFactory("Delete options")
     MenuItemsFunc = () =>
     {
         var checkersOptionsToDelete = new List<MenuItem>();
-        foreach (var checkersOption in ctx.CheckersOptionsRepository.GetAll().Where(co => !co.BuiltIn && co.Saved))
+        foreach (var checkersOption in repoCtx.CheckersOptionsRepository.GetAll().Where(co => !co.BuiltIn && co.Saved))
         {
             checkersOptionsToDelete.Add(new MenuItem($"{checkersOption.Title}",
                 _ =>
                 {
-                    ctx.CheckersOptionsRepository.Remove(checkersOption.Id);
+                    repoCtx.CheckersOptionsRepository.Remove(checkersOption.Id);
                     return EMenuFunction.Back;
                 }));
         }
@@ -251,10 +261,30 @@ var deleteOptionsMenuFactory = new MenuFactory("Delete options")
     }
 };
 
+const string swapPersistenceEngineBaseText = "Swap persistence engine";
+MenuItem swapPersistenceEngine = default!;
+swapPersistenceEngine = new MenuItem(swapPersistenceEngineBaseText + $" (Current: {repoCtx.Name})", m =>
+{
+    IRepositoryContext otherRepoCtx = repoCtx == repoDb ? repoFs : repoDb;
+    var switchPersistenceEngine =
+        m.ConsoleWindow.PopupPromptBoolInput(
+            $"Switch persistence engine from {repoCtx.Name} to {otherRepoCtx.Name}?");
+    if (!switchPersistenceEngine) return EMenuFunction.Continue;
+
+    var successMessage =
+        $"Successfully switched persistence engine from {repoCtx.Name} to {otherRepoCtx.Name}!";
+    repoCtx = otherRepoCtx;
+    m.ConsoleWindow.MessageBox(successMessage);
+    swapPersistenceEngine.Text = swapPersistenceEngineBaseText + $" (Current: {repoCtx.Name})";
+    return EMenuFunction.MainMenu;
+});
+
 var optionsManagerMenuCreator = new MenuFactory("Options",
     createOptions,
     new MenuItem("View", viewOptionsMenuFactory),
-    new MenuItem("Delete", deleteOptionsMenuFactory));
+    new MenuItem("Delete", deleteOptionsMenuFactory),
+    swapPersistenceEngine
+    );
 
 var mainMenuCreator = new MenuFactory("Main menu",
     new MenuItem("New game", loadGameOptionsMenuFactory),
@@ -262,7 +292,6 @@ var mainMenuCreator = new MenuFactory("Main menu",
     new MenuItem("Delete game", deleteGameMenuFactory),
     new MenuItem("Options", optionsManagerMenuCreator));
 
-var window = new ConsoleWindow("Checkers", 50, 20);
 var mainMenu = mainMenuCreator.Create(window);
 
 mainMenu.Run();
