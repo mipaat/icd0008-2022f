@@ -47,4 +47,9 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
 
         return result;
     }
+
+    public new ICollection<CheckersGame> GetAll()
+    {
+        return base.GetAll().OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt).ToList();
+    }
 }

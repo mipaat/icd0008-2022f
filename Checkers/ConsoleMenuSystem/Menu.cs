@@ -147,13 +147,13 @@ public class Menu
 
             var menuItemsHeight = Height - 2; // -2 for the surrounding separator lines
 
-            var page = menuItemsHeight != 0 ? CursorPosition / menuItemsHeight : 0;
+            var page = CursorPosition / menuItemsHeight;
             var menuItemsStart = page * menuItemsHeight;
 
             ConsoleWindow.AddLinePattern(page == 0 ? "_" : "▲", Math.Max(LongestLine(), 20));
             WriteMenuItems(menuItemsStart, menuItemsStart + menuItemsHeight);
 
-            var maxPage = menuItemsHeight != 0 ? (MenuItems.Count - 1) / menuItemsHeight : page;
+            var maxPage = (MenuItems.Count - 1) / menuItemsHeight;
             ConsoleWindow.AddLinePattern(page < maxPage ? "▼" : "_", Math.Max(LongestLine(), 20));
 
             ConsoleWindow.Render();

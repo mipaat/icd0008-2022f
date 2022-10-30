@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Text;
 
 namespace ConsoleUI;
 
@@ -76,7 +75,7 @@ public class ConsoleWindow
         }
     }
 
-    public ConsoleWindow(string title = "ConsoleWindow", int width = 72, int height = 12)
+    public ConsoleWindow(string title = "ConsoleWindow")
     {
         Title = CheckStringValid(title);
         CursorVisible = false;
@@ -200,7 +199,6 @@ public class ConsoleWindow
         switch (align)
         {
             default:
-            case EAlignment.Left:
                 result.Append(' ', totalSpaceToAdd);
                 break;
             case EAlignment.Center:
@@ -254,15 +252,34 @@ public class ConsoleWindow
         return result;
     }
 
-    public bool PopupPromptBoolInput(string prompt, string? rePrompt = null)
+    public bool PopupPromptBoolInput(string prompt)
     {
-        var input = PopupPromptTextInput(prompt + " (y/n)", rePrompt);
-        return input.Trim().ToLower() switch
+        bool IsValidBooleanString(string input, out bool result)
         {
-            "y" => true,
-            "n" => false,
-            _ => throw new FormatException($"Input '{input}' is not a valid boolean string!")
-        };
+            switch (input.Trim().ToLower())
+            {
+                case "y":
+                    result = true;
+                    break;
+                case "n":
+                    result = false;
+                    break;
+                default:
+                    result = default!;
+                    return false;
+            }
+
+            return true;
+        }
+        
+        string? input = null;
+        while (true)
+        {
+            var rePrompt = input == null ? null : "Input must be 'y' for yes or 'n' for no!";
+            input = PopupPromptTextInput(prompt + " (y/n)", rePrompt);
+
+            if (IsValidBooleanString(input, out var result)) return result;
+        }
     }
 
     public int PopupPromptIntInput(string prompt, string? rePrompt = null)

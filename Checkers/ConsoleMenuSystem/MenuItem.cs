@@ -4,13 +4,18 @@ public class MenuItem
 {
     public string Text;
     public readonly string? Id;
-    private readonly Func<Menu, EMenuFunction> _action;
+    private readonly Func<Menu, MenuItem, EMenuFunction> _action;
 
-    public MenuItem(string text, Func<Menu, EMenuFunction> action, string? id = null)
+    public MenuItem(string text, Func<Menu, MenuItem, EMenuFunction> action, string? id = null)
     {
         Text = text;
         _action = action;
         Id = id;
+    }
+
+    public MenuItem(string text, Func<Menu, EMenuFunction> action, string? id = null)
+        : this(text, (m, _) => action(m), id)
+    {
     }
 
     public MenuItem(string text, EMenuFunction type, string? id = null) : this(text, _ => type, id)
@@ -35,7 +40,7 @@ public class MenuItem
 
     public EMenuFunction Run(Menu menu)
     {
-        return _action(menu);
+        return _action(menu, this);
     }
 
     public override string ToString()

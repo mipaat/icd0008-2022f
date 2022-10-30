@@ -13,17 +13,12 @@ public class ConsoleGame
     private readonly ConsoleWindow _consoleWindow;
     private readonly IRepositoryContext _repositoryContext;
 
-    private string _player1Id;
-    private string? _player2Id;
-
     public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain,
         IRepositoryContext repositoryContext)
     {
         _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;
         _repositoryContext = repositoryContext;
-        _player1Id = "1";
-        _player2Id = null;
     }
 
     private static string GetPieceDisplay(GamePiece? gamePiece)
@@ -53,7 +48,7 @@ public class ConsoleGame
         return result.ToString();
     }
 
-    public static string EncodeLetterCoords(int letterCoords)
+    private static string EncodeLetterCoords(int letterCoords)
     {
         var charId = letterCoords % 26;
         var charMultiplier = letterCoords / 26 + 1;
@@ -61,7 +56,7 @@ public class ConsoleGame
         return new string(letter, charMultiplier);
     }
 
-    public static int DecodeLetterCoords(string letterCoords)
+    private static int DecodeLetterCoords(string letterCoords)
     {
         const int baseOffset = 'A';
 
@@ -125,7 +120,8 @@ public class ConsoleGame
                         }
                         catch (Exception e)
                         {
-                            _consoleWindow.PopupPromptTextInput("Input caused the following error: " + e.ToString().Split("\n")[0]);
+                            _consoleWindow.PopupPromptTextInput("Input caused the following error: " +
+                                                                e.ToString().Split("\n")[0]);
                         }
                     }
 
@@ -135,27 +131,9 @@ public class ConsoleGame
             _consoleWindow.ClearRenderQueue();
         }
 
-        var saveGameInput = _consoleWindow.PopupPromptTextInput("Save game? (y/n)")?.ToLower() ?? "";
+        var saveGameInput = _consoleWindow.PopupPromptBoolInput("Save game?");
 
-        var breakFor = false;
-        for (var i = 0; i < 3 && !breakFor; i++)
-        {
-            switch (saveGameInput)
-            {
-                case "y":
-                    _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.GetSaveGameState());
-                    breakFor = true;
-                    break;
-                case "n":
-                    breakFor = true;
-                    break;
-                default:
-                    saveGameInput = _consoleWindow.PopupPromptTextInput("Save game? (y/n)",
-                            $"Input '{saveGameInput}' not recognized! Auto-quitting without saving in {3 - i} more failed attempts!")
-                        ?.ToLower() ?? "";
-                    break;
-            }
-        }
+        if (saveGameInput) _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.GetSaveGameState());
     }
 
     private static string BoundaryLine(int cells)

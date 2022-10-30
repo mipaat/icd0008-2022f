@@ -9,7 +9,7 @@ using Domain;
 using GameBrain;
 using Microsoft.EntityFrameworkCore;
 
-var window = new ConsoleWindow("Checkers", 50, 20);
+var window = new ConsoleWindow("Checkers");
 
 var selectedCheckersOptions = new CheckersOptions();
 CheckersGame? selectedCheckersGame = null;
@@ -17,8 +17,8 @@ CheckersGame? selectedCheckersGame = null;
 using var ctx = AppDbContextFactory.CreateDbContext();
 ctx.Database.Migrate();
 
-var repoDb = new RepositoryContext(ctx);
-var repoFs = new DAL.FileSystem.RepositoryContext();
+RepositoryContext repoDb = new RepositoryContext(ctx);
+DAL.FileSystem.RepositoryContext repoFs = new DAL.FileSystem.RepositoryContext();
 IRepositoryContext repoCtx = repoDb;
 
 EMenuFunction RunConsoleGame(Menu menu)
@@ -158,32 +158,26 @@ var createOptions = new MenuItem("Create new custom options", m =>
                         customOptions.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height");
                         return EMenuFunction.Refresh;
                     }),
-                    new MenuItem($"Black moves first: {customOptions.BlackMovesFirst}", m2 =>
+                    new MenuItem($"Black moves first: {customOptions.BlackMovesFirst}", _ =>
                     {
-                        customOptions.BlackMovesFirst =
-                            m2.ConsoleWindow.PopupPromptBoolInput("Should black pieces start the game?");
+                        customOptions.BlackMovesFirst = !customOptions.BlackMovesFirst;
                         return EMenuFunction.Refresh;
                     }),
-                    new MenuItem($"Must capture piece if able: {customOptions.MustCapture}", m2 =>
+                    new MenuItem($"Must capture piece if able: {customOptions.MustCapture}", _ =>
                     {
-                        customOptions.MustCapture =
-                            m2.ConsoleWindow.PopupPromptBoolInput(
-                                "If a player can capture a piece, must they capture it?");
+                        customOptions.MustCapture = !customOptions.MustCapture;
                         return EMenuFunction.Refresh;
                     }),
-                    new MenuItem("Backwards jumps: " + (customOptions.CanJumpBackwards ? "yes" : "no"), m2 =>
+                    new MenuItem($"Backwards jumps: {customOptions.CanJumpBackwards}", _ =>
                     {
-                        customOptions.CanJumpBackwards =
-                            m2.ConsoleWindow.PopupPromptBoolInput("Can regular pieces jump backwards?");
+                        customOptions.CanJumpBackwards = !customOptions.CanJumpBackwards;
                         return EMenuFunction.Refresh;
                     }),
                     new MenuItem(
-                        "Multi-capture backwards jumps: " +
-                        (customOptions.CanJumpBackwardsDuringMultiCapture ? "yes" : "no"), m2 =>
+                        $"Multi-capture backwards jumps: {customOptions.CanJumpBackwardsDuringMultiCapture}", _ =>
                         {
                             customOptions.CanJumpBackwardsDuringMultiCapture =
-                                m2.ConsoleWindow.PopupPromptBoolInput(
-                                    "Can regular pieces jump backwards during a multi-capture jump?");
+                                !customOptions.CanJumpBackwardsDuringMultiCapture;
                             return EMenuFunction.Refresh;
                         }),
                     new MenuItem("Options title: " + customOptions.Title, m2 =>
@@ -261,22 +255,21 @@ var deleteOptionsMenuFactory = new MenuFactory("Delete options")
     }
 };
 
-const string swapPersistenceEngineBaseText = "Swap persistence engine";
-MenuItem swapPersistenceEngine = default!;
-swapPersistenceEngine = new MenuItem(swapPersistenceEngineBaseText + $" (Current: {repoCtx.Name})", m =>
+IRepositoryContext OtherRepoCtx()
 {
-    IRepositoryContext otherRepoCtx = repoCtx == repoDb ? repoFs : repoDb;
-    var switchPersistenceEngine =
-        m.ConsoleWindow.PopupPromptBoolInput(
-            $"Switch persistence engine from {repoCtx.Name} to {otherRepoCtx.Name}?");
-    if (!switchPersistenceEngine) return EMenuFunction.Continue;
+    return repoCtx == repoDb ? repoFs : repoDb;
+}
 
-    var successMessage =
-        $"Successfully switched persistence engine from {repoCtx.Name} to {otherRepoCtx.Name}!";
-    repoCtx = otherRepoCtx;
-    m.ConsoleWindow.MessageBox(successMessage);
-    swapPersistenceEngine.Text = swapPersistenceEngineBaseText + $" (Current: {repoCtx.Name})";
-    return EMenuFunction.MainMenu;
+string GetRepoSwapText()
+{
+    return $"Swap persistence engine? ({repoCtx.Name} => {OtherRepoCtx().Name})";
+}
+
+var swapPersistenceEngine = new MenuItem(GetRepoSwapText(), (_, mi) =>
+{
+    repoCtx = OtherRepoCtx();
+    mi.Text = GetRepoSwapText();
+    return EMenuFunction.Continue;
 });
 
 var optionsManagerMenuCreator = new MenuFactory("Options",
@@ -284,7 +277,7 @@ var optionsManagerMenuCreator = new MenuFactory("Options",
     new MenuItem("View", viewOptionsMenuFactory),
     new MenuItem("Delete", deleteOptionsMenuFactory),
     swapPersistenceEngine
-    );
+);
 
 var mainMenuCreator = new MenuFactory("Main menu",
     new MenuItem("New game", loadGameOptionsMenuFactory),

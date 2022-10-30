@@ -1,6 +1,5 @@
 using Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace DAL.Db;
 

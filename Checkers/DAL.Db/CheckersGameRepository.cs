@@ -29,6 +29,8 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
                 .Include(cg => cg.CheckersStates)
                 .Include(cg => cg.CheckersOptions)
             )
+            .ToList()
+            .OrderByDescending(cg=> cg.CurrentCheckersState!.CreatedAt)
             .ToList();
     }
 
