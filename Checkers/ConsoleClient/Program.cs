@@ -144,10 +144,11 @@ var createOptions = new MenuItem("Create new custom options", m =>
     {
         try
         {
+            var previousCursorPosition = 0;
             var result = EMenuFunction.Refresh;
             while (result == EMenuFunction.Refresh)
             {
-                result = new Menu("Customize options", m.ConsoleWindow, null, m,
+                var optionsEditMenu = new Menu("Customize options", m.ConsoleWindow, null, m,
                     new MenuItem($"Game board width: {customOptions.Width}", m2 =>
                     {
                         customOptions.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width");
@@ -197,7 +198,10 @@ var createOptions = new MenuItem("Create new custom options", m =>
                         repoCtx.CheckersOptionsRepository.Add(customOptions);
                         return EMenuFunction.Back;
                     })
-                ).Run();
+                );
+                optionsEditMenu.CursorPosition = previousCursorPosition;
+                result = optionsEditMenu.Run();
+                previousCursorPosition = optionsEditMenu.CursorPosition;
             }
 
             return result;
