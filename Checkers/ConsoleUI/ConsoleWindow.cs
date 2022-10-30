@@ -271,7 +271,7 @@ public class ConsoleWindow
 
             return true;
         }
-        
+
         string? input = null;
         while (true)
         {
@@ -282,9 +282,26 @@ public class ConsoleWindow
         }
     }
 
-    public int PopupPromptIntInput(string prompt, string? rePrompt = null)
+    public delegate bool ValidityFunc<in T>(T input, out string? rePrompt);
+
+    public int PopupPromptIntInput(string prompt, ValidityFunc<int>? validityFunc = null)
     {
-        return int.Parse(PopupPromptTextInput(prompt, rePrompt));
+        string? rePrompt = null;
+        while (true)
+        {
+            var textInput = PopupPromptTextInput(prompt, rePrompt);
+            if (int.TryParse(textInput, out var input))
+            {
+                if (validityFunc != null && !validityFunc(input, out rePrompt))
+                {
+                    continue;
+                }
+
+                return input;
+            }
+
+            rePrompt = $"Couldn't get integer from '{textInput}'!";
+        }
     }
 
     public string? RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)
@@ -305,7 +322,7 @@ public class ConsoleWindow
         return result;
     }
 
-    public void MessageBox(params string[] messageLines)
+    public void PopUpMessageBox(params string[] messageLines)
     {
         ClearRenderQueue();
 

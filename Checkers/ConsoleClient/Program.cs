@@ -45,7 +45,7 @@ EMenuFunction RunConsoleGame(Menu menu)
     }
     catch (ArgumentOutOfRangeException e)
     {
-        menu.ConsoleWindow.MessageBox("An error occurred when attempting to run Checkers game!", e.Message);
+        menu.ConsoleWindow.PopUpMessageBox("An error occurred when attempting to run Checkers game!", e.Message);
     }
     finally
     {
@@ -60,17 +60,8 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
 {
     var consoleWindow = menu.ConsoleWindow;
 
-    if (!int.TryParse(consoleWindow.PopupPromptTextInput("Enter board horizontal dimension:"), out var x))
-    {
-        consoleWindow.MessageBox("Board dimension must be an integer!");
-        return EMenuFunction.Continue;
-    }
-
-    if (!int.TryParse(consoleWindow.PopupPromptTextInput("Enter board vertical dimension:"), out var y))
-    {
-        consoleWindow.MessageBox("Board dimension must be an integer!");
-        return EMenuFunction.Continue;
-    }
+    var x = consoleWindow.PopupPromptIntInput("Enter board horizontal dimension:", CheckersOptions.IsDimensionValid);
+    var y = consoleWindow.PopupPromptIntInput("Enter board vertical dimension:", CheckersOptions.IsDimensionValid);
 
     selectedCheckersOptions = new CheckersOptions { Width = x, Height = y, Title = $"{x}x{y}", Saved = false };
     return RunConsoleGame(menu);
@@ -151,12 +142,12 @@ var createOptions = new MenuItem("Create new custom options", m =>
                 var optionsEditMenu = new Menu("Customize options", m.ConsoleWindow, null, m,
                     new MenuItem($"Game board width: {customOptions.Width}", m2 =>
                     {
-                        customOptions.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width");
+                        customOptions.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width", CheckersOptions.IsDimensionValid);
                         return EMenuFunction.Refresh;
                     }),
                     new MenuItem($"Game board height: {customOptions.Height}", m2 =>
                     {
-                        customOptions.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height");
+                        customOptions.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height", CheckersOptions.IsDimensionValid);
                         return EMenuFunction.Refresh;
                     }),
                     new MenuItem($"Black moves first: {customOptions.BlackMovesFirst}", _ =>
@@ -208,7 +199,7 @@ var createOptions = new MenuItem("Create new custom options", m =>
         }
         catch (Exception e)
         {
-            m.ConsoleWindow.MessageBox($"An error occurred: {e.ToString().Split("\n")[0]}");
+            m.ConsoleWindow.PopUpMessageBox($"An error occurred: {e.ToString().Split("\n")[0]}");
         }
     }
 });
@@ -223,7 +214,7 @@ var viewOptionsMenuFactory = new MenuFactory("View options")
             checkersOptionsToView.Add(new MenuItem($"{checkersOptions.Title}",
                 m =>
                 {
-                    m.ConsoleWindow.MessageBox("Title: " + checkersOptions.Title,
+                    m.ConsoleWindow.PopUpMessageBox("Title: " + checkersOptions.Title,
                         "Description: " + checkersOptions.Description,
                         "Width: " + checkersOptions.Width,
                         "Height: " + checkersOptions.Height,

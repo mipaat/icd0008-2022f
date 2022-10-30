@@ -26,7 +26,6 @@ public class CheckersBrain : AbstractCheckersBrain
         _checkersGame = checkersGame;
 
         var checkersOptions = checkersGame.CheckersOptions;
-        CheckDimensionsValid(checkersOptions.Width, checkersOptions.Height);
         _checkersOptions = checkersOptions;
 
         if (_checkersGame.CurrentCheckersState != null)
@@ -56,18 +55,9 @@ public class CheckersBrain : AbstractCheckersBrain
             StartedAt = DateTime.Now
         };
 
-        CheckDimensionsValid(checkersOptions.Width, checkersOptions.Height);
         _checkersOptions = checkersOptions;
         _pieces = new GamePiece?[checkersOptions.Width, checkersOptions.Height];
         InitializePieces();
-    }
-
-    private static void CheckDimensionsValid(int x, int y)
-    {
-        if (RowsPerPlayer(y) < 1 || x < 4)
-        {
-            throw new ArgumentOutOfRangeException($"Dimensions ({x}, {y}) too small to initialize GameBoard!");
-        }
     }
 
     private int RowsPerPlayer()

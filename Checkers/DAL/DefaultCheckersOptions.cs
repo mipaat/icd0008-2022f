@@ -2,7 +2,7 @@ using Domain;
 
 namespace DAL;
 
-public class DefaultCheckersOptions
+public static class DefaultCheckersOptions
 {
     public static List<CheckersOptions> DefaultOptions => new()
     {
