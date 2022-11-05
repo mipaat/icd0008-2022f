@@ -8,7 +8,7 @@ public class CheckersState : AbstractDatabaseEntity
 {
     public int CheckersGameId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 
     [JsonIgnore] [NotMapped] public GamePiece?[,] GamePieces { get; set; } = default!;
     public string SerializedGamePieces { get; set; } = default!;

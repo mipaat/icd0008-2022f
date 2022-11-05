@@ -52,7 +52,7 @@ public class CheckersBrain : AbstractCheckersBrain
             BlackPlayerId = null,
             CheckersOptions = checkersOptions,
             CheckersStates = new List<CheckersState>(),
-            StartedAt = DateTime.Now
+            StartedAt = DateTime.Now.ToUniversalTime()
         };
 
         _checkersOptions = checkersOptions;
@@ -141,7 +141,7 @@ public class CheckersBrain : AbstractCheckersBrain
 
         return new CheckersState
         {
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.Now.ToUniversalTime(),
             GamePieces = gamePiecesCopy,
             MoveElapsedTime = MoveElapsedTime,
             GameElapsedTime = GameElapsedTime,
