@@ -90,7 +90,7 @@ var loadGameMenuFactory = new MenuFactory("Load game", _ =>
     foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
     {
         gamesToLoad.Add(new MenuItem(
-            $"{checkersGame.Id} | {checkersGame.CheckersRuleset.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
+            $"{checkersGame.Id} | {checkersGame.CheckersRuleset!.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
             m =>
             {
                 selectedCheckersGame = checkersGame;
@@ -107,7 +107,7 @@ var deleteGameMenuFactory = new MenuFactory("Delete game", _ =>
     foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
     {
         gamesToDelete.Add(new MenuItem(
-            $"{checkersGame.Id} | {checkersGame.CheckersRuleset.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
+            $"{checkersGame.Id} | {checkersGame.CheckersRuleset!.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
             _ =>
             {
                 repoCtx.CheckersGameRepository.Remove(checkersGame.Id);

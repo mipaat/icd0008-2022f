@@ -21,18 +21,16 @@ namespace WebApp.Pages.CheckersGames
 
         public IActionResult OnGet()
         {
-        ViewData["CheckersRulesetId"] = new SelectList(_context.CheckersRulesets, "Id", "Id");
+            ViewData["CheckersRulesetId"] = new SelectList(_context.CheckersRulesets, "Id", "Id");
             return Page();
         }
 
-        [BindProperty]
-        public CheckersGame CheckersGame { get; set; } = default!;
-        
+        [BindProperty] public CheckersGame CheckersGame { get; set; } = default!;
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-          if (!ModelState.IsValid || _context.CheckersGames == null || CheckersGame == null)
+            if (!ModelState.IsValid || _context.CheckersGames == null || CheckersGame == null)
             {
                 return Page();
             }

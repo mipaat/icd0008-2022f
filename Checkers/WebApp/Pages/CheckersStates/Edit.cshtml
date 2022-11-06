@@ -19,7 +19,7 @@
                 <span asp-validation-for="CheckersState.CheckersGameId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.CreatedAt" class="control-label"></label>
+                <label asp-for="CheckersState.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersState.CreatedAt) (UTC)</label>
                 <input asp-for="CheckersState.CreatedAt" class="form-control" />
                 <span asp-validation-for="CheckersState.CreatedAt" class="text-danger"></span>
             </div>

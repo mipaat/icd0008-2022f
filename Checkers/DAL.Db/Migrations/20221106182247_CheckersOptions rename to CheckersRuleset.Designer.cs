@@ -28,9 +28,8 @@ namespace DAL.Db.Migrations
                     b.Property<string>("BlackPlayerId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CheckersOptionsId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("CheckersRulesetId");
+                    b.Property<int>("CheckersRulesetId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("TEXT");
@@ -46,12 +45,12 @@ namespace DAL.Db.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckersOptionsId");
+                    b.HasIndex("CheckersRulesetId");
 
                     b.ToTable("CheckersGames");
                 });
 
-            modelBuilder.Entity("Domain.CheckersOptions", b =>
+            modelBuilder.Entity("Domain.CheckersRuleset", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,13 +134,13 @@ namespace DAL.Db.Migrations
 
             modelBuilder.Entity("Domain.CheckersGame", b =>
                 {
-                    b.HasOne("Domain.CheckersOptions", "CheckersOptions")
+                    b.HasOne("Domain.CheckersRuleset", "CheckersRuleset")
                         .WithMany()
-                        .HasForeignKey("CheckersOptionsId")
+                        .HasForeignKey("CheckersRulesetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CheckersOptions");
+                    b.Navigation("CheckersRuleset");
                 });
 
             modelBuilder.Entity("Domain.CheckersState", b =>

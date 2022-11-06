@@ -44,12 +44,12 @@
                 <span asp-validation-for="CheckersRuleset.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.CreatedAt" class="control-label"></label>
+                <label asp-for="CheckersRuleset.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.CreatedAt) (UTC)</label>
                 <input asp-for="CheckersRuleset.CreatedAt" class="form-control" />
                 <span asp-validation-for="CheckersRuleset.CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.LastModified" class="control-label"></label>
+                <label asp-for="CheckersRuleset.LastModified" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.LastModified) (UTC)</label>
                 <input asp-for="CheckersRuleset.LastModified" class="form-control" />
                 <span asp-validation-for="CheckersRuleset.LastModified" class="text-danger"></span>
             </div>

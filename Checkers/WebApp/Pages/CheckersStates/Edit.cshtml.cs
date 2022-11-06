@@ -36,6 +36,7 @@ namespace WebApp.Pages.CheckersStates
                 return NotFound();
             }
             CheckersState = checkersstate;
+            ViewData["CheckersGameId"] = new SelectList(_context.CheckersGames, "Id", "Id");
             return Page();
         }
 

@@ -25,7 +25,7 @@ public class CheckersBrain : AbstractCheckersBrain
     {
         _checkersGame = checkersGame;
 
-        var checkersRuleset = checkersGame.CheckersRuleset;
+        var checkersRuleset = checkersGame.CheckersRuleset!;
         _checkersRuleset = checkersRuleset;
 
         if (_checkersGame.CurrentCheckersState != null)

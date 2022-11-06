@@ -12,31 +12,38 @@
 </p>
 <table class="table">
     <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].WhitePlayerId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].BlackPlayerId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].CheckersRuleset)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].StartedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].EndedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersGame[0].Winner)
-            </th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].Id)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].WhitePlayerId)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].BlackPlayerId)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].CheckersRuleset)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].StartedAt) (UTC)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].EndedAt) (UTC)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].Winner)
+        </th>
+        <th></th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.CheckersGame) {
+    @foreach (var item in Model.CheckersGame)
+    {
         <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhitePlayerId)
             </td>
@@ -44,7 +51,7 @@
                 @Html.DisplayFor(modelItem => item.BlackPlayerId)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CheckersRuleset.Id)
+                @Html.DisplayFor(modelItem => item.CheckersRulesetId)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StartedAt)
@@ -61,6 +68,6 @@
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
-}
+    }
     </tbody>
 </table>

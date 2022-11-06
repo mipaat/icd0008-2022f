@@ -10,7 +10,7 @@ public class CheckersState : AbstractDatabaseEntity
 
     public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 
-    [JsonIgnore] [NotMapped] public GamePiece?[,] GamePieces { get; set; } = default!;
+    [JsonIgnore] [NotMapped] public GamePiece?[,]? GamePieces { get; set; }
     public string SerializedGamePieces { get; set; } = default!;
 
     public TimeSpan MoveElapsedTime { get; set; }
@@ -34,7 +34,7 @@ public class CheckersState : AbstractDatabaseEntity
 
     public void SerializeGamePieces()
     {
-        var compressedGamePieces = new CompressedGamePieces(GamePieces.GetLength(0), GamePieces.GetLength(1));
+        var compressedGamePieces = new CompressedGamePieces(GamePieces!.GetLength(0), GamePieces.GetLength(1));
         for (var y = 0; y < GamePieces.GetLength(1); y++)
         {
             for (var x = 0; x < GamePieces.GetLength(0); x++)

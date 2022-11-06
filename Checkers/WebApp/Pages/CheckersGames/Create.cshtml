@@ -28,12 +28,12 @@
                 <select asp-for="CheckersGame.CheckersRulesetId" class ="form-control" asp-items="ViewBag.CheckersRulesetId"></select>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.StartedAt" class="control-label"></label>
+                <label asp-for="CheckersGame.StartedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersGame.StartedAt) (UTC)</label>
                 <input asp-for="CheckersGame.StartedAt" class="form-control" />
                 <span asp-validation-for="CheckersGame.StartedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.EndedAt" class="control-label"></label>
+                <label asp-for="CheckersGame.EndedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersGame.EndedAt) (UTC)</label>
                 <input asp-for="CheckersGame.EndedAt" class="form-control" />
                 <span asp-validation-for="CheckersGame.EndedAt" class="text-danger"></span>
             </div>

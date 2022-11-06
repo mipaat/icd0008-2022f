@@ -22,8 +22,8 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
 
     protected override string Serialize(CheckersGame entity)
     {
-        RepositoryContext.CheckersRulesetRepository.Upsert(entity.CheckersRuleset);
-        entity.CheckersRulesetId = entity.CheckersRuleset.Id;
+        RepositoryContext.CheckersRulesetRepository.Upsert(entity.CheckersRuleset!);
+        entity.CheckersRulesetId = entity.CheckersRuleset!.Id;
 
         foreach (var checkersState in entity.AssertSufficientCheckersStates())
         {
