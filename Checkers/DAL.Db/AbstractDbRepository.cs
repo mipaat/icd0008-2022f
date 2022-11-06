@@ -72,7 +72,7 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
     {
         if (Exists(entity.Id))
             throw new ArgumentException(
-                $"Can't update entity {typeof(T).Name} with ID {entity.Id} - ID already exists!");
+                $"Can't add entity {typeof(T).Name} with ID {entity.Id} - ID already exists!");
         ThisDbSet.Add(RunPreSaveActions(entity));
         DbContext.SaveChanges();
     }
@@ -107,5 +107,10 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
     public bool Exists(int id)
     {
         return ThisDbSet.Any(t => id.Equals(t.Id));
+    }
+
+    public void Refresh(T entity)
+    {
+        DbContext.Entry(entity).Reload();
     }
 }

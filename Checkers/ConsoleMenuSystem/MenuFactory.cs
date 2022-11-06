@@ -4,25 +4,36 @@ namespace ConsoleMenuSystem;
 
 public class MenuFactory
 {
-    public readonly string Title;
-    public readonly string? Id;
-    public List<MenuItem> StaticMenuItems;
-    public Func<List<MenuItem>>? MenuItemsFunc;
-    public List<MenuItem> MenuItems => MenuItemsFunc != null ? MenuItemsFunc() : StaticMenuItems;
+    private Func<Menu, List<MenuItem>> MenuItemsFunc { get; }
+    public bool AppendDefaultMenuItems;
 
-    public MenuFactory(string title, params MenuItem[] menuItems) : this(title, null, menuItems)
+    private Func<Menu, string> TitleFunc { get; }
+
+    public MenuFactory(Func<Menu, string> titleFunc, Func<Menu, List<MenuItem>> menuItemsFunc,
+        bool appendDefaultMenuItems = true)
+    {
+        TitleFunc = titleFunc;
+        MenuItemsFunc = menuItemsFunc;
+        AppendDefaultMenuItems = appendDefaultMenuItems;
+    }
+
+    public MenuFactory(string title, Func<Menu, List<MenuItem>> menuItemsFunc, bool appendDefaultMenuItems = true) :
+        this(_ => title, menuItemsFunc, appendDefaultMenuItems)
     {
     }
 
-    public MenuFactory(string title, string? id, params MenuItem[] menuItems)
+    public MenuFactory(string title, params MenuItem[] menuItems) :
+        this(title, _ => menuItems.ToList())
     {
-        Title = title;
-        Id = id;
-        StaticMenuItems = menuItems.ToList();
+    }
+
+    public MenuFactory(Func<Menu, string> titleFunc, params MenuItem[] menuItems) :
+        this(titleFunc, _ => menuItems.ToList())
+    {
     }
 
     public Menu Create(ConsoleWindow consoleWindow, Menu? parentMenu = null)
     {
-        return new Menu(Title, consoleWindow, Id, parentMenu, MenuItems.ToArray());
+        return new Menu(consoleWindow, TitleFunc, MenuItemsFunc, parentMenu, AppendDefaultMenuItems);
     }
 }

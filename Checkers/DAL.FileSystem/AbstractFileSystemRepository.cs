@@ -15,6 +15,16 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
                                      DirectorySeparator + "FileSystemRepo" +
                                      DirectorySeparator + RepositoryName;
 
+    private string IdFilePath => RepositoryPath + DirectorySeparator + ".NextID";
+
+    protected ICollection<Action<T>> PreSaveActions { get; }
+
+    protected AbstractFileSystemRepository(RepositoryContext repositoryContext)
+    {
+        RepositoryContext = repositoryContext;
+        PreSaveActions = new List<Action<T>>();
+    }
+
     private void EnsureDirectoryExists()
     {
         Directory.CreateDirectory(RepositoryPath);
@@ -28,7 +38,8 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     protected virtual T Deserialize(string serializedData)
     {
         var result = System.Text.Json.JsonSerializer.Deserialize<T>(serializedData);
-        if (result == null) throw new NullReferenceException($"Could not deserialize {typeof(T).Name} from '{serializedData}'!");
+        if (result == null)
+            throw new NullReferenceException($"Could not deserialize {typeof(T).Name} from '{serializedData}'!");
         return result;
     }
 
@@ -36,8 +47,6 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     {
         return System.Text.Json.JsonSerializer.Serialize(entity);
     }
-
-    private string IdFilePath => RepositoryPath + DirectorySeparator + ".NextID";
 
     private int GetNextId()
     {
@@ -62,11 +71,6 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     }
 
     protected readonly RepositoryContext RepositoryContext;
-
-    protected AbstractFileSystemRepository(RepositoryContext repositoryContext)
-    {
-        RepositoryContext = repositoryContext;
-    }
 
     public ICollection<T> GetAll()
     {
@@ -150,5 +154,10 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     public bool Exists(int id)
     {
         return File.Exists(GetFilePath(id));
+    }
+
+    public void Refresh(T entity)
+    {
+        entity = Exists(entity.Id) ? GetById(entity.Id) : entity;
     }
 }

@@ -4,29 +4,40 @@ namespace ConsoleMenuSystem;
 
 public class Menu
 {
-    public string Title { get; }
-    public string? Id { get; }
-
+    public static readonly MenuItem Exit = new("Exit", EMenuFunction.Exit);
+    public static readonly MenuItem Back = new("Back", EMenuFunction.Back);
+    public static readonly MenuItem MainMenu = new("Main Menu", EMenuFunction.MainMenu);
     private const int Height = 12;
 
+    public readonly ConsoleWindow ConsoleWindow;
     public readonly Menu? ParentMenu;
 
-    private static readonly MenuItem Exit = new("Exit", EMenuFunction.Exit);
-    private static readonly MenuItem Back = new("Back", EMenuFunction.Back);
-    private static readonly MenuItem Main = new("Main Menu", EMenuFunction.MainMenu);
-    private readonly List<MenuItem> _menuItems = new();
+    private readonly Func<Menu, string> _titleFunc;
+    public string Title => _titleFunc(this);
 
-    public MenuItem SelectedItem => MenuItems[CursorPosition];
+    private readonly bool _appendDefaultMenuItems;
 
-    public readonly ConsoleWindow ConsoleWindow;
+    private readonly Func<Menu, List<MenuItem>> _menuItemsFunc;
 
     public List<MenuItem> MenuItems
     {
         get
         {
-            var result = new List<MenuItem>(_menuItems);
+            var result = _menuItemsFunc(this);
+
+            if (_appendDefaultMenuItems) result.AddRange(BuiltInMenuItems);
+
+            return result;
+        }
+    }
+
+    public List<MenuItem> BuiltInMenuItems
+    {
+        get
+        {
+            var result = new List<MenuItem>();
             if (ParentMenu is not null) result.Add(Back);
-            if (Hierarchy.Count > 2) result.Add(Main);
+            if (Hierarchy.Count > 2) result.Add(MainMenu);
             result.Add(Exit);
             return result;
         }
@@ -51,7 +62,11 @@ public class Menu
 
     public int CursorPosition
     {
-        get => _cursorPosition;
+        get
+        {
+            _cursorPosition = Math.Max(Math.Min(_cursorPosition, MenuItems.Count - 1), 0);
+            return _cursorPosition;
+        }
         set
         {
             var menuItems = MenuItems;
@@ -64,30 +79,17 @@ public class Menu
 
     public string MenuPath => (ParentMenu?.MenuPath ?? "") + Title + "/";
 
-    public Menu(string title, ConsoleWindow consoleWindow, string? id = null, Menu? parentMenu = null,
-        params MenuItem[] menuItems)
+    public Menu(ConsoleWindow consoleWindow,
+        Func<Menu, string> titleFunc,
+        Func<Menu, List<MenuItem>> menuItemsFunc,
+        Menu? parentMenu = null,
+        bool appendDefaultMenuItems = true)
     {
-        Title = title;
-        Id = id;
         ConsoleWindow = consoleWindow;
+        _titleFunc = titleFunc;
+        _menuItemsFunc = menuItemsFunc;
         ParentMenu = parentMenu;
-
-        AddMenuItems(menuItems);
-    }
-
-    public MenuItem? GetSelectedItem(string menuId)
-    {
-        if (Id == menuId && _menuItems.Contains(SelectedItem))
-        {
-            return SelectedItem;
-        }
-
-        return ParentMenu?.GetSelectedItem(menuId);
-    }
-
-    public string? GetSelectedItemId(string menuId)
-    {
-        return GetSelectedItem(menuId)?.Id;
+        _appendDefaultMenuItems = appendDefaultMenuItems;
     }
 
     public int IncrementCursorPosition(int amount = 1)
@@ -102,19 +104,6 @@ public class Menu
     public int DecrementCursorPosition(int amount = 1)
     {
         return IncrementCursorPosition(-amount);
-    }
-
-    private void AddMenuItem(MenuItem menuItem)
-    {
-        _menuItems.Add(menuItem);
-    }
-
-    private void AddMenuItems(params MenuItem[] menuItems)
-    {
-        foreach (var menuItem in menuItems)
-        {
-            AddMenuItem(menuItem);
-        }
     }
 
     private void WriteMenuItems(int start, int end)

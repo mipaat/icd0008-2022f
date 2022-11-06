@@ -1,6 +1,6 @@
 namespace Domain;
 
-public class CheckersOptions : AbstractDatabaseEntity
+public class CheckersOptions : AbstractDatabaseEntity, ICloneable
 {
     public bool BuiltIn { get; init; }
     public bool Saved { get; init; } = true;
@@ -29,8 +29,20 @@ public class CheckersOptions : AbstractDatabaseEntity
         }
     }
 
-    public string Title { get; set; } = "No Option Title";
+    private string? _title;
+    public string? Title
+    {
+        get => _title;
+        set
+        {
+            if (value?.Trim().Length > 0) _title = value;
+        }
+    }
+
+    public string TitleText => Title ?? $"No title! ({Width}x{Height}, Modified: {LastModified.ToLocalTime()})";
     public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
+    public DateTime LastModified { get; set; } = DateTime.Now.ToUniversalTime();
 
     public bool BlackMovesFirst { get; set; } = true;
     public bool MustCapture { get; set; } = true;
@@ -62,5 +74,31 @@ public class CheckersOptions : AbstractDatabaseEntity
                other.MustCapture == MustCapture && other.CanJumpBackwards == CanJumpBackwards &&
                other.CanJumpBackwardsDuringMultiCapture == CanJumpBackwardsDuringMultiCapture &&
                other.BuiltIn == BuiltIn && other.Saved == Saved && other.Title == Title;
+    }
+
+    public CheckersOptions GetClone()
+    {
+        return new CheckersOptions
+        {
+            Height = Height,
+            Width = Width,
+            BlackMovesFirst = BlackMovesFirst,
+            BuiltIn = false,
+            Saved = Saved,
+            CanJumpBackwards = CanJumpBackwards,
+            CanJumpBackwardsDuringMultiCapture = CanJumpBackwardsDuringMultiCapture,
+            Title = Title,
+            Description = Description
+        };
+    }
+
+    public object Clone()
+    {
+        return GetClone();
+    }
+
+    public void UpdateLastModified()
+    {
+        LastModified = DateTime.Now.ToUniversalTime();
     }
 }

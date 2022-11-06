@@ -14,6 +14,8 @@ public class CheckersOptionsRepository : AbstractDbRepository<CheckersOptions>, 
                 Add(checkersOptions);
             }
         }
+
+        PreSaveActions.Add(co => co.UpdateLastModified());
     }
 
     protected override DbSet<CheckersOptions> ThisDbSet => DbContext.CheckersOptions;

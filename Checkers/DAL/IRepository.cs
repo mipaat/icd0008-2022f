@@ -20,4 +20,6 @@ public interface IRepository<T>
     T Remove(T entity);
 
     bool Exists(int id);
+
+    void Refresh(T entity);
 }

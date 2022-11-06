@@ -15,6 +15,8 @@ public class CheckersOptionsRepository : AbstractFileSystemRepository<CheckersOp
                 Add(checkerOptions);
             }
         }
+
+        PreSaveActions.Add(co => co.UpdateLastModified());
     }
 
     private bool ExistsEquivalent(CheckersOptions checkersOptions)
