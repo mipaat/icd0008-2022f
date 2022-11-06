@@ -1,0 +1,55 @@
+@page
+@model WebApp.Pages.CheckersStates.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>CheckersState</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.CreatedAt)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.CreatedAt)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.SerializedGamePieces)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.SerializedGamePieces)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.MoveElapsedTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.MoveElapsedTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.GameElapsedTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.GameElapsedTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.WhiteMoves)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.WhiteMoves)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.BlackMoves)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.BlackMoves)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.CheckersState?.Id">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>

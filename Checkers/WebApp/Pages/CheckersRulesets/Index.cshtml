@@ -1,0 +1,102 @@
+@page
+@model WebApp.Pages.CheckersRulesets.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].BuiltIn)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Saved)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Width)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Height)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CreatedAt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].LastModified)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].BlackMovesFirst)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].MustCapture)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanJumpBackwards)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanJumpBackwardsDuringMultiCapture)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.CheckersRuleset) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.BuiltIn)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Saved)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Width)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Height)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedAt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastModified)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BlackMovesFirst)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MustCapture)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanJumpBackwards)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanJumpBackwardsDuringMultiCapture)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

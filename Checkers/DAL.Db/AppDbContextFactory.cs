@@ -7,18 +7,24 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public static AppDbContext CreateDbContext()
     {
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+        
+        ConfigureOptions(optionsBuilder);
+
+        return new AppDbContext(optionsBuilder.Options);
+    }
+
+    public static void ConfigureOptions(DbContextOptionsBuilder optionsBuilder)
+    {
         var directorySeparator = Path.DirectorySeparatorChar;
         var sqliteRepoDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
                                   directorySeparator + "ICD0008Checkers" +
                                   directorySeparator + "Data" +
                                   directorySeparator + "Sqlite" +
                                   directorySeparator;
-        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
         Directory.CreateDirectory(sqliteRepoDirectory);
         optionsBuilder.UseSqlite("Data source=" + sqliteRepoDirectory + "Checkers.db");
-
-        return new AppDbContext(optionsBuilder.Options);
     }
 
     public AppDbContext CreateDbContext(string[] args)

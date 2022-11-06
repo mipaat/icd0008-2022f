@@ -1,0 +1,91 @@
+@page
+@model WebApp.Pages.CheckersRulesets.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>CheckersRuleset</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.BuiltIn)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.BuiltIn)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.Saved)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.Saved)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.Width)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.Width)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.Height)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.Height)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.Title)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.Title)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.Description)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.CreatedAt)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.CreatedAt)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.LastModified)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.LastModified)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.BlackMovesFirst)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.BlackMovesFirst)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.MustCapture)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.MustCapture)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.CanJumpBackwards)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.CanJumpBackwards)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersRuleset.CanJumpBackwardsDuringMultiCapture)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersRuleset.CanJumpBackwardsDuringMultiCapture)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.CheckersRuleset?.Id">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>

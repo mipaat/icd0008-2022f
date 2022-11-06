@@ -1,0 +1,58 @@
+@page
+@model WebApp.Pages.CheckersStates.DeleteModel
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>CheckersState</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.CreatedAt)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.CreatedAt)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.SerializedGamePieces)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.SerializedGamePieces)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.MoveElapsedTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.MoveElapsedTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.GameElapsedTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.GameElapsedTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.WhiteMoves)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.WhiteMoves)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CheckersState.BlackMoves)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CheckersState.BlackMoves)
+        </dd>
+    </dl>
+    
+    <form method="post">
+        <input type="hidden" asp-for="CheckersState.Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-page="./Index">Back to List</a>
+    </form>
+</div>

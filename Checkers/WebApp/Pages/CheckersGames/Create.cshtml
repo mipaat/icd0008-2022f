@@ -1,0 +1,58 @@
+@page
+@model WebApp.Pages.CheckersGames.CreateModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>CheckersGame</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.WhitePlayerId" class="control-label"></label>
+                <input asp-for="CheckersGame.WhitePlayerId" class="form-control" />
+                <span asp-validation-for="CheckersGame.WhitePlayerId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.BlackPlayerId" class="control-label"></label>
+                <input asp-for="CheckersGame.BlackPlayerId" class="form-control" />
+                <span asp-validation-for="CheckersGame.BlackPlayerId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.CheckersRulesetId" class="control-label"></label>
+                <select asp-for="CheckersGame.CheckersRulesetId" class ="form-control" asp-items="ViewBag.CheckersRulesetId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.StartedAt" class="control-label"></label>
+                <input asp-for="CheckersGame.StartedAt" class="form-control" />
+                <span asp-validation-for="CheckersGame.StartedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.EndedAt" class="control-label"></label>
+                <input asp-for="CheckersGame.EndedAt" class="form-control" />
+                <span asp-validation-for="CheckersGame.EndedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.Winner" class="control-label"></label>
+                <input asp-for="CheckersGame.Winner" class="form-control" />
+                <span asp-validation-for="CheckersGame.Winner" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
