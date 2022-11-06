@@ -2,29 +2,29 @@ using Domain;
 
 namespace DAL;
 
-public static class DefaultCheckersOptions
+public static class DefaultCheckersRulesets
 {
-    public static List<CheckersOptions> DefaultOptions => new()
+    public static List<CheckersRuleset> DefaultRulesets => new()
     {
-        new CheckersOptions
+        new CheckersRuleset
         {
             Title = "Classic (8x8)",
             BuiltIn = true,
         },
-        new CheckersOptions
+        new CheckersRuleset
         {
             Title = "10x10",
             BuiltIn = true,
             Width = 10,
             Height = 10,
         },
-        new CheckersOptions
+        new CheckersRuleset
         {
             Title = "No captures required",
             BuiltIn = true,
             MustCapture = false
         },
-        new CheckersOptions
+        new CheckersRuleset
         {
             Title = "Backwards jumps allowed",
             BuiltIn = true,

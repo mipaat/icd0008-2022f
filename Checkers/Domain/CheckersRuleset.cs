@@ -1,6 +1,6 @@
 namespace Domain;
 
-public class CheckersOptions : AbstractDatabaseEntity, ICloneable
+public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
 {
     public bool BuiltIn { get; init; }
     public bool Saved { get; init; } = true;
@@ -68,7 +68,7 @@ public class CheckersOptions : AbstractDatabaseEntity, ICloneable
         return true;
     }
 
-    public bool IsEquivalent(CheckersOptions other)
+    public bool IsEquivalent(CheckersRuleset other)
     {
         return other.Width == Width && other.Height == Height && other.BlackMovesFirst == BlackMovesFirst &&
                other.MustCapture == MustCapture && other.CanJumpBackwards == CanJumpBackwards &&
@@ -76,9 +76,9 @@ public class CheckersOptions : AbstractDatabaseEntity, ICloneable
                other.BuiltIn == BuiltIn && other.Saved == Saved && other.Title == Title;
     }
 
-    public CheckersOptions GetClone()
+    public CheckersRuleset GetClone()
     {
-        return new CheckersOptions
+        return new CheckersRuleset
         {
             Height = Height,
             Width = Width,

@@ -3,6 +3,7 @@ using System;
 using DAL.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Db.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221106182247_CheckersOptions rename to CheckersRuleset")]
+    partial class CheckersOptionsrenametoCheckersRuleset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
@@ -26,8 +28,9 @@ namespace DAL.Db.Migrations
                     b.Property<string>("BlackPlayerId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CheckersRulesetId")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("CheckersOptionsId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("CheckersRulesetId");
 
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("TEXT");
@@ -43,12 +46,12 @@ namespace DAL.Db.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckersRulesetId");
+                    b.HasIndex("CheckersOptionsId");
 
                     b.ToTable("CheckersGames");
                 });
 
-            modelBuilder.Entity("Domain.CheckersRuleset", b =>
+            modelBuilder.Entity("Domain.CheckersOptions", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -132,13 +135,13 @@ namespace DAL.Db.Migrations
 
             modelBuilder.Entity("Domain.CheckersGame", b =>
                 {
-                    b.HasOne("Domain.CheckersRuleset", "CheckersRuleset")
+                    b.HasOne("Domain.CheckersOptions", "CheckersOptions")
                         .WithMany()
-                        .HasForeignKey("CheckersRulesetId")
+                        .HasForeignKey("CheckersOptionsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CheckersRuleset");
+                    b.Navigation("CheckersOptions");
                 });
 
             modelBuilder.Entity("Domain.CheckersState", b =>

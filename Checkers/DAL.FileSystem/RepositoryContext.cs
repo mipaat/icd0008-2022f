@@ -5,12 +5,12 @@ public class RepositoryContext : IRepositoryContext
     public RepositoryContext()
     {
         CheckersGameRepository = new CheckersGameRepository(this);
-        CheckersOptionsRepository = new CheckersOptionsRepository(this);
+        CheckersRulesetRepository = new CheckersRulesetRepository(this);
         CheckersStateRepository = new CheckersStateRepository(this);
     }
 
     public ICheckersGameRepository CheckersGameRepository { get; }
-    public ICheckersOptionsRepository CheckersOptionsRepository { get; }
+    public ICheckersRulesetRepository CheckersRulesetRepository { get; }
     public ICheckersStateRepository CheckersStateRepository { get; }
     public string Name => "FileSystem";
 }

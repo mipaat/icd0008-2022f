@@ -27,7 +27,7 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
     {
         return RunPreFetchActions(ThisDbSet
                 .Include(cg => cg.CheckersStates)
-                .Include(cg => cg.CheckersOptions)
+                .Include(cg => cg.CheckersRuleset)
             )
             .ToList()
             .OrderByDescending(cg=> cg.CurrentCheckersState!.CreatedAt)

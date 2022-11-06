@@ -14,7 +14,7 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
     {
         var result = base.Deserialize(serializedData);
 
-        result.CheckersOptions = RepositoryContext.CheckersOptionsRepository.GetById(result.CheckersOptionsId);
+        result.CheckersRuleset = RepositoryContext.CheckersRulesetRepository.GetById(result.CheckersRulesetId);
         result.CheckersStates = RepositoryContext.CheckersStateRepository.GetByCheckersGameId(result.Id);
 
         return result;
@@ -22,8 +22,8 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
 
     protected override string Serialize(CheckersGame entity)
     {
-        RepositoryContext.CheckersOptionsRepository.Upsert(entity.CheckersOptions);
-        entity.CheckersOptionsId = entity.CheckersOptions.Id;
+        RepositoryContext.CheckersRulesetRepository.Upsert(entity.CheckersRuleset);
+        entity.CheckersRulesetId = entity.CheckersRuleset.Id;
 
         foreach (var checkersState in entity.AssertSufficientCheckersStates())
         {
@@ -43,7 +43,7 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
 
         var result = base.Remove(id);
 
-        RepositoryContext.CheckersOptionsRepository.Remove(result.CheckersOptionsId);
+        RepositoryContext.CheckersRulesetRepository.Remove(result.CheckersRulesetId);
 
         return result;
     }

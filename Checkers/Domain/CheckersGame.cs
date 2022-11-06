@@ -7,8 +7,8 @@ public class CheckersGame : AbstractDatabaseEntity
     public string? WhitePlayerId { get; set; }
     public string? BlackPlayerId { get; set; }
 
-    public int CheckersOptionsId { get; set; }
-    [JsonIgnore] public CheckersOptions CheckersOptions { get; set; } = default!;
+    public int CheckersRulesetId { get; set; }
+    [JsonIgnore] public CheckersRuleset CheckersRuleset { get; set; } = default!;
 
     [JsonIgnore] public ICollection<CheckersState>? CheckersStates { get; set; }
     [JsonIgnore] public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);

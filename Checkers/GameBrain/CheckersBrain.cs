@@ -4,10 +4,10 @@ namespace GameBrain;
 
 public class CheckersBrain : AbstractCheckersBrain
 {
-    private readonly CheckersOptions _checkersOptions;
+    private readonly CheckersRuleset _checkersRuleset;
     private readonly CheckersGame _checkersGame;
-    public override int Width => _checkersOptions.Width;
-    public override int Height => _checkersOptions.Height;
+    public override int Width => _checkersRuleset.Width;
+    public override int Height => _checkersRuleset.Height;
 
     private readonly GamePiece?[,] _pieces;
 
@@ -25,8 +25,8 @@ public class CheckersBrain : AbstractCheckersBrain
     {
         _checkersGame = checkersGame;
 
-        var checkersOptions = checkersGame.CheckersOptions;
-        _checkersOptions = checkersOptions;
+        var checkersRuleset = checkersGame.CheckersRuleset;
+        _checkersRuleset = checkersRuleset;
 
         if (_checkersGame.CurrentCheckersState != null)
         {
@@ -39,24 +39,24 @@ public class CheckersBrain : AbstractCheckersBrain
         }
         else
         {
-            _pieces = new GamePiece?[checkersOptions.Width, checkersOptions.Height];
+            _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
             InitializePieces();
         }
     }
 
-    public CheckersBrain(CheckersOptions checkersOptions)
+    public CheckersBrain(CheckersRuleset checkersRuleset)
     {
         _checkersGame = new CheckersGame
         {
             WhitePlayerId = null, // TODO: figure out how Player IDs are actually going to work. Then implement.
             BlackPlayerId = null,
-            CheckersOptions = checkersOptions,
+            CheckersRuleset = checkersRuleset,
             CheckersStates = new List<CheckersState>(),
             StartedAt = DateTime.Now.ToUniversalTime()
         };
 
-        _checkersOptions = checkersOptions;
-        _pieces = new GamePiece?[checkersOptions.Width, checkersOptions.Height];
+        _checkersRuleset = checkersRuleset;
+        _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
         InitializePieces();
     }
 

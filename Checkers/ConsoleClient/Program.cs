@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 var window = new ConsoleWindow("Checkers");
 
-var selectedCheckersOptions = new CheckersOptions();
+var selectedCheckersRuleset = new CheckersRuleset();
 CheckersGame? selectedCheckersGame = null;
 
 using var ctx = AppDbContextFactory.CreateDbContext();
@@ -27,19 +27,19 @@ EMenuFunction RunConsoleGame(Menu menu)
     {
         var consoleGame = selectedCheckersGame != null
             ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx)
-            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersOptions()
+            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersRuleset()
             {
                 Id = default,
                 BuiltIn = false,
                 Saved = false,
-                Width = selectedCheckersOptions.Width,
-                Height = selectedCheckersOptions.Height,
-                Title = selectedCheckersOptions.Title,
-                Description = selectedCheckersOptions.Description,
-                BlackMovesFirst = selectedCheckersOptions.BlackMovesFirst,
-                MustCapture = selectedCheckersOptions.MustCapture,
-                CanJumpBackwards = selectedCheckersOptions.CanJumpBackwards,
-                CanJumpBackwardsDuringMultiCapture = selectedCheckersOptions.CanJumpBackwardsDuringMultiCapture
+                Width = selectedCheckersRuleset.Width,
+                Height = selectedCheckersRuleset.Height,
+                Title = selectedCheckersRuleset.Title,
+                Description = selectedCheckersRuleset.Description,
+                BlackMovesFirst = selectedCheckersRuleset.BlackMovesFirst,
+                MustCapture = selectedCheckersRuleset.MustCapture,
+                CanJumpBackwards = selectedCheckersRuleset.CanJumpBackwards,
+                CanJumpBackwardsDuringMultiCapture = selectedCheckersRuleset.CanJumpBackwardsDuringMultiCapture
             }), repoCtx);
         consoleGame.Run();
     }
@@ -49,7 +49,7 @@ EMenuFunction RunConsoleGame(Menu menu)
     }
     finally
     {
-        selectedCheckersOptions = null;
+        selectedCheckersRuleset = null;
         selectedCheckersGame = null;
     }
 
@@ -60,28 +60,28 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
 {
     var consoleWindow = menu.ConsoleWindow;
 
-    var x = consoleWindow.PopupPromptIntInput("Enter board horizontal dimension:", CheckersOptions.IsDimensionValid);
-    var y = consoleWindow.PopupPromptIntInput("Enter board vertical dimension:", CheckersOptions.IsDimensionValid);
+    var x = consoleWindow.PopupPromptIntInput("Enter board horizontal dimension:", CheckersRuleset.IsDimensionValid);
+    var y = consoleWindow.PopupPromptIntInput("Enter board vertical dimension:", CheckersRuleset.IsDimensionValid);
 
-    selectedCheckersOptions = new CheckersOptions { Width = x, Height = y, Title = $"{x}x{y}", Saved = false };
+    selectedCheckersRuleset = new CheckersRuleset { Width = x, Height = y, Title = $"{x}x{y}", Saved = false };
     return RunConsoleGame(menu);
 });
 
-var loadGameOptionsMenuFactory = new MenuFactory("Pick a game options preset", _ =>
+var loadCheckersRulesetsMenuFactory = new MenuFactory("Pick a Checkers ruleset", _ =>
 {
-    var gameOptionsPresets = new List<MenuItem>();
-    foreach (var checkersOptions in repoCtx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+    var checkersRulesets = new List<MenuItem>();
+    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAll().Where(cr => cr.Saved))
     {
-        gameOptionsPresets.Add(new MenuItem(checkersOptions.TitleText, m =>
+        checkersRulesets.Add(new MenuItem(checkersRuleset.TitleText, m =>
         {
-            selectedCheckersOptions = checkersOptions;
+            selectedCheckersRuleset = checkersRuleset;
             return RunConsoleGame(m);
         }));
     }
 
-    gameOptionsPresets.Add(customBoardSize);
+    checkersRulesets.Add(customBoardSize);
 
-    return gameOptionsPresets;
+    return checkersRulesets;
 });
 
 var loadGameMenuFactory = new MenuFactory("Load game", _ =>
@@ -90,7 +90,7 @@ var loadGameMenuFactory = new MenuFactory("Load game", _ =>
     foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
     {
         gamesToLoad.Add(new MenuItem(
-            $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
+            $"{checkersGame.Id} | {checkersGame.CheckersRuleset.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
             m =>
             {
                 selectedCheckersGame = checkersGame;
@@ -107,7 +107,7 @@ var deleteGameMenuFactory = new MenuFactory("Delete game", _ =>
     foreach (var checkersGame in repoCtx.CheckersGameRepository.GetAll())
     {
         gamesToDelete.Add(new MenuItem(
-            $"{checkersGame.Id} | {checkersGame.CheckersOptions.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
+            $"{checkersGame.Id} | {checkersGame.CheckersRuleset.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
             _ =>
             {
                 repoCtx.CheckersGameRepository.Remove(checkersGame.Id);
@@ -118,115 +118,117 @@ var deleteGameMenuFactory = new MenuFactory("Delete game", _ =>
     return gamesToDelete;
 });
 
-MenuItem GetEditableCheckersOptionsMenuItem(CheckersOptions checkersOptions, string? menuItemText = null)
+MenuItem GetEditableCheckersRulesetMenuItem(CheckersRuleset checkersRuleset, string? menuItemText = null)
 {
     return new MenuItem(
         menuItemText ??
-        (checkersOptions.BuiltIn ? $"{checkersOptions.TitleText} (Built-in)" : checkersOptions.TitleText), m =>
+        (checkersRuleset.BuiltIn ? $"{checkersRuleset.TitleText} (Built-in)" : checkersRuleset.TitleText), m =>
         {
             var previousCursorPosition = 0;
             var result = EMenuFunction.Refresh;
             while (result == EMenuFunction.Refresh)
             {
-                var optionsEditMenuFactory = new MenuFactory(
-                    _ => checkersOptions.BuiltIn ? "Viewing built-in game options" : "Editing custom game options",
+                var editCheckersRulesetsMenuFactory = new MenuFactory(
+                    _ => checkersRuleset.BuiltIn
+                        ? "Viewing built-in Checkers ruleset"
+                        : "Editing custom Checkers ruleset",
                     _ =>
                     {
-                        var optionsMenuItems = new List<MenuItem>
+                        var rulesetMenuItems = new List<MenuItem>
                         {
-                            new($"Game board width: {checkersOptions.Width}", m2 =>
+                            new($"Game board width: {checkersRuleset.Width}", m2 =>
                             {
-                                checkersOptions.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width",
-                                    CheckersOptions.IsDimensionValid);
+                                checkersRuleset.Width = m2.ConsoleWindow.PopupPromptIntInput("Enter game board width",
+                                    CheckersRuleset.IsDimensionValid);
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Game board height: {checkersOptions.Height}", m2 =>
+                            new($"Game board height: {checkersRuleset.Height}", m2 =>
                             {
-                                checkersOptions.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height",
-                                    CheckersOptions.IsDimensionValid);
+                                checkersRuleset.Height = m2.ConsoleWindow.PopupPromptIntInput("Enter game board height",
+                                    CheckersRuleset.IsDimensionValid);
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Black moves first: {checkersOptions.BlackMovesFirst}", _ =>
+                            new($"Black moves first: {checkersRuleset.BlackMovesFirst}", _ =>
                             {
-                                checkersOptions.BlackMovesFirst = !checkersOptions.BlackMovesFirst;
+                                checkersRuleset.BlackMovesFirst = !checkersRuleset.BlackMovesFirst;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Must capture piece if able: {checkersOptions.MustCapture}", _ =>
+                            new($"Must capture piece if able: {checkersRuleset.MustCapture}", _ =>
                             {
-                                checkersOptions.MustCapture = !checkersOptions.MustCapture;
+                                checkersRuleset.MustCapture = !checkersRuleset.MustCapture;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Backwards jumps: {checkersOptions.CanJumpBackwards}", _ =>
+                            new($"Backwards jumps: {checkersRuleset.CanJumpBackwards}", _ =>
                             {
-                                checkersOptions.CanJumpBackwards = !checkersOptions.CanJumpBackwards;
+                                checkersRuleset.CanJumpBackwards = !checkersRuleset.CanJumpBackwards;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Multi-capture backwards jumps: {checkersOptions.CanJumpBackwardsDuringMultiCapture}",
+                            new($"Multi-capture backwards jumps: {checkersRuleset.CanJumpBackwardsDuringMultiCapture}",
                                 _ =>
                                 {
-                                    checkersOptions.CanJumpBackwardsDuringMultiCapture =
-                                        !checkersOptions.CanJumpBackwardsDuringMultiCapture;
+                                    checkersRuleset.CanJumpBackwardsDuringMultiCapture =
+                                        !checkersRuleset.CanJumpBackwardsDuringMultiCapture;
                                     return EMenuFunction.Continue;
                                 }),
-                            new("Options title: " + checkersOptions.Title, m2 =>
+                            new("Ruleset title: " + checkersRuleset.Title, m2 =>
                             {
-                                checkersOptions.Title =
-                                    m2.ConsoleWindow.PopupPromptTextInput("Enter a title for your Menu!");
+                                checkersRuleset.Title =
+                                    m2.ConsoleWindow.PopupPromptTextInput("Enter a title for your ruleset!");
                                 return EMenuFunction.Continue;
                             }),
-                            new("Options description: " + checkersOptions.Description, m2 =>
+                            new("Ruleset description: " + checkersRuleset.Description, m2 =>
                             {
-                                checkersOptions.Description =
+                                checkersRuleset.Description =
                                     m2.ConsoleWindow.PopupPromptTextInput(
-                                        "You may enter a description for your options preset");
+                                        "You may enter a description for your ruleset");
                                 return EMenuFunction.Continue;
                             })
                         };
 
-                        if (!checkersOptions.BuiltIn)
+                        if (!checkersRuleset.BuiltIn)
                         {
-                            optionsMenuItems.Add(new MenuItem("Save", _ =>
+                            rulesetMenuItems.Add(new MenuItem("Save", _ =>
                             {
-                                repoCtx.CheckersOptionsRepository.Upsert(checkersOptions);
+                                repoCtx.CheckersRulesetRepository.Upsert(checkersRuleset);
                                 return EMenuFunction.Back;
                             }));
-                            optionsMenuItems.Add(new MenuItem("Delete", _ =>
+                            rulesetMenuItems.Add(new MenuItem("Delete", _ =>
                             {
-                                repoCtx.CheckersOptionsRepository.Remove(checkersOptions);
+                                repoCtx.CheckersRulesetRepository.Remove(checkersRuleset);
                                 return EMenuFunction.Back;
                             }));
                         }
 
-                        optionsMenuItems.Add(
-                            GetEditableCheckersOptionsMenuItem(checkersOptions.GetClone(), "Create a copy"));
+                        rulesetMenuItems.Add(
+                            GetEditableCheckersRulesetMenuItem(checkersRuleset.GetClone(), "Create a copy"));
 
-                        return optionsMenuItems;
+                        return rulesetMenuItems;
                     }
                 );
 
-                var optionsEditMenu = optionsEditMenuFactory.Create(m.ConsoleWindow, m);
+                var rulesetEditMenu = editCheckersRulesetsMenuFactory.Create(m.ConsoleWindow, m);
 
-                optionsEditMenu.CursorPosition = previousCursorPosition;
-                result = optionsEditMenu.Run();
-                previousCursorPosition = optionsEditMenu.CursorPosition;
+                rulesetEditMenu.CursorPosition = previousCursorPosition;
+                result = rulesetEditMenu.Run();
+                previousCursorPosition = rulesetEditMenu.CursorPosition;
             }
 
             return result;
         });
 }
 
-var manageCheckersOptionsMenuFactory = new MenuFactory("Manage game options", _ =>
+var manageCheckersRulesetsMenuFactory = new MenuFactory("Manage Checkers rulesets", _ =>
 {
-    var checkersOptionsList = new List<MenuItem>();
+    var checkersRulesets = new List<MenuItem>();
 
-    checkersOptionsList.Add(GetEditableCheckersOptionsMenuItem(new CheckersOptions(), "CREATE NEW OPTIONS"));
-    foreach (var checkersOptions in repoCtx.CheckersOptionsRepository.GetAll().Where(co => co.Saved))
+    checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(new CheckersRuleset(), "CREATE NEW RULESET"));
+    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAll().Where(cr => cr.Saved))
     {
-        repoCtx.CheckersOptionsRepository.Refresh(checkersOptions); // TODO: figure out a better way to do this
-        checkersOptionsList.Add(GetEditableCheckersOptionsMenuItem(checkersOptions));
+        repoCtx.CheckersRulesetRepository.Refresh(checkersRuleset); // TODO: figure out a better way to do this
+        checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(checkersRuleset));
     }
 
-    return checkersOptionsList;
+    return checkersRulesets;
 });
 
 IRepositoryContext OtherRepoCtx()
@@ -247,12 +249,12 @@ var swapPersistenceEngine = new MenuItem(GetRepoSwapText(), (_, mi) =>
 });
 
 var optionsManagerMenuCreator = new MenuFactory("Options",
-    new MenuItem("Manage game options", manageCheckersOptionsMenuFactory),
+    new MenuItem("Manage Checkers rulesets", manageCheckersRulesetsMenuFactory),
     swapPersistenceEngine
 );
 
 var mainMenuCreator = new MenuFactory("Main menu",
-    new MenuItem("New game", loadGameOptionsMenuFactory),
+    new MenuItem("New game", loadCheckersRulesetsMenuFactory),
     new MenuItem("Load game", loadGameMenuFactory),
     new MenuItem("Delete game", deleteGameMenuFactory),
     new MenuItem("Options", optionsManagerMenuCreator));

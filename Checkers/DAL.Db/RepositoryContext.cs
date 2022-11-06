@@ -5,12 +5,12 @@ public class RepositoryContext : IRepositoryContext
     public RepositoryContext(AppDbContext dbContext)
     {
         CheckersGameRepository = new CheckersGameRepository(dbContext);
-        CheckersOptionsRepository = new CheckersOptionsRepository(dbContext);
+        CheckersRulesetRepository = new CheckersRulesetRepository(dbContext);
         CheckersStateRepository = new CheckersStateRepository(dbContext);
     }
 
     public ICheckersGameRepository CheckersGameRepository { get; }
-    public ICheckersOptionsRepository CheckersOptionsRepository { get; }
+    public ICheckersRulesetRepository CheckersRulesetRepository { get; }
     public ICheckersStateRepository CheckersStateRepository { get; }
     public string Name => "Sqlite DB";
 }
