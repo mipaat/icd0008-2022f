@@ -1,5 +1,4 @@
-﻿using Domain;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace WebApp.Pages;
 
@@ -11,8 +10,6 @@ public class IndexModel : PageModel
     {
         _logger = logger;
     }
-
-    public CheckersGame CheckersGame { get; set; }
 
     public void OnGet()
     {
