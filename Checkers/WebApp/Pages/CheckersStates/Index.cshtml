@@ -12,36 +12,37 @@
 </p>
 <table class="table">
     <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].CreatedAt) (UTC)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].SerializedGamePieces)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].MoveElapsedTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].GameElapsedTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].WhiteMoves)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersState[0].BlackMoves)
-            </th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].CreatedAt) (UTC)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].SerializedGamePieces)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].MoveElapsedTime)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].GameElapsedTime)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].WhiteMoves)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].BlackMoves)
+        </th>
+        <th></th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.CheckersState) {
+    @foreach (var item in Model.CheckersState)
+    {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.SerializedGamePieces)
+                @IndexModel.ShortenSerializedGamePieces(item)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.MoveElapsedTime)
@@ -61,6 +62,6 @@
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
-}
+    }
     </tbody>
 </table>
