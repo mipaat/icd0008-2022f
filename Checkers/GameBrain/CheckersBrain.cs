@@ -31,7 +31,7 @@ public class CheckersBrain : AbstractCheckersBrain
         if (_checkersGame.CurrentCheckersState != null)
         {
             var currentCheckersState = _checkersGame.CurrentCheckersState;
-            _pieces = currentCheckersState.GamePieces;
+            _pieces = currentCheckersState.GamePieces!;
             WhiteMoves = currentCheckersState.WhiteMoves;
             BlackMoves = currentCheckersState.BlackMoves;
             GameElapsedTime = currentCheckersState.GameElapsedTime;
