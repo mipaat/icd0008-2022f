@@ -63,6 +63,7 @@
                 @Html.DisplayFor(modelItem => item.Winner)
             </td>
             <td>
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-swap="true">Play (shared window)</a> |
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>

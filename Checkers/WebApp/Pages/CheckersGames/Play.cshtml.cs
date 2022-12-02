@@ -27,11 +27,12 @@ public class Play : PageModel
     [BindProperty(SupportsGet = true)] public int? FromY { get; set; }
     [BindProperty(SupportsGet = true)] public int? ToX { get; set; }
     [BindProperty(SupportsGet = true)] public int? ToY { get; set; }
+    [BindProperty(SupportsGet = true)] public bool Swap { get; set; }
     public bool FromSet => FromX != null && FromY != null;
     public bool ToSet => ToX != null && ToY != null;
     public GamePiece? PieceBeingMoved => FromSet ? Brain[FromX!.Value, FromY!.Value] : null;
 
-    private RedirectToPageResult Reset => RedirectToPage("", new { id = GameId, playerId = PlayerId });
+    private RedirectToPageResult Reset => RedirectToPage("", new { id = GameId, swap = Swap, playerId = Swap ? null : PlayerId });
 
     public bool IsPieceMovable(int x, int y) // TODO: Check if piece actually has available moves
     {
@@ -71,6 +72,15 @@ public class Play : PageModel
 
         game.CurrentCheckersState.DeserializeGamePieces();
 
+        GameId = id.Value;
+        Brain = new CheckersBrain(game);
+        playerId ??= Brain.CurrentTurnPlayerColor switch
+        {
+            EPlayerColor.Black => game.BlackPlayerId,
+            EPlayerColor.White => game.WhitePlayerId,
+            _ => playerId
+        };
+
         if ((playerId != game.BlackPlayerId && playerId != game.WhitePlayerId) || playerId == null)
         {
             var playerIdText = playerId ?? "NULL";
@@ -78,8 +88,6 @@ public class Play : PageModel
                 new { error = $"Player with ID '{playerIdText}' not found in game with ID {id}!" });
         }
 
-        GameId = id.Value;
-        Brain = new CheckersBrain(game);
         PlayerId = playerId;
 
         if (FromSet && !IsPieceMovable(FromX!.Value, FromY!.Value))

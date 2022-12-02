@@ -57,11 +57,12 @@
 {
     HtmlString GetSelectOnClickText(int x, int y, GamePiece? gamePiece)
     {
+        var playerIdParam = Model.Swap ? "" : $"&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}";
         if (Model.IsPieceMovable(x, y))
         {
-            return new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}&fromX={x}&fromY={y}'\"");
+            return new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}{playerIdParam}&fromX={x}&fromY={y}&swap={Model.Swap}'\"");
         }
-        return Model.IsMovableTo(x, y) ? new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}&fromX={Model.FromX}&fromY={Model.FromY}&toX={x}&toY={y}'\"") : new HtmlString("");
+        return Model.IsMovableTo(x, y) ? new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}{playerIdParam}&fromX={Model.FromX}&fromY={Model.FromY}&toX={x}&toY={y}&swap={Model.Swap}'\"") : new HtmlString("");
     }
 
     string GetBoardCellClasses(int x, int y)
