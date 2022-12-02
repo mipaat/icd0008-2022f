@@ -46,8 +46,9 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
 
     public bool BlackMovesFirst { get; set; } = true;
     public bool MustCapture { get; set; } = true;
-    public bool CanJumpBackwards { get; set; }
-    public bool CanJumpBackwardsDuringMultiCapture { get; set; }
+    public bool CanCaptureBackwards { get; set; }
+    public bool CanCaptureBackwardsDuringMultiCapture { get; set; }
+    public bool FlyingKings { get; set; } = false;
 
     private const int MinDimension = 4;
 
@@ -71,9 +72,10 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
     public bool IsEquivalent(CheckersRuleset other)
     {
         return other.Width == Width && other.Height == Height && other.BlackMovesFirst == BlackMovesFirst &&
-               other.MustCapture == MustCapture && other.CanJumpBackwards == CanJumpBackwards &&
-               other.CanJumpBackwardsDuringMultiCapture == CanJumpBackwardsDuringMultiCapture &&
-               other.BuiltIn == BuiltIn && other.Saved == Saved && other.Title == Title;
+               other.MustCapture == MustCapture && other.CanCaptureBackwards == CanCaptureBackwards &&
+               other.CanCaptureBackwardsDuringMultiCapture == CanCaptureBackwardsDuringMultiCapture &&
+               other.BuiltIn == BuiltIn && other.Saved == Saved && other.Title == Title
+               && other.FlyingKings == FlyingKings;
     }
 
     public CheckersRuleset GetClone()
@@ -85,8 +87,9 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
             BlackMovesFirst = BlackMovesFirst,
             BuiltIn = false,
             Saved = Saved,
-            CanJumpBackwards = CanJumpBackwards,
-            CanJumpBackwardsDuringMultiCapture = CanJumpBackwardsDuringMultiCapture,
+            CanCaptureBackwards = CanCaptureBackwards,
+            CanCaptureBackwardsDuringMultiCapture = CanCaptureBackwardsDuringMultiCapture,
+            FlyingKings = FlyingKings,
             Title = Title,
             Description = Description
         };

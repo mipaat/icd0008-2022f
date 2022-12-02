@@ -2,21 +2,25 @@
 
 namespace GameBrain;
 
-public class CheckersBrain : AbstractCheckersBrain
+internal record GamePieceWithPosition(GamePiece GamePiece, int X, int Y);
+
+internal record Move(int ToX, int ToY, List<GamePieceWithPosition> GamePieces);
+
+public class CheckersBrain
 {
     private readonly CheckersRuleset _checkersRuleset;
     private readonly CheckersGame _checkersGame;
-    public override int Width => _checkersRuleset.Width;
-    public override int Height => _checkersRuleset.Height;
+    public int Width => _checkersRuleset.Width;
+    public int Height => _checkersRuleset.Height;
 
     private readonly GamePiece?[,] _pieces;
 
-    public override bool IsSquareBlack(int x, int y)
+    public static bool IsSquareBlack(int x, int y)
     {
         return (x + y) % 2 != 0;
     }
 
-    public override GamePiece? this[int x, int y] => _pieces[x, y];
+    public GamePiece? this[int x, int y] => _pieces[x, y];
 
     private string? WhitePlayerId => _checkersGame.WhitePlayerId;
     private string? BlackPlayerId => _checkersGame.BlackPlayerId;
@@ -36,6 +40,9 @@ public class CheckersBrain : AbstractCheckersBrain
             BlackMoves = currentCheckersState.BlackMoves;
             GameElapsedTime = currentCheckersState.GameElapsedTime;
             MoveElapsedTime = currentCheckersState.MoveElapsedTime;
+            LastMovedToX = currentCheckersState.LastMovedToX;
+            LastMovedToY = currentCheckersState.LastMovedToY;
+            LastMoveState = currentCheckersState.LastMoveState;
         }
         else
         {
@@ -44,12 +51,14 @@ public class CheckersBrain : AbstractCheckersBrain
         }
     }
 
-    public CheckersBrain(CheckersRuleset checkersRuleset)
+    public CheckersBrain(CheckersRuleset checkersRuleset, string whitePlayerId, string blackPlayerId)
     {
+        if (whitePlayerId == blackPlayerId)
+            throw new ArgumentException($"Player IDs must not be identical! '{whitePlayerId}' = '{blackPlayerId}'");
         _checkersGame = new CheckersGame
         {
-            WhitePlayerId = null, // TODO: figure out how Player IDs are actually going to work. Then implement.
-            BlackPlayerId = null,
+            WhitePlayerId = whitePlayerId,
+            BlackPlayerId = blackPlayerId,
             CheckersRuleset = checkersRuleset,
             CheckersStates = new List<CheckersState>(),
             StartedAt = DateTime.Now.ToUniversalTime()
@@ -91,14 +100,14 @@ public class CheckersBrain : AbstractCheckersBrain
         InitializePlayerPieces(Height - rowsPerPlayer, Height, EPlayerColor.Black);
     }
 
-    public override EPlayerColor PlayerColor(string playerId)
+    public EPlayerColor PlayerColor(string? playerId)
     {
-        if (playerId.Equals(WhitePlayerId))
+        if (playerId == WhitePlayerId)
         {
             return EPlayerColor.White;
         }
 
-        if (playerId.Equals(BlackPlayerId))
+        if (playerId == BlackPlayerId)
         {
             return EPlayerColor.Black;
         }
@@ -106,23 +115,208 @@ public class CheckersBrain : AbstractCheckersBrain
         throw new KeyNotFoundException($"Player with ID {playerId} not found in current game!");
     }
 
-    public override DateTime StartedAt { get; set; }
-    public override DateTime? EndedAt { get; set; }
-    public sealed override TimeSpan MoveElapsedTime { get; set; }
-    public sealed override TimeSpan GameElapsedTime { get; set; }
-    public sealed override int WhiteMoves { get; set; }
-    public sealed override int BlackMoves { get; set; }
+    public DateTime StartedAt { get; set; }
+    public DateTime? EndedAt { get; set; }
+    public TimeSpan MoveElapsedTime { get; set; }
+    public TimeSpan GameElapsedTime { get; set; }
+    public int WhiteMoves { get; set; }
+    public int BlackMoves { get; set; }
+    public int? LastMovedToX { get; set; }
+    public int? LastMovedToY { get; set; }
+    public EMoveState? LastMoveState { get; set; } = EMoveState.Finished;
 
-    public override bool IsMoveValid(int sourceX, int sourceY, int destinationX, int destinationY)
+    public bool IsPlayerTurn(string? playerId)
     {
-        return true; //TODO: Actually implement!
+        try
+        {
+            var playerColor = PlayerColor(playerId);
+            return IsPlayerTurn(playerColor);
+        }
+        catch (KeyNotFoundException)
+        {
+            return false;
+        }
     }
 
-    public override EMoveState Move(int sourceX, int sourceY, int destinationX, int destinationY)
+    public bool IsPlayerTurn(EPlayerColor playerColor) => playerColor == CurrentTurnPlayerColor;
+
+    public EPlayerColor CurrentTurnPlayerColor
     {
+        get
+        {
+            var firstPlayer = _checkersRuleset.BlackMovesFirst ? EPlayerColor.Black : EPlayerColor.White;
+            var otherPlayer = _checkersRuleset.BlackMovesFirst ? EPlayerColor.White : EPlayerColor.Black;
+            var firstPlayerMoves = _checkersRuleset.BlackMovesFirst ? BlackMoves : WhiteMoves;
+            var otherPlayerMoves = _checkersRuleset.BlackMovesFirst ? WhiteMoves : BlackMoves;
+
+            if (firstPlayerMoves == otherPlayerMoves) return firstPlayer;
+            if (firstPlayerMoves == otherPlayerMoves + 1) return otherPlayer;
+            throw new Exception(
+                $"Illegal difference between player move counts! BlackMoves: {BlackMoves}, WhiteMoves: {WhiteMoves}, BlackMovesFirst: {_checkersRuleset.BlackMovesFirst}");
+        }
+    }
+
+    private List<Move>
+        AvailableMoves(int fromX, int fromY)
+    {
+        var result = new List<Move>();
+
+        if (_pieces[fromX, fromY] == null) return result;
+        var gamePiece = _pieces[fromX, fromY]!.Value;
+
+        if (!IsPieceMovableBasic(gamePiece.Player, fromX, fromY)) return result;
+
+        // TODO: Figure out how and where to handle required captures
+        // TODO: Maybe save currently calculated availableMoves to not have to recalculate them each time?
+        // TODO: Handle crowned pieces and backwards moves
+        var increments = new List<int> { -1, 1 };
+        foreach (var yIncrement in increments)
+        {
+            foreach (var xIncrement in increments)
+            {
+                var x = fromX + xIncrement;
+                var y = fromY + yIncrement;
+                var c = 1;
+                var gamePiecesOnPath = new List<GamePieceWithPosition>();
+                while (x >= 0 && x < Width && y >= 0 && y < Height && c <= 2)
+                {
+                    var gamePieceOnPath = _pieces[x, y];
+                    if (gamePieceOnPath != null)
+                    {
+                        if (gamePieceOnPath.Value.Player == gamePiece.Player) break;
+                        gamePiecesOnPath.Add(new GamePieceWithPosition(gamePieceOnPath.Value, x, y));
+                    }
+                    else
+                    {
+                        if (!gamePiece.IsCrowned)
+                        {
+                            if (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))
+                            {
+                                result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
+                            }
+                        }
+                        else
+                        {
+                            result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
+                        }
+                    }
+
+                    x += xIncrement;
+                    y += yIncrement;
+                    c++;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public bool IsPieceMovableBasic(EPlayerColor playerColor, int x, int y)
+    {
+        var gamePiece = _pieces[x, y];
+        if (gamePiece == null) return false;
+        if (LastMovedToX != null && LastMovedToY != null && LastMoveState == EMoveState.CanContinue)
+        {
+            var previousMoveGamePiece = this[LastMovedToX!.Value, LastMovedToY!.Value];
+            if (previousMoveGamePiece == null)
+                throw new IllegalGameStateException(
+                    $"GamePiece expected at ({LastMovedToX}, {LastMovedToY}) from previous move with state {LastMoveState}!");
+            if (previousMoveGamePiece.Value.Player != CurrentTurnPlayerColor)
+                throw new IllegalGameStateException(
+                    $"Expecting move from {previousMoveGamePiece.Value.Player} during {CurrentTurnPlayerColor}'s turn!");
+            if (x != LastMovedToX || y != LastMovedToY) return false;
+        }
+
+        return gamePiece.Value.Player == playerColor && playerColor == CurrentTurnPlayerColor;
+    }
+
+    public bool IsPieceMovable(string? playerId, int x, int y)
+    {
+        try
+        {
+            return IsPieceMovable(PlayerColor(playerId), x, y);
+        }
+        catch (KeyNotFoundException)
+        {
+            Console.Out.WriteLine("KEY NOT FOUND " + playerId);
+            return false;
+        }
+    }
+
+    public bool IsPieceMovable(EPlayerColor playerColor, int x, int y)
+    {
+        return IsPieceMovableBasic(playerColor, x, y) && AvailableMoves(x, y).Count > 0;
+    }
+
+    public bool IsMoveValid(string? playerId, int sourceX, int sourceY, int destinationX, int destinationY)
+    {
+        try
+        {
+            return IsMoveValid(PlayerColor(playerId), sourceX, sourceY, destinationX, destinationY);
+        }
+        catch (KeyNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    public bool IsMoveValid(EPlayerColor playerColor, int sourceX, int sourceY, int destinationX, int destinationY)
+    {
+        var availableMoves = AvailableMoves(sourceX, sourceY);
+        return availableMoves.Exists(move => move.ToX == destinationX && move.ToY == destinationY);
+    }
+
+    public void Move(int sourceX, int sourceY, int destinationX, int destinationY)
+    {
+        var availableMoves = AvailableMoves(sourceX, sourceY);
+        var move = availableMoves.Find(m => m.ToX == destinationX && m.ToY == destinationY);
+
+        if (move == null)
+            throw new NotAllowedException(
+                $"Moving from ({sourceX}, {sourceY}) to ({destinationX}, {destinationY}) is not allowed!");
+
         _pieces[destinationX, destinationY] = _pieces[sourceX, sourceY];
         _pieces[sourceX, sourceY] = null;
-        return EMoveState.Finished; //TODO: Return actual move state!
+        foreach (var capturedGamePiece in move.GamePieces)
+        {
+            _pieces[capturedGamePiece.X, capturedGamePiece.Y] = null;
+        }
+
+        LastMovedToX = destinationX;
+        LastMovedToY = destinationY;
+        if (false)
+        {
+            LastMoveState = EMoveState.CanContinue;
+        }
+        else
+        {
+            LastMoveState = EMoveState.Finished;
+        }
+
+        if (LastMoveState == EMoveState.Finished)
+        {
+            IncrementMoveCounter();
+        }
+    }
+
+    public void IncrementMoveCounter()
+    {
+        switch (CurrentTurnPlayerColor)
+        {
+            case EPlayerColor.Black:
+                BlackMoves++;
+                break;
+            case EPlayerColor.White:
+                WhiteMoves++;
+                break;
+        }
+    }
+
+    private void EndTurn()
+    {
+        IncrementMoveCounter();
+
+        LastMoveState = EMoveState.Finished;
     }
 
     private CheckersState GetCheckersState()
@@ -146,11 +340,14 @@ public class CheckersBrain : AbstractCheckersBrain
             MoveElapsedTime = MoveElapsedTime,
             GameElapsedTime = GameElapsedTime,
             WhiteMoves = WhiteMoves,
-            BlackMoves = BlackMoves
+            BlackMoves = BlackMoves,
+            LastMovedToX = LastMovedToX,
+            LastMovedToY = LastMovedToY,
+            LastMoveState = LastMoveState
         };
     }
 
-    public override CheckersGame GetSaveGameState()
+    public CheckersGame GetSaveGameState()
     {
         if (_checkersGame.CheckersStates == null) throw new InsufficientCheckersStatesException(_checkersGame);
         _checkersGame.CheckersStates.Add(GetCheckersState());

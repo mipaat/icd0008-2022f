@@ -31,6 +31,15 @@
         <th>
             @Html.DisplayNameFor(model => model.CheckersState[0].BlackMoves)
         </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].LastMovedToX)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].LastMovedToY)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersState[0].LastMoveState)
+        </th>
         <th></th>
     </tr>
     </thead>
@@ -55,6 +64,15 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.BlackMoves)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastMovedToX)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastMovedToY)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastMoveState)
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |

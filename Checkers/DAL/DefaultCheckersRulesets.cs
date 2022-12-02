@@ -28,8 +28,8 @@ public static class DefaultCheckersRulesets
         {
             Title = "Backwards jumps allowed",
             BuiltIn = true,
-            CanJumpBackwards = true,
-            CanJumpBackwardsDuringMultiCapture = true
+            CanCaptureBackwards = true,
+            CanCaptureBackwardsDuringMultiCapture = true
         }
     };
 }

@@ -1,0 +1,84 @@
+@page
+@using Domain
+@using Microsoft.AspNetCore.Html
+@using System.Text.Encodings.Web
+@using GameBrain
+@model WebApp.Pages.CheckersGames.Play
+
+<pre>
+    Your player ID: @Model.PlayerId
+    Your color: @Model.PlayerColor
+    Current turn: @Model.Brain.CurrentTurnPlayerColor
+    BlackMoves: @Model.Brain.BlackMoves
+    WhiteMoves: @Model.Brain.WhiteMoves
+</pre>
+<table class="table table-bordered game-board-table">
+    @for (var y = 0; y < Model.Brain.Height; y++)
+    {
+        <tr>
+            @for (var x = 0; x < Model.Brain.Width; x++)
+            {
+                var gamePiece = Model.Brain[x, y];
+                var text = gamePiece == null ? "" : gamePiece.Value.Player.ToString();
+                <td @GetSelectOnClickText(x, y, gamePiece)
+                    class="@GetBoardCellClasses(x, y)">
+                    @switch (gamePiece?.Player)
+                    {
+                        case EPlayerColor.Black:
+                            @switch (gamePiece.Value.IsCrowned)
+                            {
+                                case false:
+                                    <img src="/images/CheckersPieceBlack.png" alt="Black"/>
+                                    break;
+                                case true:
+                                    <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
+                                    break;
+                            }
+                            break;
+                        case EPlayerColor.White:
+                            @switch (gamePiece.Value.IsCrowned)
+                            {
+                                case false:
+                                    <img src="/images/CheckersPieceWhite.png" alt="White"/>
+                                    break;
+                                case true:
+                                    <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
+                                    break;
+                            }
+                            break;
+                    }
+                </td>
+            }
+        </tr>
+    }
+</table>
+
+@functions
+{
+    HtmlString GetSelectOnClickText(int x, int y, GamePiece? gamePiece)
+    {
+        if (Model.IsPieceMovable(x, y))
+        {
+            return new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}&fromX={x}&fromY={y}'\"");
+        }
+        return Model.IsMovableTo(x, y) ? new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}&fromX={Model.FromX}&fromY={Model.FromY}&toX={x}&toY={y}'\"") : new HtmlString("");
+    }
+
+    string GetBoardCellClasses(int x, int y)
+    {
+        return GetBackgroundClass(x, y)
+        + (IsSelectedPiece(x, y) ? " selected-piece" : "")
+        + (Model.IsMovableTo(x, y) ? " movable-to" : "")
+        + (Model.IsPieceMovable(x, y) ? " movable" : "");
+    }
+
+    static string GetBackgroundClass(int x, int y)
+    {
+        return CheckersBrain.IsSquareBlack(x, y) ? "checkers-cell-black" : "checkers-cell-white";
+    }
+
+    bool IsSelectedPiece(int x, int y)
+    {
+        return Model.FromSet && Model.FromX == x && Model.FromY == y;
+    }
+}

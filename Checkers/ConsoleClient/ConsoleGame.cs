@@ -9,11 +9,11 @@ namespace ConsoleClient;
 
 public class ConsoleGame
 {
-    private readonly AbstractCheckersBrain _checkersBrain;
+    private readonly CheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
     private readonly IRepositoryContext _repositoryContext;
 
-    public ConsoleGame(ConsoleWindow consoleWindow, AbstractCheckersBrain checkersBrain,
+    public ConsoleGame(ConsoleWindow consoleWindow, CheckersBrain checkersBrain,
         IRepositoryContext repositoryContext)
     {
         _checkersBrain = checkersBrain;
@@ -25,10 +25,10 @@ public class ConsoleGame
     {
         var pieceIcon = (gamePiece?.Player, gamePiece?.IsCrowned) switch
         {
-            (EPlayerColor.Black, false) => "⬤",
-            (EPlayerColor.White, false) => "◯",
-            (EPlayerColor.Black, true) => "♛",
-            (EPlayerColor.White, true) => "♕",
+            (EPlayerColor.White, false) => "⬤",
+            (EPlayerColor.Black, false) => "◯",
+            (EPlayerColor.White, true) => "♛",
+            (EPlayerColor.Black, true) => "♕",
             _ => " "
         };
         return " " + pieceIcon + " ";
@@ -67,6 +67,7 @@ public class ConsoleGame
 
     private void AddBoardToRenderQueue()
     {
+        _consoleWindow.AddLine($"{_checkersBrain.CurrentTurnPlayerColor} player's turn");
         _consoleWindow.AddLine(LettersLine(_checkersBrain.Width));
         for (var y = 0; y < _checkersBrain.Height; y++)
         {
@@ -95,7 +96,7 @@ public class ConsoleGame
             AddBoardToRenderQueue();
             var input = _consoleWindow
                 .RenderAndAwaitTextInput(
-                    "Q to quit! Coordinate pairs (e.g A4D7) to move (currently no game logic/rules implemented)!",
+                    "Q to quit! Coordinate pairs (e.g A4D7) to move!",
                     keepRenderQueue: true)?.ToLower() ?? "";
             switch (input)
             {
@@ -113,14 +114,18 @@ public class ConsoleGame
                             var y1 = _checkersBrain.Height - int.Parse(groups[2].Value);
                             var x2 = DecodeLetterCoords(groups[3].Value.ToUpper());
                             var y2 = _checkersBrain.Height - int.Parse(groups[4].Value);
-                            if (_checkersBrain.IsMoveValid(x1, y1, x2, y2))
+                            if (_checkersBrain.IsMoveValid(_checkersBrain.CurrentTurnPlayerColor, x1, y1, x2, y2))
                             {
                                 _checkersBrain.Move(x1, y1, x2, y2);
+                            }
+                            else
+                            {
+                                _consoleWindow.PopUpMessageBox("Invalid move!");
                             }
                         }
                         catch (Exception e)
                         {
-                            _consoleWindow.PopupPromptTextInput("Input caused the following error: " +
+                            _consoleWindow.PopUpMessageBox("Input caused the following error: " +
                                                                 e.ToString().Split("\n")[0]);
                         }
                     }

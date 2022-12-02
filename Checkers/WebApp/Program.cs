@@ -1,3 +1,4 @@
+using DAL;
 using DAL.Db;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ builder.Services.AddRazorPages();
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddDbContext<AppDbContext>(AppDbContextFactory.ConfigureOptions);
+builder.Services.AddScoped<ICheckersGameRepository, DAL.Db.CheckersGameRepository>();
 
 var app = builder.Build();
 

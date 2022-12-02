@@ -45,10 +45,10 @@
                 @Html.DisplayFor(modelItem => item.Id)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.WhitePlayerId)
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayerId">@item.WhitePlayerId</a>
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.BlackPlayerId)
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayerId">@item.BlackPlayerId</a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CheckersRulesetId)

@@ -25,9 +25,17 @@ EMenuFunction RunConsoleGame(Menu menu)
 {
     try
     {
-        var consoleGame = selectedCheckersGame != null
-            ? new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx)
-            : new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersRuleset()
+        ConsoleGame consoleGame;
+        if (selectedCheckersGame != null)
+        {
+            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx);
+        }
+        else
+        {
+            var firstPlayerName = menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the first player:");
+            var secondPlayerName = menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the second player:");
+            // TODO: Allow users to randomize starting order?
+            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersRuleset
             {
                 Id = default,
                 BuiltIn = false,
@@ -38,9 +46,11 @@ EMenuFunction RunConsoleGame(Menu menu)
                 Description = selectedCheckersRuleset.Description,
                 BlackMovesFirst = selectedCheckersRuleset.BlackMovesFirst,
                 MustCapture = selectedCheckersRuleset.MustCapture,
-                CanJumpBackwards = selectedCheckersRuleset.CanJumpBackwards,
-                CanJumpBackwardsDuringMultiCapture = selectedCheckersRuleset.CanJumpBackwardsDuringMultiCapture
-            }), repoCtx);
+                CanCaptureBackwards = selectedCheckersRuleset.CanCaptureBackwards,
+                CanCaptureBackwardsDuringMultiCapture = selectedCheckersRuleset.CanCaptureBackwardsDuringMultiCapture,
+                FlyingKings = selectedCheckersRuleset.FlyingKings
+            }, firstPlayerName, secondPlayerName), repoCtx);
+        }
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)
@@ -158,16 +168,23 @@ MenuItem GetEditableCheckersRulesetMenuItem(CheckersRuleset checkersRuleset, str
                                 checkersRuleset.MustCapture = !checkersRuleset.MustCapture;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Backwards jumps: {checkersRuleset.CanJumpBackwards}", _ =>
+                            new($"Can capture backwards: {checkersRuleset.CanCaptureBackwards}", _ =>
                             {
-                                checkersRuleset.CanJumpBackwards = !checkersRuleset.CanJumpBackwards;
+                                checkersRuleset.CanCaptureBackwards = !checkersRuleset.CanCaptureBackwards;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Multi-capture backwards jumps: {checkersRuleset.CanJumpBackwardsDuringMultiCapture}",
+                            new($"Can capture backwards during multi-capture: {checkersRuleset.CanCaptureBackwardsDuringMultiCapture}",
                                 _ =>
                                 {
-                                    checkersRuleset.CanJumpBackwardsDuringMultiCapture =
-                                        !checkersRuleset.CanJumpBackwardsDuringMultiCapture;
+                                    checkersRuleset.CanCaptureBackwardsDuringMultiCapture =
+                                        !checkersRuleset.CanCaptureBackwardsDuringMultiCapture;
+                                    return EMenuFunction.Continue;
+                                }),
+                            new($"Kings can move multiple cells: {checkersRuleset.FlyingKings}",
+                                _ =>
+                                {
+                                    checkersRuleset.FlyingKings =
+                                        !checkersRuleset.FlyingKings;
                                     return EMenuFunction.Continue;
                                 }),
                             new("Ruleset title: " + checkersRuleset.Title, m2 =>

@@ -34,5 +34,13 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
             .ToList();
     }
 
+    public new CheckersGame GetById(int id)
+    {
+        return RunPreFetchActions(ThisDbSet
+            .Include(cg => cg.CheckersStates)
+            .Include(cg => cg.CheckersRuleset)
+            .First(cg => id.Equals(cg.Id)));
+    }
+
     protected override DbSet<CheckersGame> ThisDbSet => DbContext.CheckersGames;
 }

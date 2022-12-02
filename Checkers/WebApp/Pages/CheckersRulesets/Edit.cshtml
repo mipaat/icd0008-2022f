@@ -65,12 +65,17 @@
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanJumpBackwards" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanJumpBackwards)
+                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwards" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwards)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanJumpBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanJumpBackwardsDuringMultiCapture)
+                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwardsDuringMultiCapture)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CheckersRuleset.FlyingKings" /> @Html.DisplayNameFor(model => model.CheckersRuleset.FlyingKings)
                 </label>
             </div>
             <input type="hidden" asp-for="CheckersRuleset.Id" />

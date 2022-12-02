@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DAL.Db\DAL.Db.csproj" />
+      <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -19,6 +20,10 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.10" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" />
       <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.10" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\images" />
     </ItemGroup>
 
 </Project>

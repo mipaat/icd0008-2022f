@@ -18,6 +18,9 @@ public class CheckersState : AbstractDatabaseEntity
 
     public int WhiteMoves { get; set; }
     public int BlackMoves { get; set; }
+    public int? LastMovedToX { get; set; }
+    public int? LastMovedToY { get; set; }
+    public EMoveState? LastMoveState { get; set; }
 
     private record CompressedGamePieces(int X, int Y)
     {

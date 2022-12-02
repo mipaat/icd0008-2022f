@@ -44,10 +44,13 @@
                 @Html.DisplayNameFor(model => model.CheckersRuleset[0].MustCapture)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanJumpBackwards)
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanCaptureBackwards)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanJumpBackwardsDuringMultiCapture)
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanCaptureBackwardsDuringMultiCapture)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CheckersRuleset[0].FlyingKings)
             </th>
             <th></th>
         </tr>
@@ -86,10 +89,13 @@
                 @Html.DisplayFor(modelItem => item.MustCapture)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CanJumpBackwards)
+                @Html.DisplayFor(modelItem => item.CanCaptureBackwards)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CanJumpBackwardsDuringMultiCapture)
+                @Html.DisplayFor(modelItem => item.CanCaptureBackwardsDuringMultiCapture)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FlyingKings)
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |

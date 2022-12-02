@@ -3,6 +3,7 @@ using System;
 using DAL.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Db.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221129004105_Record necessary previous move data in CheckersState")]
+    partial class RecordnecessarypreviousmovedatainCheckersState
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
@@ -60,10 +62,10 @@ namespace DAL.Db.Migrations
                     b.Property<bool>("BuiltIn")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("CanCaptureBackwards")
+                    b.Property<bool>("CanJumpBackwards")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("CanCaptureBackwardsDuringMultiCapture")
+                    b.Property<bool>("CanJumpBackwardsDuringMultiCapture")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
@@ -71,9 +73,6 @@ namespace DAL.Db.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("FlyingKings")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Height")
                         .HasColumnType("INTEGER");

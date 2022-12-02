@@ -1,0 +1,48 @@
+.game-board-table {
+    table-layout: fixed;
+}
+
+.game-board-table td {
+    width: 50px;
+    min-width: 50px;
+    height: 50px;
+    min-height: 50px;
+    position: relative;
+}
+
+.game-board-table td:after {
+    content:'';
+    display: block;
+    margin-top: 100%;
+}
+
+.game-board-table td img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: auto;
+}
+
+.game-board-table .checkers-cell-white {
+    background-color: white;
+    color: black;
+}
+
+.game-board-table .checkers-cell-black {
+    background-color: black;
+    color: white;
+}
+
+.game-board-table .movable {
+    background-color: #198754;
+}
+
+.game-board-table .movable-to {
+    background-color: #20c997;
+}
+
+.game-board-table .selected-piece {
+    background-color: #4a7188;
+}
