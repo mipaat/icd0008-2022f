@@ -1,3 +1,4 @@
+using System.Reflection;
 using Domain;
 
 namespace DAL.FileSystem;
@@ -70,6 +71,14 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return id;
     }
 
+    private void RunPreSaveActions(T entity)
+    {
+        foreach (var action in PreSaveActions)
+        {
+            action(entity);
+        }
+    }
+
     protected readonly RepositoryContext RepositoryContext;
 
     public ICollection<T> GetAll()
@@ -111,6 +120,8 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
         entity.Id = IncrementNextId();
 
+        RunPreSaveActions(entity);
+
         var fileContent = Serialize(entity);
         File.WriteAllText(GetFilePath(entity.Id), fileContent);
     }
@@ -121,6 +132,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
         if (!Exists(entity.Id))
             throw new ArgumentException($"Can't update entity {typeof(T).Name} with ID {entity.Id} - ID not found!");
+        RunPreSaveActions(entity);
         var fileContent = Serialize(entity);
         File.WriteAllText(GetFilePath(entity.Id), fileContent);
     }
@@ -158,6 +170,15 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     public void Refresh(T entity)
     {
-        entity = Exists(entity.Id) ? GetById(entity.Id) : entity;
+        if (!Exists(entity.Id)) return;
+
+        var fetchedEntity = GetById(entity.Id);
+        const BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        var fields = fetchedEntity.GetType()
+            .GetFields(bindingAttr);
+        foreach (var field in fields)
+        {
+            entity.GetType().GetField(field.Name, bindingAttr)?.SetValue(entity, field.GetValue(fetchedEntity));
+        }
     }
 }
