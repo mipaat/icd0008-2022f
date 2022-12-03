@@ -94,14 +94,22 @@ public class ConsoleGame
         while (breakControl)
         {
             AddBoardToRenderQueue();
+            var prompt = "Q to quit! Coordinate pairs (e.g A4D7) to move!";
+            if (_checkersBrain.EndTurnAllowed) prompt += " E to end turn!";
             var input = _consoleWindow
                 .RenderAndAwaitTextInput(
-                    "Q to quit! Coordinate pairs (e.g A4D7) to move!",
+                    prompt,
                     keepRenderQueue: true)?.ToLower() ?? "";
             switch (input)
             {
                 case "q":
                     breakControl = false;
+                    break;
+                case "e":
+                    if (_checkersBrain.EndTurnAllowed)
+                    {
+                        _checkersBrain.EndTurn();
+                    }
                     break;
                 default:
                     var matches = rx.Matches(input);

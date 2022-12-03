@@ -220,8 +220,11 @@ public class CheckersBrain
                     }
                     else
                     {
-                        if ((!gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))) ||
-                            gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1)) || _checkersRuleset.FlyingKings) result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
+                        if (((!gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))) ||
+                            gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1)) ||
+                            _checkersRuleset.FlyingKings)
+                            && !(LastMoveState == EMoveState.CanContinue && gamePiecesOnPath.Count == 0))
+                            result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
                     }
 
                     x += xIncrement;
@@ -328,6 +331,7 @@ public class CheckersBrain
 
     public bool IsMoveValid(EPlayerColor playerColor, int sourceX, int sourceY, int destinationX, int destinationY)
     {
+        if (!IsPieceMovableBasic(playerColor, sourceX, sourceY)) return false;
         var availableMoves = AvailableMoves(sourceX, sourceY);
         return availableMoves.Exists(move => move.ToX == destinationX && move.ToY == destinationY);
     }
@@ -341,6 +345,8 @@ public class CheckersBrain
             throw new NotAllowedException(
                 $"Moving from ({sourceX}, {sourceY}) to ({destinationX}, {destinationY}) is not allowed!");
 
+        ClearCalculatedMoves();
+        ClearCalculatedCapturingMoves();
         var gamePiece = _pieces[sourceX, sourceY]!.Value;
         if ((gamePiece.Player == EPlayerColor.Black && destinationY == 0) ||
             (gamePiece.Player == EPlayerColor.White && destinationY == Height - 1)) gamePiece.IsCrowned = true;
@@ -377,8 +383,13 @@ public class CheckersBrain
         }
     }
 
+    public bool EndTurnAllowed => LastMoveState == EMoveState.CanContinue && !_checkersRuleset.MustCapture;
+
     public void EndTurn()
     {
+        if (!EndTurnAllowed)
+            throw new NotAllowedException($"Not allowed to end turn when more pieces can still be captured!");
+
         IncrementMoveCounter();
 
         LastMoveState = EMoveState.Finished;

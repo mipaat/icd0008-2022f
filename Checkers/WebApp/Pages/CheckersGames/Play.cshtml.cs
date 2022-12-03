@@ -91,7 +91,7 @@ public class Play : PageModel
 
         PlayerId = playerId;
 
-        if (endTurn && Brain.LastMoveState == EMoveState.CanContinue && Brain.PlayerColor(PlayerId) ==
+        if (endTurn && Brain.EndTurnAllowed && Brain.PlayerColor(PlayerId) ==
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
