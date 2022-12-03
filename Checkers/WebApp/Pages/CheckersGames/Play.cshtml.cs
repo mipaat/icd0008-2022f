@@ -32,7 +32,8 @@ public class Play : PageModel
     public bool ToSet => ToX != null && ToY != null;
     public GamePiece? PieceBeingMoved => FromSet ? Brain[FromX!.Value, FromY!.Value] : null;
 
-    private RedirectToPageResult Reset => RedirectToPage("", new { id = GameId, swap = Swap, playerId = Swap ? null : PlayerId });
+    private RedirectToPageResult Reset =>
+        RedirectToPage("", new { id = GameId, swap = Swap, playerId = Swap ? null : PlayerId });
 
     public bool IsPieceMovable(int x, int y) // TODO: Check if piece actually has available moves
     {
@@ -44,7 +45,7 @@ public class Play : PageModel
         return FromSet && Brain.IsMoveValid(PlayerId, FromX!.Value, FromY!.Value, x, y);
     }
 
-    public async Task<IActionResult> OnGet(int? id, string? playerId)
+    public async Task<IActionResult> OnGet(int? id, string? playerId, bool endTurn = false)
     {
         if (id == null)
         {
@@ -90,6 +91,14 @@ public class Play : PageModel
 
         PlayerId = playerId;
 
+        if (endTurn && Brain.LastMoveState == EMoveState.CanContinue && Brain.PlayerColor(PlayerId) ==
+            Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
+        {
+            Brain.EndTurn();
+            _games.Upsert(Brain.GetSaveGameState());
+            return Reset;
+        }
+
         if (FromSet && !IsPieceMovable(FromX!.Value, FromY!.Value))
         {
             return Reset;
@@ -103,7 +112,14 @@ public class Play : PageModel
                 _games.Upsert(Brain.GetSaveGameState());
             }
 
-            return Reset;
+            return Brain.LastMoveState == EMoveState.CanContinue
+                ? RedirectToPage("",
+                    new
+                    {
+                        id = GameId, swap = Swap, playerId = Swap ? null : PlayerId, fromX = Brain.LastMovedToX,
+                        FromY = Brain.LastMovedToY
+                    })
+                : Reset;
         }
 
         return Page();

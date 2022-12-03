@@ -53,24 +53,47 @@
     }
 </table>
 
+@if (Model.Brain.LastMoveState == EMoveState.CanContinue)
+{
+    <form method="GET" action="">
+        <input value="@Model.GameId" name="id" type="hidden">
+        <input value="@Model.Swap.ToString()" name="swap" type="hidden">
+        @if (!Model.Swap)
+        {
+            <input value="@Model.PlayerId" name="playerId" type="hidden">
+        }
+        <input value="@(true.ToString())" name="endTurn" type="hidden">
+        <button type="submit">End turn</button>
+    </form>
+}
+
 @functions
 {
     HtmlString GetSelectOnClickText(int x, int y, GamePiece? gamePiece)
     {
-        var playerIdParam = Model.Swap ? "" : $"&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}";
         if (Model.IsPieceMovable(x, y))
         {
-            return new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}{playerIdParam}&fromX={x}&fromY={y}&swap={Model.Swap}'\"");
+            return new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?{GetBaseParams()}&fromX={x}&fromY={y}'\"");
         }
-        return Model.IsMovableTo(x, y) ? new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?id={Model.GameId}{playerIdParam}&fromX={Model.FromX}&fromY={Model.FromY}&toX={x}&toY={y}&swap={Model.Swap}'\"") : new HtmlString("");
+        return Model.IsMovableTo(x, y) ? new HtmlString($"onclick=\"window.location = '/CheckersGames/Play?{GetBaseParams()}&fromX={Model.FromX}&fromY={Model.FromY}&toX={x}&toY={y}'\"") : new HtmlString("");
+    }
+
+    string GetPlayerIdParam()
+    {
+        return Model.Swap ? "" : $"&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}";
+    }
+
+    HtmlString GetBaseParams()
+    {
+        return new HtmlString($"id={Model.GameId}{GetPlayerIdParam()}&swap={Model.Swap}");
     }
 
     string GetBoardCellClasses(int x, int y)
     {
         return GetBackgroundClass(x, y)
-        + (IsSelectedPiece(x, y) ? " selected-piece" : "")
-        + (Model.IsMovableTo(x, y) ? " movable-to" : "")
-        + (Model.IsPieceMovable(x, y) ? " movable" : "");
+               + (IsSelectedPiece(x, y) ? " selected-piece" : "")
+               + (Model.IsMovableTo(x, y) ? " movable-to" : "")
+               + (Model.IsPieceMovable(x, y) ? " movable" : "");
     }
 
     static string GetBackgroundClass(int x, int y)

@@ -176,6 +176,11 @@ public class CheckersBrain
         }
     }
 
+    private List<Move> CalculateCapturingMoves(int fromX, int fromY)
+    {
+        return CalculateAvailableMoves(fromX, fromY).FindAll(move => move.GamePieces.Count > 0);
+    }
+
     private List<Move> CalculateAvailableMoves(int fromX, int fromY)
     {
         var result = new List<Move>();
@@ -193,9 +198,7 @@ public class CheckersBrain
                 $"GamePiece has unknown color: {gamePiece.Player}") // Should never happen
         };
 
-        // TODO: Handle crowned pieces
         // TODO: Handle backwards moves
-        // TODO: Handle multi-captures
         var increments = new List<int> { -1, 1 };
         foreach (var yIncrement in increments)
         {
@@ -205,7 +208,9 @@ public class CheckersBrain
                 var y = fromY + yIncrement;
                 var c = 1;
                 var gamePiecesOnPath = new List<GamePieceWithPosition>();
-                while (x >= 0 && x < Width && y >= 0 && y < Height && c <= 2)
+                while (x >= 0 && x < Width && y >= 0 && y < Height &&
+                       (c <= 2 || (gamePiece.IsCrowned && _checkersRuleset.FlyingKings)) &&
+                       gamePiecesOnPath.Count < 2)
                 {
                     var gamePieceOnPath = _pieces[x, y];
                     if (gamePieceOnPath != null)
@@ -215,17 +220,8 @@ public class CheckersBrain
                     }
                     else
                     {
-                        if (!gamePiece.IsCrowned)
-                        {
-                            if (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))
-                            {
-                                result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
-                            }
-                        }
-                        else
-                        {
-                            result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
-                        }
+                        if ((!gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))) ||
+                            gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1)) || _checkersRuleset.FlyingKings) result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
                     }
 
                     x += xIncrement;
@@ -345,7 +341,10 @@ public class CheckersBrain
             throw new NotAllowedException(
                 $"Moving from ({sourceX}, {sourceY}) to ({destinationX}, {destinationY}) is not allowed!");
 
-        _pieces[destinationX, destinationY] = _pieces[sourceX, sourceY];
+        var gamePiece = _pieces[sourceX, sourceY]!.Value;
+        if ((gamePiece.Player == EPlayerColor.Black && destinationY == 0) ||
+            (gamePiece.Player == EPlayerColor.White && destinationY == Height - 1)) gamePiece.IsCrowned = true;
+        _pieces[destinationX, destinationY] = gamePiece;
         _pieces[sourceX, sourceY] = null;
         foreach (var capturedGamePiece in move.GamePieces)
         {
@@ -354,14 +353,10 @@ public class CheckersBrain
 
         LastMovedToX = destinationX;
         LastMovedToY = destinationY;
-        if (false)
-        {
-            LastMoveState = EMoveState.CanContinue;
-        }
-        else
-        {
-            LastMoveState = EMoveState.Finished;
-        }
+
+        LastMoveState = move.GamePieces.Count == 0 || CalculateCapturingMoves(destinationX, destinationY).Count == 0
+            ? EMoveState.Finished
+            : EMoveState.CanContinue;
 
         if (LastMoveState == EMoveState.Finished)
         {
@@ -382,7 +377,7 @@ public class CheckersBrain
         }
     }
 
-    private void EndTurn()
+    public void EndTurn()
     {
         IncrementMoveCounter();
 
