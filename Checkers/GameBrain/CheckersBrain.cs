@@ -125,6 +125,26 @@ public class CheckersBrain
     public int? LastMovedToY { get; set; }
     public EMoveState? LastMoveState { get; set; } = EMoveState.Finished;
 
+    private List<Move>[,]? CalculatedMoves { get; set; }
+    private int? CalculatedMovesCount { get; set; }
+    private List<Move>[,]? CalculatedCapturingMoves { get; set; }
+    private int? CalculatedCapturingMovesCount { get; set; }
+
+    private void ClearCalculatedMoves()
+    {
+        CalculatedMoves = null;
+        CalculatedMovesCount = null;
+    }
+
+    private void ClearCalculatedCapturingMoves()
+    {
+        CalculatedCapturingMoves = null;
+        CalculatedCapturingMovesCount = null;
+    }
+
+    private bool MovesCalculated => CalculatedMoves != null && CalculatedMovesCount != null;
+    private bool CapturingMovesCalculated => CalculatedCapturingMoves != null && CalculatedCapturingMovesCount != null;
+
     public bool IsPlayerTurn(string? playerId)
     {
         try
@@ -156,8 +176,7 @@ public class CheckersBrain
         }
     }
 
-    private List<Move>
-        AvailableMoves(int fromX, int fromY)
+    private List<Move> CalculateAvailableMoves(int fromX, int fromY)
     {
         var result = new List<Move>();
 
@@ -166,9 +185,17 @@ public class CheckersBrain
 
         if (!IsPieceMovableBasic(gamePiece.Player, fromX, fromY)) return result;
 
-        // TODO: Figure out how and where to handle required captures
-        // TODO: Maybe save currently calculated availableMoves to not have to recalculate them each time?
-        // TODO: Handle crowned pieces and backwards moves
+        var backwardsDirection = gamePiece.Player switch
+        {
+            EPlayerColor.Black => 1,
+            EPlayerColor.White => -1,
+            _ => throw new IllegalGameStateException(
+                $"GamePiece has unknown color: {gamePiece.Player}") // Should never happen
+        };
+
+        // TODO: Handle crowned pieces
+        // TODO: Handle backwards moves
+        // TODO: Handle multi-captures
         var increments = new List<int> { -1, 1 };
         foreach (var yIncrement in increments)
         {
@@ -209,6 +236,49 @@ public class CheckersBrain
         }
 
         return result;
+    }
+
+    private void CalculateAllAvailableMoves()
+    {
+        CalculatedMoves = new List<Move>[Width, Height];
+        CalculatedMovesCount = 0;
+        for (var fromX = 0; fromX < Width; fromX++)
+        {
+            for (var fromY = 0; fromY < Height; fromY++)
+            {
+                var moves = CalculateAvailableMoves(fromX, fromY);
+                CalculatedMoves[fromX, fromY] = moves;
+                CalculatedMovesCount += moves.Count;
+            }
+        }
+    }
+
+    private void CalculateAllCapturingMoves()
+    {
+        if (!MovesCalculated) CalculateAllAvailableMoves();
+        CalculatedCapturingMoves = new List<Move>[Width, Height];
+        CalculatedCapturingMovesCount = 0;
+        for (var fromX = 0; fromX < Width; fromX++)
+        {
+            for (var fromY = 0; fromY < Height; fromY++)
+            {
+                var moves = CalculatedMoves![fromX, fromY];
+                var capturingMoves = moves.FindAll(move => move.GamePieces.Count > 0);
+                CalculatedCapturingMoves[fromX, fromY] = capturingMoves;
+                CalculatedCapturingMovesCount += capturingMoves.Count;
+            }
+        }
+    }
+
+    private List<Move>
+        AvailableMoves(int fromX, int fromY)
+    {
+        if (!MovesCalculated) CalculateAllAvailableMoves();
+        if (!_checkersRuleset.MustCapture) return CalculatedMoves![fromX, fromY];
+        if (!CapturingMovesCalculated) CalculateAllCapturingMoves();
+        return CalculatedCapturingMovesCount > 0
+            ? CalculatedCapturingMoves![fromX, fromY]
+            : CalculatedMoves![fromX, fromY];
     }
 
     public bool IsPieceMovableBasic(EPlayerColor playerColor, int x, int y)
