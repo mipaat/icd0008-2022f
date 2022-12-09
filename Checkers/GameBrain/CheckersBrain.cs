@@ -197,11 +197,13 @@ public class CheckersBrain
             _ => throw new IllegalGameStateException(
                 $"GamePiece has unknown color: {gamePiece.Player}") // Should never happen
         };
+        var isContinuingTurn =
+            LastMovedToX == fromX && LastMovedToY == fromY && LastMoveState == EMoveState.CanContinue;
 
-        // TODO: Handle backwards moves
         var increments = new List<int> { -1, 1 };
         foreach (var yIncrement in increments)
         {
+            if (yIncrement == backwardsDirection && !_checkersRuleset.CanCaptureBackwards && (!_checkersRuleset.CanCaptureBackwardsDuringMultiCapture || !isContinuingTurn) && !gamePiece.IsCrowned) continue;;
             foreach (var xIncrement in increments)
             {
                 var x = fromX + xIncrement;
