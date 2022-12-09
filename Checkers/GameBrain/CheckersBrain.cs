@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using System.Collections;
+using Domain;
 
 namespace GameBrain;
 
@@ -181,6 +182,17 @@ public class CheckersBrain
         return CalculateAvailableMoves(fromX, fromY).FindAll(move => move.GamePieces.Count > 0);
     }
 
+    private int BackWardsDirection(GamePiece gamePiece)
+    {
+        return gamePiece.Player switch
+        {
+            EPlayerColor.Black => 1,
+            EPlayerColor.White => -1,
+            _ => throw new IllegalGameStateException(
+                $"GamePiece has unknown color: {gamePiece.Player}") // Should never happen
+        };
+    }
+
     private List<Move> CalculateAvailableMoves(int fromX, int fromY)
     {
         var result = new List<Move>();
@@ -190,20 +202,12 @@ public class CheckersBrain
 
         if (!IsPieceMovableBasic(gamePiece.Player, fromX, fromY)) return result;
 
-        var backwardsDirection = gamePiece.Player switch
-        {
-            EPlayerColor.Black => 1,
-            EPlayerColor.White => -1,
-            _ => throw new IllegalGameStateException(
-                $"GamePiece has unknown color: {gamePiece.Player}") // Should never happen
-        };
         var isContinuingTurn =
             LastMovedToX == fromX && LastMovedToY == fromY && LastMoveState == EMoveState.CanContinue;
 
         var increments = new List<int> { -1, 1 };
         foreach (var yIncrement in increments)
         {
-            if (yIncrement == backwardsDirection && !_checkersRuleset.CanCaptureBackwards && (!_checkersRuleset.CanCaptureBackwardsDuringMultiCapture || !isContinuingTurn) && !gamePiece.IsCrowned) continue;;
             foreach (var xIncrement in increments)
             {
                 var x = fromX + xIncrement;
@@ -222,10 +226,7 @@ public class CheckersBrain
                     }
                     else
                     {
-                        if (((!gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1))) ||
-                            gamePiece.IsCrowned && (c == 1 || (c == 2 && gamePiecesOnPath.Count == 1)) ||
-                            _checkersRuleset.FlyingKings)
-                            && !(LastMoveState == EMoveState.CanContinue && gamePiecesOnPath.Count == 0))
+                        if (CheckValid(gamePiece, gamePiecesOnPath, c, yIncrement, isContinuingTurn))
                             result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
                     }
 
@@ -237,6 +238,35 @@ public class CheckersBrain
         }
 
         return result;
+    }
+
+    private bool CheckValid(GamePiece gamePiece, ICollection gamePiecesOnPath, int distance, int yIncrement, bool isContinuingTurn)
+    {
+        var isCapturing = gamePiecesOnPath.Count > 0;
+        return CheckDistanceValid(gamePiece, distance, isCapturing)
+               && CheckContinueValid(gamePiecesOnPath)
+               && CheckBackwardsValid(yIncrement, gamePiece, isCapturing, isContinuingTurn);
+    }
+
+    private bool CheckDistanceValid(GamePiece gamePiece, int distance, bool isCapturing)
+    {
+        return (!gamePiece.IsCrowned && (distance == 1 || (distance == 2 && isCapturing))) ||
+               gamePiece.IsCrowned && (distance == 1 || (distance == 2 && isCapturing)) ||
+               (_checkersRuleset.FlyingKings && gamePiece.IsCrowned && distance > 0);
+    }
+
+    private bool CheckContinueValid(ICollection gamePiecesOnPath)
+    {
+        return !(LastMoveState == EMoveState.CanContinue && gamePiecesOnPath.Count == 0);
+    }
+
+    private bool CheckBackwardsValid(int yIncrement, GamePiece gamePiece, bool isCapturing, bool isContinuingTurn)
+    {
+        return yIncrement != BackWardsDirection(gamePiece) ||
+               gamePiece.IsCrowned ||
+               (isCapturing &&
+                (_checkersRuleset.CanCaptureBackwards ||
+                 (isContinuingTurn && _checkersRuleset.CanCaptureBackwardsDuringMultiCapture)));
     }
 
     private void CalculateAllAvailableMoves()
