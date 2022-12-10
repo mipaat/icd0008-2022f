@@ -18,12 +18,17 @@ public class Menu
     private readonly bool _appendDefaultMenuItems;
 
     private readonly Func<Menu, List<MenuItem>> _menuItemsFunc;
+    private List<MenuItem>? _menuItemsCache;
 
     public List<MenuItem> MenuItems
     {
         get
         {
-            var result = _menuItemsFunc(this);
+            if (_menuItemsCache == null)
+            {
+                _menuItemsCache = _menuItemsFunc(this);
+            }
+            var result = _menuItemsCache.ToList();
 
             if (_appendDefaultMenuItems) result.AddRange(BuiltInMenuItems);
 
@@ -123,6 +128,11 @@ public class Menu
         }
     }
 
+    private void ClearMenuItemsCache()
+    {
+        _menuItemsCache = null;
+    }
+
     private int LongestLine()
     {
         return Math.Max(MenuItems.Aggregate(0, (i, item) => Math.Max(i, item.Text.Length)), Title.Length);
@@ -159,6 +169,7 @@ public class Menu
                 case ConsoleKey.Enter:
                     var menuItem = MenuItems[CursorPosition];
                     var menuFunction = menuItem.Run(this);
+                    ClearMenuItemsCache();
                     switch (menuFunction)
                     {
                         case EMenuFunction.Back:
@@ -179,7 +190,10 @@ public class Menu
 
     public EMenuFunction Run()
     {
-        return MenuLoop();
+        
+        var result = MenuLoop();
+        ClearMenuItemsCache();
+        return result;
     }
 
     public override string ToString()
