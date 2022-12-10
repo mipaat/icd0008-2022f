@@ -259,7 +259,7 @@ var manageCheckersRulesetsMenuFactory = new MenuFactory("Manage Checkers ruleset
     var checkersRulesets = new List<MenuItem>();
 
     checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(new CheckersRuleset(), "CREATE NEW RULESET"));
-    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAll().Where(cr => cr.Saved))
+    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAllSaved())
     {
         repoCtx.CheckersRulesetRepository.Refresh(checkersRuleset); // TODO: figure out a better way to do this
         checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(checkersRuleset));
