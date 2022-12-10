@@ -7,12 +7,15 @@ public class NotAllowedException : Exception
     }
 }
 
-public class IllegalGameStateException : Exception
+public class IllegalStateException : Exception
 {
-    public IllegalGameStateException()
+    public IllegalStateException(string message) : base(message)
     {
     }
+}
 
+public class IllegalGameStateException : IllegalStateException
+{
     public IllegalGameStateException(string message) : base("Unexpected game state: " + message)
     {
     }

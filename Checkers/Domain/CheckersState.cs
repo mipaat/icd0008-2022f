@@ -13,9 +13,6 @@ public class CheckersState : AbstractDatabaseEntity
     [JsonIgnore] [NotMapped] public GamePiece?[,]? GamePieces { get; set; }
     public string SerializedGamePieces { get; set; } = default!;
 
-    public TimeSpan MoveElapsedTime { get; set; }
-    public TimeSpan GameElapsedTime { get; set; }
-
     public int WhiteMoves { get; set; }
     public int BlackMoves { get; set; }
     public int? LastMovedToX { get; set; }

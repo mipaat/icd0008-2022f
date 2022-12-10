@@ -24,6 +24,16 @@
                 <span asp-validation-for="CheckersGame.BlackPlayerId" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="CheckersGame.WhiteAiType" class="control-label"></label>
+                <input asp-for="CheckersGame.WhiteAiType" class="form-control" />
+                <span asp-validation-for="CheckersGame.WhiteAiType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CheckersGame.BlackAiType" class="control-label"></label>
+                <input asp-for="CheckersGame.BlackAiType" class="form-control" />
+                <span asp-validation-for="CheckersGame.BlackAiType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="CheckersGame.CheckersRulesetId" class="control-label"></label>
                 <select asp-for="CheckersGame.CheckersRulesetId" class="form-control" asp-items="ViewBag.CheckersRulesetId"></select>
                 <span asp-validation-for="CheckersGame.CheckersRulesetId" class="text-danger"></span>

@@ -6,6 +6,8 @@ public class CheckersGame : AbstractDatabaseEntity
 {
     public string? WhitePlayerId { get; set; }
     public string? BlackPlayerId { get; set; }
+    public EAiType? WhiteAiType { get; set; }
+    public EAiType? BlackAiType { get; set; }
 
     public int CheckersRulesetId { get; set; }
     [JsonIgnore] public CheckersRuleset? CheckersRuleset { get; set; }

@@ -3,9 +3,9 @@ using Domain;
 
 namespace GameBrain;
 
-internal record GamePieceWithPosition(GamePiece GamePiece, int X, int Y);
+public record GamePieceWithPosition(GamePiece GamePiece, int X, int Y);
 
-internal record Move(int ToX, int ToY, List<GamePieceWithPosition> GamePieces);
+public record Move(int FromX, int FromY, int ToX, int ToY, List<GamePieceWithPosition> GamePieces);
 
 public class CheckersBrain
 {
@@ -39,8 +39,6 @@ public class CheckersBrain
             _pieces = currentCheckersState.GamePieces!;
             WhiteMoves = currentCheckersState.WhiteMoves;
             BlackMoves = currentCheckersState.BlackMoves;
-            GameElapsedTime = currentCheckersState.GameElapsedTime;
-            MoveElapsedTime = currentCheckersState.MoveElapsedTime;
             LastMovedToX = currentCheckersState.LastMovedToX;
             LastMovedToY = currentCheckersState.LastMovedToY;
             LastMoveState = currentCheckersState.LastMoveState;
@@ -116,10 +114,6 @@ public class CheckersBrain
         throw new KeyNotFoundException($"Player with ID {playerId} not found in current game!");
     }
 
-    public DateTime StartedAt { get; set; }
-    public DateTime? EndedAt { get; set; }
-    public TimeSpan MoveElapsedTime { get; set; }
-    public TimeSpan GameElapsedTime { get; set; }
     public int WhiteMoves { get; set; }
     public int BlackMoves { get; set; }
     public int? LastMovedToX { get; set; }
@@ -227,7 +221,7 @@ public class CheckersBrain
                     else
                     {
                         if (CheckValid(gamePiece, gamePiecesOnPath, c, yIncrement, isContinuingTurn))
-                            result.Add(new Move(x, y, gamePiecesOnPath.ToList()));
+                            result.Add(new Move(fromX, fromY, x, y, gamePiecesOnPath.ToList()));
                     }
 
                     x += xIncrement;
@@ -240,7 +234,8 @@ public class CheckersBrain
         return result;
     }
 
-    private bool CheckValid(GamePiece gamePiece, ICollection gamePiecesOnPath, int distance, int yIncrement, bool isContinuingTurn)
+    private bool CheckValid(GamePiece gamePiece, ICollection gamePiecesOnPath, int distance, int yIncrement,
+        bool isContinuingTurn)
     {
         var isCapturing = gamePiecesOnPath.Count > 0;
         return CheckDistanceValid(gamePiece, distance, isCapturing)
@@ -301,7 +296,21 @@ public class CheckersBrain
         }
     }
 
-    private List<Move>
+    public List<Move> AvailableMoves()
+    {
+        var result = new List<Move>();
+        for (var x = 0; x < Width; x++)
+        {
+            for (var y = 0; y < Height; y++)
+            {
+                result.AddRange(AvailableMoves(x, y));
+            }
+        }
+
+        return result;
+    }
+
+    public List<Move>
         AvailableMoves(int fromX, int fromY)
     {
         if (!MovesCalculated) CalculateAllAvailableMoves();
@@ -445,8 +454,6 @@ public class CheckersBrain
         {
             CreatedAt = DateTime.Now.ToUniversalTime(),
             GamePieces = gamePiecesCopy,
-            MoveElapsedTime = MoveElapsedTime,
-            GameElapsedTime = GameElapsedTime,
             WhiteMoves = WhiteMoves,
             BlackMoves = BlackMoves,
             LastMovedToX = LastMovedToX,

@@ -20,12 +20,6 @@
             @Html.DisplayNameFor(model => model.CheckersState[0].SerializedGamePieces)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].MoveElapsedTime)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].GameElapsedTime)
-        </th>
-        <th>
             @Html.DisplayNameFor(model => model.CheckersState[0].WhiteMoves)
         </th>
         <th>
@@ -52,12 +46,6 @@
             </td>
             <td>
                 @IndexModel.ShortenSerializedGamePieces(item)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MoveElapsedTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.GameElapsedTime)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhiteMoves)

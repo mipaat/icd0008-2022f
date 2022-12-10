@@ -23,6 +23,12 @@
             @Html.DisplayNameFor(model => model.CheckersGame[0].BlackPlayerId)
         </th>
         <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].WhiteAiType)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersGame[0].BlackAiType)
+        </th>
+        <th>
             @Html.DisplayNameFor(model => model.CheckersGame[0].CheckersRuleset)
         </th>
         <th>
@@ -49,6 +55,12 @@
             </td>
             <td>
                 <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayerId">@item.BlackPlayerId</a>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WhiteAiType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BlackAiType)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CheckersRulesetId)
