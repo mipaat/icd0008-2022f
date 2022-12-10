@@ -23,4 +23,9 @@ public class CheckersRulesetRepository : AbstractFileSystemRepository<CheckersRu
     {
         return GetAll().ToList().Exists(other => other.IsEquivalent(checkersRuleset));
     }
+
+    public ICollection<CheckersRuleset> GetAllSaved()
+    {
+        return GetAll().Where(cr => cr.Saved).ToList();
+    }
 }

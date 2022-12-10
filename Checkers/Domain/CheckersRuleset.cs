@@ -78,7 +78,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
                && other.FlyingKings == FlyingKings;
     }
 
-    public CheckersRuleset GetClone()
+    public CheckersRuleset GetClone(bool? saved = null)
     {
         return new CheckersRuleset
         {
@@ -86,7 +86,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
             Width = Width,
             BlackMovesFirst = BlackMovesFirst,
             BuiltIn = false,
-            Saved = Saved,
+            Saved = saved ?? Saved,
             CanCaptureBackwards = CanCaptureBackwards,
             CanCaptureBackwardsDuringMultiCapture = CanCaptureBackwardsDuringMultiCapture,
             FlyingKings = FlyingKings,

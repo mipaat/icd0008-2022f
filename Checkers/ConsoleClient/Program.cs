@@ -21,36 +21,55 @@ RepositoryContext repoDb = new RepositoryContext(ctx);
 DAL.FileSystem.RepositoryContext repoFs = new DAL.FileSystem.RepositoryContext();
 IRepositoryContext repoCtx = repoDb;
 
+EAiType? GetPlayerType(string playerIdentifier, Menu parentMenu)
+{
+    var menuItems = new List<MenuItem>();
+    EAiType? result = null;
+    menuItems.Add(new MenuItem("Player", EMenuFunction.Exit));
+    foreach (var enumValue in Enum.GetValues(typeof(EAiType)))
+    {
+        menuItems.Add(new MenuItem(enumValue.ToString() ?? "???", _ =>
+        {
+            result = (EAiType)enumValue;
+            return EMenuFunction.Exit;
+        }));
+    }
+
+    var selectAiMenuFactory = new MenuFactory(
+        $"Select {playerIdentifier} type", _ => menuItems, false);
+    var selectAiMenu = selectAiMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
+    selectAiMenu.Run();
+    return result;
+}
+
 EMenuFunction RunConsoleGame(Menu menu)
 {
     try
     {
         ConsoleGame consoleGame;
+        // TODO: AI selection
         if (selectedCheckersGame != null)
         {
             consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx);
         }
         else
         {
-            var firstPlayerName = menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the first player:");
-            var secondPlayerName = menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the second player:");
+            var whitePlayerAiType = GetPlayerType("white player", menu);
+            var whitePlayerName = menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the white player:");
+            var blackPlayerAiType = GetPlayerType("black player", menu);
+            var blackPlayerName =
+                menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the black player:");
             // TODO: Allow users to randomize starting order?
-            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(new CheckersRuleset
-            {
-                Id = default,
-                BuiltIn = false,
-                Saved = false,
-                Width = selectedCheckersRuleset.Width,
-                Height = selectedCheckersRuleset.Height,
-                Title = selectedCheckersRuleset.Title,
-                Description = selectedCheckersRuleset.Description,
-                BlackMovesFirst = selectedCheckersRuleset.BlackMovesFirst,
-                MustCapture = selectedCheckersRuleset.MustCapture,
-                CanCaptureBackwards = selectedCheckersRuleset.CanCaptureBackwards,
-                CanCaptureBackwardsDuringMultiCapture = selectedCheckersRuleset.CanCaptureBackwardsDuringMultiCapture,
-                FlyingKings = selectedCheckersRuleset.FlyingKings
-            }, firstPlayerName, secondPlayerName), repoCtx);
+            consoleGame = new ConsoleGame(menu.ConsoleWindow,
+                new CheckersBrain(
+                    selectedCheckersRuleset.GetClone(false),
+                    whitePlayerName,
+                    blackPlayerName,
+                    whitePlayerAiType,
+                    blackPlayerAiType),
+                repoCtx);
         }
+
         consoleGame.Run();
     }
     catch (ArgumentOutOfRangeException e)
@@ -80,7 +99,7 @@ var customBoardSize = new MenuItem("Custom board size", menu =>
 var loadCheckersRulesetsMenuFactory = new MenuFactory("Pick a Checkers ruleset", _ =>
 {
     var checkersRulesets = new List<MenuItem>();
-    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAll().Where(cr => cr.Saved))
+    foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAllSaved())
     {
         checkersRulesets.Add(new MenuItem(checkersRuleset.TitleText, m =>
         {
@@ -173,7 +192,8 @@ MenuItem GetEditableCheckersRulesetMenuItem(CheckersRuleset checkersRuleset, str
                                 checkersRuleset.CanCaptureBackwards = !checkersRuleset.CanCaptureBackwards;
                                 return EMenuFunction.Continue;
                             }),
-                            new($"Can capture backwards during multi-capture: {checkersRuleset.CanCaptureBackwardsDuringMultiCapture}",
+                            new(
+                                $"Can capture backwards during multi-capture: {checkersRuleset.CanCaptureBackwardsDuringMultiCapture}",
                                 _ =>
                                 {
                                     checkersRuleset.CanCaptureBackwardsDuringMultiCapture =

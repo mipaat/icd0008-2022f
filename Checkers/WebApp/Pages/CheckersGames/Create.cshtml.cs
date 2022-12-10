@@ -1,44 +1,77 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using DAL.Db;
 using Domain;
+using GameBrain;
 
 namespace WebApp.Pages.CheckersGames
 {
     public class CreateModel : PageModel
     {
-        private readonly DAL.Db.AppDbContext _context;
+        private readonly IRepositoryContext _ctx;
 
-        public CreateModel(DAL.Db.AppDbContext context)
+        public CreateModel(IRepositoryContext ctx)
         {
-            _context = context;
+            _ctx = ctx;
         }
 
         public IActionResult OnGet()
         {
-            ViewData["CheckersRulesetId"] = new SelectList(_context.CheckersRulesets, "Id", "Id");
             return Page();
         }
 
-        [BindProperty] public CheckersGame CheckersGame { get; set; } = default!;
+        public IEnumerable<SelectListItem> CheckersRulesets
+        {
+            get
+            {
+                var result = new List<SelectListItem>();
+                foreach (var checkersRuleset in _ctx.CheckersRulesetRepository.GetAllSaved())
+                {
+                    result.Add(new SelectListItem(checkersRuleset.TitleText, checkersRuleset.Id.ToString()));
+                }
+
+                return result;
+            }
+        }
+
+        public IEnumerable<SelectListItem> AiTypeOptions
+        {
+            get
+            {
+                var result = new List<SelectListItem>();
+                var enumValues = Enum.GetValues(typeof(EAiType));
+                result.Add(new SelectListItem("No AI", ""));
+                foreach (var value in enumValues)
+                {
+                    result.Add(new SelectListItem(value.ToString(), ((int)value).ToString()));
+                }
+
+                return result;
+            }
+        }
+
+        [BindProperty] public string WhitePlayerId { get; set; } = default!;
+        [BindProperty] public string BlackPlayerId { get; set; } = default!;
+        [BindProperty] public EAiType? WhiteAiType { get; set; }
+        [BindProperty] public EAiType? BlackAiType { get; set; }
+        [BindProperty] public int CheckersRulesetId { get; set; }
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public async Task<IActionResult> OnPostAsync()
+        public Task<IActionResult> OnPost()
         {
-            if (!ModelState.IsValid || _context.CheckersGames == null || CheckersGame == null)
+            if (!ModelState.IsValid)
             {
-                return Page();
+                return Task.FromResult<IActionResult>(Page());
             }
 
-            _context.CheckersGames.Add(CheckersGame);
-            await _context.SaveChangesAsync();
+            var checkersRuleset = _ctx.CheckersRulesetRepository.GetById(CheckersRulesetId).GetClone(false);
+            var checkersBrain =
+                new CheckersBrain(checkersRuleset, WhitePlayerId, BlackPlayerId, WhiteAiType, BlackAiType);
+            var checkersGame = checkersBrain.GetSaveGameState();
+            _ctx.CheckersGameRepository.Add(checkersGame);
 
-            return RedirectToPage("./Index");
+            return Task.FromResult<IActionResult>(RedirectToPage("./Play", new {id = checkersGame.Id}));
         }
     }
 }

@@ -10,9 +10,9 @@ public class Play : PageModel
 {
     private readonly ICheckersGameRepository _games;
 
-    public Play(ICheckersGameRepository games)
+    public Play(IRepositoryContext ctx)
     {
-        _games = games;
+        _games = ctx.CheckersGameRepository;
     }
 
     public CheckersBrain Brain { get; set; } = default!;

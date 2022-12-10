@@ -24,4 +24,9 @@ public class CheckersRulesetRepository : AbstractDbRepository<CheckersRuleset>, 
     {
         return ThisDbSet.AsEnumerable().Any(other => other.IsEquivalent(checkersRuleset));
     }
+
+    public ICollection<CheckersRuleset> GetAllSaved()
+    {
+        return RunPreFetchActions(ThisDbSet.Where(cr => cr.Saved)).ToList();
+    }
 }

@@ -1,33 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using DAL;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using DAL.Db;
 using Domain;
 
 namespace WebApp.Pages.CheckersGames
 {
     public class IndexModel : PageModel
     {
-        private readonly DAL.Db.AppDbContext _context;
+        private readonly IRepositoryContext _ctx;
 
-        public IndexModel(DAL.Db.AppDbContext context)
+        public IndexModel(IRepositoryContext ctx)
         {
-            _context = context;
+            _ctx = ctx;
         }
 
-        public IList<CheckersGame> CheckersGame { get;set; } = default!;
+        public IList<CheckersGame> CheckersGame { get; set; } = default!;
 
-        public async Task OnGetAsync()
+        public Task OnGet()
         {
-            if (_context.CheckersGames != null)
-            {
-                CheckersGame = await _context.CheckersGames
-                .Include(c => c.CheckersRuleset).ToListAsync();
-            }
+            CheckersGame = _ctx.CheckersGameRepository.GetAll().ToList();
+            return Task.CompletedTask;
         }
     }
 }

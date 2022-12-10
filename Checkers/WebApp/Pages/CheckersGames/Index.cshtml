@@ -63,7 +63,9 @@
                 @Html.DisplayFor(modelItem => item.BlackAiType)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CheckersRulesetId)
+                <a asp-page="/CheckersRulesets/Details" asp-route-id="@item.CheckersRulesetId">
+                    @Html.DisplayFor(modelItem => item.CheckersRuleset!.TitleText)
+                </a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StartedAt)

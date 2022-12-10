@@ -50,7 +50,9 @@ public class CheckersBrain
         }
     }
 
-    public CheckersBrain(CheckersRuleset checkersRuleset, string whitePlayerId, string blackPlayerId)
+    public CheckersBrain(CheckersRuleset checkersRuleset,
+        string whitePlayerId, string blackPlayerId,
+        EAiType? whiteAiType = null, EAiType? blackAiType = null)
     {
         if (whitePlayerId == blackPlayerId)
             throw new ArgumentException($"Player IDs must not be identical! '{whitePlayerId}' = '{blackPlayerId}'");
@@ -58,6 +60,8 @@ public class CheckersBrain
         {
             WhitePlayerId = whitePlayerId,
             BlackPlayerId = blackPlayerId,
+            WhiteAiType = whiteAiType,
+            BlackAiType = blackAiType,
             CheckersRuleset = checkersRuleset,
             CheckersStates = new List<CheckersState>(),
             StartedAt = DateTime.Now.ToUniversalTime()
