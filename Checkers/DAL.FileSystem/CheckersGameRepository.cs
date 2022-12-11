@@ -6,7 +6,7 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
 {
     protected override string RepositoryName => "CheckersGame";
 
-    public CheckersGameRepository(RepositoryContext repositoryContext) : base(repositoryContext)
+    public CheckersGameRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
     {
     }
 
@@ -34,14 +34,14 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
         return base.Serialize(entity);
     }
 
-    public new CheckersGame Remove(int id)
+    public new CheckersGame Remove(CheckersGame entity)
     {
-        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(id))
+        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
         {
-            RepositoryContext.CheckersStateRepository.Remove(checkersState.Id);
+            RepositoryContext.CheckersStateRepository.Remove(checkersState);
         }
 
-        var result = base.Remove(id);
+        var result = base.Remove(entity);
 
         RepositoryContext.CheckersRulesetRepository.Remove(result.CheckersRulesetId);
 

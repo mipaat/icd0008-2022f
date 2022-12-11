@@ -5,7 +5,7 @@ namespace DAL.Db;
 
 public class CheckersRulesetRepository : AbstractDbRepository<CheckersRuleset>, ICheckersRulesetRepository
 {
-    public CheckersRulesetRepository(AppDbContext dbContext) : base(dbContext)
+    public CheckersRulesetRepository(AppDbContext dbContext, IRepositoryContext repoContext) : base(dbContext, repoContext)
     {
         foreach (var checkersRuleset in DefaultCheckersRulesets.DefaultRulesets)
         {

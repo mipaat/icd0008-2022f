@@ -8,11 +8,11 @@ namespace WebApp.Pages.CheckersGames;
 
 public class Play : PageModel
 {
-    private readonly ICheckersGameRepository _games;
+    private readonly IRepositoryContext _ctx;
 
     public Play(IRepositoryContext ctx)
     {
-        _games = ctx.CheckersGameRepository;
+        _ctx = ctx;
     }
 
     public CheckersBrain Brain { get; set; } = default!;
@@ -52,18 +52,18 @@ public class Play : PageModel
             return RedirectToPage("/Index", new { error = $"NULL is not a valid game ID!" });
         }
 
-        CheckersGame game;
+        CheckersGame? game;
         try
         {
-            game = await Task.Run(() => _games.GetById(id.Value));
-        }
-        catch (InvalidOperationException)
-        {
-            return RedirectToPage("/Index", new { error = $"No game with ID {id.Value} found!" });
+            game = _ctx.CheckersGameRepository.GetById(id.Value);
         }
         catch (InsufficientCheckersStatesException)
         {
             return RedirectToPage("/Index", new { error = $"Game with ID {id.Value} appears to be corrupted!" });
+        }
+        if (game == null)
+        {
+            return RedirectToPage("/Index", new { error = $"No game with ID {id.Value} found!" });
         }
 
         if (game.CheckersRuleset == null || game.CurrentCheckersState == null)
@@ -98,7 +98,7 @@ public class Play : PageModel
             {
                 Brain.MoveAi();
             }
-            _games.Upsert(Brain.GetSaveGameState());
+            _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
             return Reset;
         }
 
@@ -106,7 +106,7 @@ public class Play : PageModel
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
-            _games.Upsert(Brain.GetSaveGameState());
+            _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
             return Reset;
         }
 
@@ -120,7 +120,7 @@ public class Play : PageModel
             if (IsMovableTo(ToX!.Value, ToY!.Value))
             {
                 Brain.Move(FromX!.Value, FromY!.Value, ToX!.Value, ToY!.Value);
-                _games.Upsert(Brain.GetSaveGameState());
+                _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
             }
 
             return Brain.LastMoveState == EMoveState.CanContinue

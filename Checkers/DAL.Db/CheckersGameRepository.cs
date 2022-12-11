@@ -5,7 +5,7 @@ namespace DAL.Db;
 
 public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheckersGameRepository
 {
-    public CheckersGameRepository(AppDbContext dbContext) : base(dbContext)
+    public CheckersGameRepository(AppDbContext dbContext, IRepositoryContext repoContext) : base(dbContext, repoContext)
     {
         PreSaveActions.Add(cg =>
         {
@@ -30,17 +30,31 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
                 .Include(cg => cg.CheckersRuleset)
             )
             .ToList()
-            .OrderByDescending(cg=> cg.CurrentCheckersState!.CreatedAt)
+            .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
             .ToList();
     }
 
-    public new CheckersGame GetById(int id)
+    public new CheckersGame? GetById(int id)
     {
-        return RunPreFetchActions(ThisDbSet
+        var entity = ThisDbSet
             .Include(cg => cg.CheckersStates)
             .Include(cg => cg.CheckersRuleset)
-            .First(cg => id.Equals(cg.Id)));
+            .FirstOrDefault(cg => id.Equals(cg.Id));
+        return entity == null ? entity : RunPreFetchActions(entity);
     }
 
     protected override DbSet<CheckersGame> ThisDbSet => DbContext.CheckersGames;
+
+    public new CheckersGame Remove(CheckersGame entity)
+    {
+        var removedEntity = base.Remove(entity);
+
+        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
+        {
+            RepositoryContext.CheckersStateRepository.Remove(checkersState);
+        }
+        
+        RepositoryContext.CheckersRulesetRepository.Remove(removedEntity.CheckersRulesetId);
+        return removedEntity;
+    }
 }

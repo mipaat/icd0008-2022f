@@ -7,7 +7,7 @@ public interface IRepository<T>
 {
     ICollection<T> GetAll();
 
-    T GetById(int id);
+    T? GetById(int id);
 
     void Add(T entity);
 
@@ -15,7 +15,7 @@ public interface IRepository<T>
 
     void Upsert(T entity);
 
-    T Remove(int id);
+    T? Remove(int id);
 
     T Remove(T entity);
 

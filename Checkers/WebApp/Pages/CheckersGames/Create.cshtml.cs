@@ -58,20 +58,23 @@ namespace WebApp.Pages.CheckersGames
         [BindProperty] public int CheckersRulesetId { get; set; }
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public Task<IActionResult> OnPost()
+        public IActionResult OnPost()
         {
             if (!ModelState.IsValid)
             {
-                return Task.FromResult<IActionResult>(Page());
+                return Page();
             }
 
-            var checkersRuleset = _ctx.CheckersRulesetRepository.GetById(CheckersRulesetId).GetClone(false);
+            var checkersRuleset = _ctx.CheckersRulesetRepository.GetById(CheckersRulesetId)?.GetClone(false);
+
+            if (checkersRuleset == null) return Page();
+
             var checkersBrain =
                 new CheckersBrain(checkersRuleset, WhitePlayerId, BlackPlayerId, WhiteAiType, BlackAiType);
             var checkersGame = checkersBrain.GetSaveGameState();
             _ctx.CheckersGameRepository.Add(checkersGame);
 
-            return Task.FromResult<IActionResult>(RedirectToPage("./Play", new { id = checkersGame.Id, swap = true }));
+            return RedirectToPage("./Launch", new { id = checkersGame.Id });
         }
     }
 }

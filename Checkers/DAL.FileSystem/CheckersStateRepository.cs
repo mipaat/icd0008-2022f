@@ -4,7 +4,7 @@ namespace DAL.FileSystem;
 
 public class CheckersStateRepository : AbstractFileSystemRepository<CheckersState>, ICheckersStateRepository
 {
-    public CheckersStateRepository(RepositoryContext repositoryContext) : base(repositoryContext)
+    public CheckersStateRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
     {
     }
 

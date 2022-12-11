@@ -20,7 +20,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     protected ICollection<Action<T>> PreSaveActions { get; }
 
-    protected AbstractFileSystemRepository(RepositoryContext repositoryContext)
+    protected AbstractFileSystemRepository(IRepositoryContext repositoryContext)
     {
         RepositoryContext = repositoryContext;
         PreSaveActions = new List<Action<T>>();
@@ -79,7 +79,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         }
     }
 
-    protected readonly RepositoryContext RepositoryContext;
+    protected readonly IRepositoryContext RepositoryContext;
 
     public ICollection<T> GetAll()
     {
@@ -98,10 +98,10 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return result;
     }
 
-    public T GetById(int id)
+    public T? GetById(int id)
     {
         EnsureDirectoryExists();
-        if (!Exists(id)) throw new InvalidOperationException($"No {typeof(T).Name} with ID {id} found!");
+        if (!Exists(id)) return null;
 
         var filePath = GetFilePath(id);
         var fileContent = File.ReadAllText(filePath);
@@ -151,9 +151,10 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         }
     }
 
-    public T Remove(int id)
+    public T? Remove(int id)
     {
-        return Remove(GetById(id));
+        var entity = GetById(id);
+        return entity == null ? entity : Remove(entity);
     }
 
     public T Remove(T entity)
@@ -170,9 +171,8 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     public void Refresh(T entity)
     {
-        if (!Exists(entity.Id)) return;
-
         var fetchedEntity = GetById(entity.Id);
+        if (fetchedEntity == null) return;
         const BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
         var fields = fetchedEntity.GetType()
             .GetFields(bindingAttr);

@@ -6,7 +6,7 @@ public class CheckersRulesetRepository : AbstractFileSystemRepository<CheckersRu
 {
     protected override string RepositoryName => "CheckersRuleset";
 
-    public CheckersRulesetRepository(RepositoryContext repositoryContext) : base(repositoryContext)
+    public CheckersRulesetRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
     {
         foreach (var checkersRuleset in DefaultCheckersRulesets.DefaultRulesets)
         {

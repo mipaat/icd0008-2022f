@@ -6,12 +6,14 @@ namespace DAL.Db;
 public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, IDatabaseEntity
 {
     protected readonly AppDbContext DbContext;
+    protected readonly IRepositoryContext RepositoryContext;
     protected ICollection<Action<T>> PreSaveActions { get; }
     protected ICollection<Action<T>> PreFetchActions { get; }
 
-    protected AbstractDbRepository(AppDbContext dbContext)
+    protected AbstractDbRepository(AppDbContext dbContext, IRepositoryContext repoContext)
     {
         DbContext = dbContext;
+        RepositoryContext = repoContext;
         PreSaveActions = new List<Action<T>>();
         PreFetchActions = new List<Action<T>>();
     }
@@ -63,9 +65,10 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return RunPreFetchActions(ThisDbSet).ToList();
     }
 
-    public T GetById(int id)
+    public T? GetById(int id)
     {
-        return RunPreFetchActions(ThisDbSet.First(t => id.Equals(t.Id)));
+        var entity = ThisDbSet.FirstOrDefault(t => id.Equals(t.Id));
+        return entity == null ? entity : RunPreFetchActions(entity);
     }
 
     public void Add(T entity)
@@ -91,10 +94,10 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         DbContext.SaveChanges();
     }
 
-    public T Remove(int id)
+    public T? Remove(int id)
     {
-        var entity = Remove(GetById(id));
-        return entity;
+        var entity = GetById(id);
+        return entity == null ? entity : Remove(entity);
     }
 
     public T Remove(T entity)
