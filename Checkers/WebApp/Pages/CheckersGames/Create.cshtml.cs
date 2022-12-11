@@ -71,7 +71,7 @@ namespace WebApp.Pages.CheckersGames
             var checkersGame = checkersBrain.GetSaveGameState();
             _ctx.CheckersGameRepository.Add(checkersGame);
 
-            return Task.FromResult<IActionResult>(RedirectToPage("./Play", new {id = checkersGame.Id}));
+            return Task.FromResult<IActionResult>(RedirectToPage("./Play", new { id = checkersGame.Id, swap = true }));
         }
     }
 }
