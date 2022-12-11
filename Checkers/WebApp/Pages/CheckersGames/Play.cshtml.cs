@@ -91,6 +91,17 @@ public class Play : PageModel
 
         PlayerId = playerId;
 
+        if (Brain.IsAiTurn)
+        {
+            var aiColor = Brain.CurrentTurnPlayerColor;
+            while (Brain.CurrentTurnPlayerColor == aiColor)
+            {
+                Brain.MoveAi();
+            }
+            _games.Upsert(Brain.GetSaveGameState());
+            return Reset;
+        }
+
         if (endTurn && Brain.EndTurnAllowed && Brain.PlayerColor(PlayerId) ==
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {

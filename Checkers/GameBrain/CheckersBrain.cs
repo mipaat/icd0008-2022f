@@ -175,6 +175,24 @@ public class CheckersBrain
         }
     }
 
+    public bool IsAiTurn => CurrentTurnAiType != null;
+
+    private ICheckersAi? CurrentTurnAi =>
+        CurrentTurnAiType != null ? CheckersAiContext.GetCheckersAi(CurrentTurnAiType.Value) : null;
+
+    private EAiType? CurrentTurnAiType
+    {
+        get
+        {
+            return CurrentTurnPlayerColor switch
+            {
+                EPlayerColor.Black => _checkersGame.BlackAiType,
+                EPlayerColor.White => _checkersGame.WhiteAiType,
+                _ => null
+            };
+        }
+    }
+
     private List<Move> CalculateCapturingMoves(int fromX, int fromY)
     {
         return CalculateAvailableMoves(fromX, fromY).FindAll(move => move.GamePieces.Count > 0);
@@ -413,6 +431,15 @@ public class CheckersBrain
         {
             IncrementMoveCounter();
         }
+    }
+
+    public void MoveAi()
+    {
+        if (!IsAiTurn) throw new NotAllowedException("Can't make AI move during player turn!");
+        if (CurrentTurnAi == null)
+            throw new IllegalStateException($"Can't make AI move - no AI found of type '{CurrentTurnAiType}'");
+        var ai = CurrentTurnAi;
+        ai.Move(this);
     }
 
     public void IncrementMoveCounter()
