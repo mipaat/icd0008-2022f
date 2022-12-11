@@ -16,40 +16,63 @@ public class Play : PageModel
     }
 
     public CheckersBrain Brain { get; set; } = default!;
-    public string PlayerId { get; set; } = default!;
+    [BindProperty(SupportsGet = true)] public int? PlayerId { get; set; }
     public int GameId { get; set; }
 
-    public EPlayerColor PlayerColor => Brain.PlayerColor(PlayerId);
+    public EPlayerColor PlayerColor
+    {
+        get
+        {
+            return PlayerId switch
+            {
+                0 => EPlayerColor.Black,
+                1 => EPlayerColor.White,
+                _ => Brain.CurrentTurnPlayerColor
+            };
+        }
+    }
 
-    public bool IsPlayerTurn => Brain.IsPlayerTurn(PlayerId);
+    public string? PlayerName
+    {
+        get
+        {
+            return PlayerId switch
+            {
+                0 => Brain.PlayerName(PlayerColor),
+                1 => Brain.PlayerName(PlayerColor),
+                _ => null
+            };
+        }
+    }
+
+    public bool IsPlayerTurn => Brain.IsPlayerTurn(PlayerColor);
 
     [BindProperty(SupportsGet = true)] public int? FromX { get; set; }
     [BindProperty(SupportsGet = true)] public int? FromY { get; set; }
     [BindProperty(SupportsGet = true)] public int? ToX { get; set; }
     [BindProperty(SupportsGet = true)] public int? ToY { get; set; }
-    [BindProperty(SupportsGet = true)] public bool Swap { get; set; }
     public bool FromSet => FromX != null && FromY != null;
     public bool ToSet => ToX != null && ToY != null;
     public GamePiece? PieceBeingMoved => FromSet ? Brain[FromX!.Value, FromY!.Value] : null;
 
     private RedirectToPageResult Reset =>
-        RedirectToPage("", new { id = GameId, swap = Swap, playerId = Swap ? null : PlayerId });
+        RedirectToPage("", new { id = GameId, playerId = PlayerId });
 
     public bool IsPieceMovable(int x, int y) // TODO: Check if piece actually has available moves
     {
-        return Brain.IsPieceMovable(PlayerId, x, y);
+        return !Brain.IsAiTurn && Brain.IsPieceMovable(PlayerColor, x, y);
     }
 
     public bool IsMovableTo(int x, int y)
     {
-        return FromSet && Brain.IsMoveValid(PlayerId, FromX!.Value, FromY!.Value, x, y);
+        return !Brain.IsAiTurn && FromSet && Brain.IsMoveValid(PlayerColor, FromX!.Value, FromY!.Value, x, y);
     }
 
-    public async Task<IActionResult> OnGet(int? id, string? playerId, bool endTurn = false)
+    public IActionResult OnGet(int? id, bool endTurn = false, bool aiMoveAllowed = false)
     {
         if (id == null)
         {
-            return RedirectToPage("/Index", new { error = $"NULL is not a valid game ID!" });
+            return RedirectToPage("/Index", new { error = "NULL is not a valid game ID!" });
         }
 
         CheckersGame? game;
@@ -75,21 +98,8 @@ public class Play : PageModel
 
         GameId = id.Value;
         Brain = new CheckersBrain(game);
-        playerId ??= Brain.CurrentTurnPlayerColor switch
-        {
-            EPlayerColor.Black => game.BlackPlayerId,
-            EPlayerColor.White => game.WhitePlayerId,
-            _ => playerId
-        };
 
-        if ((playerId != game.BlackPlayerId && playerId != game.WhitePlayerId) || playerId == null)
-        {
-            var playerIdText = playerId ?? "NULL";
-            return RedirectToPage("/Index",
-                new { error = $"Player with ID '{playerIdText}' not found in game with ID {id}!" });
-        }
-
-        PlayerId = playerId;
+        
 
         if (Brain.IsAiTurn)
         {
@@ -102,7 +112,7 @@ public class Play : PageModel
             return Reset;
         }
 
-        if (endTurn && Brain.EndTurnAllowed && Brain.PlayerColor(PlayerId) ==
+        if (endTurn && Brain.EndTurnAllowed && PlayerColor ==
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
@@ -127,7 +137,7 @@ public class Play : PageModel
                 ? RedirectToPage("",
                     new
                     {
-                        id = GameId, swap = Swap, playerId = Swap ? null : PlayerId, fromX = Brain.LastMovedToX,
+                        id = GameId, playerId = PlayerId, fromX = Brain.LastMovedToX,
                         FromY = Brain.LastMovedToY
                     })
                 : Reset;

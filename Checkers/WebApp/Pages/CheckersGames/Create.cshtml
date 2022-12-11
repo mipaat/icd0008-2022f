@@ -14,14 +14,14 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="@Model.WhitePlayerId" class="control-label"></label>
-                <input asp-for="@Model.WhitePlayerId" class="form-control" />
-                <span asp-validation-for="@Model.WhitePlayerId" class="text-danger"></span>
+                <label asp-for="@Model.WhitePlayerName" class="control-label"></label>
+                <input asp-for="@Model.WhitePlayerName" class="form-control" />
+                <span asp-validation-for="@Model.WhitePlayerName" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="@Model.BlackPlayerId" class="control-label"></label>
-                <input asp-for="@Model.BlackPlayerId" class="form-control" />
-                <span asp-validation-for="@Model.BlackPlayerId" class="text-danger"></span>
+            <div class="form-group"> 
+                <label asp-for="@Model.BlackPlayerName" class="control-label"></label>
+                <input asp-for="@Model.BlackPlayerName" class="form-control" />
+                <span asp-validation-for="@Model.BlackPlayerName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="@Model.WhiteAiType" class="control-label"></label>

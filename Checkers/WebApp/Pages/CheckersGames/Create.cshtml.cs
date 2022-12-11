@@ -51,8 +51,8 @@ namespace WebApp.Pages.CheckersGames
             }
         }
 
-        [BindProperty] public string WhitePlayerId { get; set; } = default!;
-        [BindProperty] public string BlackPlayerId { get; set; } = default!;
+        [BindProperty] public string? WhitePlayerName { get; set; }
+        [BindProperty] public string? BlackPlayerName { get; set; }
         [BindProperty] public EAiType? WhiteAiType { get; set; }
         [BindProperty] public EAiType? BlackAiType { get; set; }
         [BindProperty] public int CheckersRulesetId { get; set; }
@@ -70,7 +70,7 @@ namespace WebApp.Pages.CheckersGames
             if (checkersRuleset == null) return Page();
 
             var checkersBrain =
-                new CheckersBrain(checkersRuleset, WhitePlayerId, BlackPlayerId, WhiteAiType, BlackAiType);
+                new CheckersBrain(checkersRuleset, WhitePlayerName, BlackPlayerName, WhiteAiType, BlackAiType);
             var checkersGame = checkersBrain.GetSaveGameState();
             _ctx.CheckersGameRepository.Add(checkersGame);
 

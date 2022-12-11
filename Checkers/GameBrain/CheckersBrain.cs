@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Domain;
 
 namespace GameBrain;
@@ -23,8 +23,8 @@ public class CheckersBrain
 
     public GamePiece? this[int x, int y] => _pieces[x, y];
 
-    private string? WhitePlayerId => _checkersGame.WhitePlayerId;
-    private string? BlackPlayerId => _checkersGame.BlackPlayerId;
+    private string? WhitePlayerName => _checkersGame.WhitePlayerName;
+    private string? BlackPlayerName => _checkersGame.BlackPlayerName;
 
     public CheckersBrain(CheckersGame checkersGame)
     {
@@ -51,15 +51,13 @@ public class CheckersBrain
     }
 
     public CheckersBrain(CheckersRuleset checkersRuleset,
-        string whitePlayerId, string blackPlayerId,
+        string? whitePlayerName, string? blackPlayerName,
         EAiType? whiteAiType = null, EAiType? blackAiType = null)
     {
-        if (whitePlayerId == blackPlayerId)
-            throw new ArgumentException($"Player IDs must not be identical! '{whitePlayerId}' = '{blackPlayerId}'");
         _checkersGame = new CheckersGame
         {
-            WhitePlayerId = whitePlayerId,
-            BlackPlayerId = blackPlayerId,
+            WhitePlayerName = whitePlayerName,
+            BlackPlayerName = blackPlayerName,
             WhiteAiType = whiteAiType,
             BlackAiType = blackAiType,
             CheckersRuleset = checkersRuleset,
@@ -103,19 +101,14 @@ public class CheckersBrain
         InitializePlayerPieces(Height - rowsPerPlayer, Height, EPlayerColor.Black);
     }
 
-    public EPlayerColor PlayerColor(string? playerId)
+    public string? PlayerName(EPlayerColor playerColor)
     {
-        if (playerId == WhitePlayerId)
+        return playerColor switch
         {
-            return EPlayerColor.White;
-        }
-
-        if (playerId == BlackPlayerId)
-        {
-            return EPlayerColor.Black;
-        }
-
-        throw new KeyNotFoundException($"Player with ID {playerId} not found in current game!");
+            EPlayerColor.Black => BlackPlayerName,
+            EPlayerColor.White => WhitePlayerName,
+            _ => throw new ArgumentException($"Invalid player color {playerColor}")
+        };
     }
 
     public int WhiteMoves { get; set; }
@@ -143,19 +136,6 @@ public class CheckersBrain
 
     private bool MovesCalculated => CalculatedMoves != null && CalculatedMovesCount != null;
     private bool CapturingMovesCalculated => CalculatedCapturingMoves != null && CalculatedCapturingMovesCount != null;
-
-    public bool IsPlayerTurn(string? playerId)
-    {
-        try
-        {
-            var playerColor = PlayerColor(playerId);
-            return IsPlayerTurn(playerColor);
-        }
-        catch (KeyNotFoundException)
-        {
-            return false;
-        }
-    }
 
     public bool IsPlayerTurn(EPlayerColor playerColor) => playerColor == CurrentTurnPlayerColor;
 
@@ -362,34 +342,9 @@ public class CheckersBrain
         return gamePiece.Value.Player == playerColor && playerColor == CurrentTurnPlayerColor;
     }
 
-    public bool IsPieceMovable(string? playerId, int x, int y)
-    {
-        try
-        {
-            return IsPieceMovable(PlayerColor(playerId), x, y);
-        }
-        catch (KeyNotFoundException)
-        {
-            Console.Out.WriteLine("KEY NOT FOUND " + playerId);
-            return false;
-        }
-    }
-
     public bool IsPieceMovable(EPlayerColor playerColor, int x, int y)
     {
         return IsPieceMovableBasic(playerColor, x, y) && AvailableMoves(x, y).Count > 0;
-    }
-
-    public bool IsMoveValid(string? playerId, int sourceX, int sourceY, int destinationX, int destinationY)
-    {
-        try
-        {
-            return IsMoveValid(PlayerColor(playerId), sourceX, sourceY, destinationX, destinationY);
-        }
-        catch (KeyNotFoundException)
-        {
-            return false;
-        }
     }
 
     public bool IsMoveValid(EPlayerColor playerColor, int sourceX, int sourceY, int destinationX, int destinationY)

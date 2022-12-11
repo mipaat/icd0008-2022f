@@ -19,8 +19,7 @@
             @for (var x = 0; x < Model.Brain.Width; x++)
             {
                 var gamePiece = Model.Brain[x, y];
-                var text = gamePiece == null ? "" : gamePiece.Value.Player.ToString();
-                <td @GetSelectOnClickText(x, y, gamePiece)
+                <td @GetSelectOnClickText(x, y)
                     class="@GetBoardCellClasses(x, y)">
                     @switch (gamePiece?.Player)
                     {
@@ -69,7 +68,7 @@
 
 @functions
 {
-    HtmlString GetSelectOnClickText(int x, int y, GamePiece? gamePiece)
+    HtmlString GetSelectOnClickText(int x, int y)
     {
         if (Model.IsPieceMovable(x, y))
         {
@@ -80,12 +79,12 @@
 
     string GetPlayerIdParam()
     {
-        return Model.Swap ? "" : $"&playerId={UrlEncoder.Default.Encode(Model.PlayerId)}";
+        return Model.PlayerId == null ? "" : $"&playerId={Model.PlayerId}";
     }
 
     HtmlString GetBaseParams()
     {
-        return new HtmlString($"id={Model.GameId}{GetPlayerIdParam()}&swap={Model.Swap}");
+        return new HtmlString($"id={Model.GameId}{GetPlayerIdParam()}");
     }
 
     string GetBoardCellClasses(int x, int y)
