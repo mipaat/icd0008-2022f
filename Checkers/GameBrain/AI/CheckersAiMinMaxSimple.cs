@@ -11,6 +11,8 @@ public class CheckersAiMinMaxSimple : AbstractCheckersAiMinMax
         var myPieces = playerColor == EPlayerColor.Black ? pieceCounts.BlackPieces : pieceCounts.WhitePieces;
         var opponentPieces = playerColor == EPlayerColor.Black ? pieceCounts.WhitePieces : pieceCounts.BlackPieces;
 
+        if (myPieces == 0) return float.MinValue;
+        if (opponentPieces == 0) return float.MaxValue;
         return myPieces * 1.5f - opponentPieces;
     }
 }
