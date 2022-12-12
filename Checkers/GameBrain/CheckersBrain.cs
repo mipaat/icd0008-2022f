@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using Domain;
 
 namespace GameBrain;
@@ -25,6 +25,10 @@ public class CheckersBrain
 
     private string? WhitePlayerName => _checkersGame.WhitePlayerName;
     private string? BlackPlayerName => _checkersGame.BlackPlayerName;
+
+    public EPlayerColor? Winner => _checkersGame.Winner;
+    public bool Tied => _checkersGame.Tied;
+    public bool Ended => _checkersGame.Ended;
 
     public CheckersBrain(CheckersGame checkersGame)
     {
@@ -270,6 +274,7 @@ public class CheckersBrain
     {
         CalculatedMoves = new List<Move>[Width, Height];
         CalculatedMovesCount = 0;
+        if (Ended) return;
         for (var fromX = 0; fromX < Width; fromX++)
         {
             for (var fromY = 0; fromY < Height; fromY++)
@@ -286,6 +291,7 @@ public class CheckersBrain
         if (!MovesCalculated) CalculateAllAvailableMoves();
         CalculatedCapturingMoves = new List<Move>[Width, Height];
         CalculatedCapturingMovesCount = 0;
+        if (Ended) return;
         for (var fromX = 0; fromX < Width; fromX++)
         {
             for (var fromY = 0; fromY < Height; fromY++)
@@ -325,11 +331,12 @@ public class CheckersBrain
 
     public bool IsPieceMovableBasic(EPlayerColor playerColor, int x, int y)
     {
+        if (Ended) return false;
         var gamePiece = _pieces[x, y];
         if (gamePiece == null) return false;
         if (LastMovedToX != null && LastMovedToY != null && LastMoveState == EMoveState.CanContinue)
         {
-            var previousMoveGamePiece = this[LastMovedToX!.Value, LastMovedToY!.Value];
+            var previousMoveGamePiece = _pieces[LastMovedToX!.Value, LastMovedToY!.Value];
             if (previousMoveGamePiece == null)
                 throw new IllegalGameStateException(
                     $"GamePiece expected at ({LastMovedToX}, {LastMovedToY}) from previous move with state {LastMoveState}!");
@@ -385,6 +392,7 @@ public class CheckersBrain
         if (LastMoveState == EMoveState.Finished)
         {
             IncrementMoveCounter();
+            CheckGameEndConditions();
         }
     }
 
@@ -412,14 +420,51 @@ public class CheckersBrain
 
     public bool EndTurnAllowed => LastMoveState == EMoveState.CanContinue && !_checkersRuleset.MustCapture;
 
+    private (int BlackPieces, int WhitePieces) PieceCounts
+    {
+        get
+        {
+            var result = (0, 0);
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    var gamePiece = _pieces[x, y];
+                    if (gamePiece?.Player == EPlayerColor.Black) result.Item1 += 1;
+                    if (gamePiece?.Player == EPlayerColor.White) result.Item2 += 1;
+                }
+            }
+
+            return result;
+        }
+    }
+
     public void EndTurn()
     {
         if (!EndTurnAllowed)
-            throw new NotAllowedException($"Not allowed to end turn when more pieces can still be captured!");
+            throw new NotAllowedException("Not allowed to end turn!");
 
         IncrementMoveCounter();
 
         LastMoveState = EMoveState.Finished;
+        
+        CheckGameEndConditions();
+    }
+
+    private void CheckGameEndConditions()
+    {
+        if (Ended) return;
+        var pieceCounts = PieceCounts;
+        if (pieceCounts.WhitePieces == 0)
+        {
+            _checkersGame.Winner = EPlayerColor.Black;
+            _checkersGame.EndedAt = DateTime.Now.ToUniversalTime();
+        }
+        if (pieceCounts.BlackPieces == 0)
+        {
+            _checkersGame.Winner = EPlayerColor.White;
+            _checkersGame.EndedAt = DateTime.Now.ToUniversalTime();
+        }
     }
 
     private CheckersState GetCheckersState()

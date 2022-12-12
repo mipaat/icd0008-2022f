@@ -25,6 +25,9 @@ public class CheckersGame : AbstractDatabaseEntity
         return CheckersStates!;
     }
 
+    public bool Tied => Ended && Winner == null;
+    public bool Ended => EndedAt != null;
+
     public override string ToString()
     {
         var result = $"CheckersGame(ID: {Id}, Started at {StartedAt}";
