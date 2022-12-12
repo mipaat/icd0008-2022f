@@ -17,10 +17,10 @@
             @Html.DisplayNameFor(model => model.CheckersGame[0].Id)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersGame[0].WhitePlayerId)
+            @Html.DisplayNameFor(model => model.CheckersGame[0].WhitePlayerName)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersGame[0].BlackPlayerId)
+            @Html.DisplayNameFor(model => model.CheckersGame[0].BlackPlayerName)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.CheckersGame[0].WhiteAiType)
@@ -51,10 +51,10 @@
                 @Html.DisplayFor(modelItem => item.Id)
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayerId">@item.WhitePlayerId</a>
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayerName">@item.WhitePlayerName</a>
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayerId">@item.BlackPlayerId</a>
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayerName">@item.BlackPlayerName</a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhiteAiType)
@@ -77,7 +77,7 @@
                 @Html.DisplayFor(modelItem => item.Winner)
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-swap="true">Play (shared window)</a> |
+                <a asp-page="./Play" asp-route-id="@item.Id">Play (shared window)</a> |
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
