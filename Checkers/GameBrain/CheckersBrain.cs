@@ -4,9 +4,9 @@ using GameBrain.AI;
 
 namespace GameBrain;
 
-public record GamePieceWithPosition(GamePiece GamePiece, int X, int Y);
+public record GamePiecePosition(int X, int Y);
 
-public record Move(int FromX, int FromY, int ToX, int ToY, List<GamePieceWithPosition> GamePieces);
+public record Move(int FromX, int FromY, int ToX, int ToY, List<GamePiecePosition> GamePieces);
 
 public class CheckersBrain
 {
@@ -122,11 +122,11 @@ public class CheckersBrain
         };
     }
 
-    public int WhiteMoves { get; set; }
-    public int BlackMoves { get; set; }
-    public int? LastMovedToX { get; set; }
-    public int? LastMovedToY { get; set; }
-    public EMoveState? LastMoveState { get; set; } = EMoveState.Finished;
+    public int WhiteMoves { get; private set; }
+    public int BlackMoves { get; private set; }
+    public int? LastMovedToX { get; private set; }
+    public int? LastMovedToY { get; private set; }
+    public EMoveState? LastMoveState { get; private set; } = EMoveState.Finished;
 
     private List<Move>[,]? CalculatedMoves { get; set; }
     private int? CalculatedMovesCount { get; set; }
@@ -163,6 +163,19 @@ public class CheckersBrain
             if (firstPlayerMoves == otherPlayerMoves + 1) return otherPlayer;
             throw new Exception(
                 $"Illegal difference between player move counts! BlackMoves: {BlackMoves}, WhiteMoves: {WhiteMoves}, BlackMovesFirst: {_checkersRuleset.BlackMovesFirst}");
+        }
+    }
+
+    public EPlayerColor OtherPlayer
+    {
+        get
+        {
+            return CurrentTurnPlayerColor switch
+            {
+                EPlayerColor.Black => EPlayerColor.White,
+                EPlayerColor.White => EPlayerColor.Black,
+                _ => throw new IllegalStateException("Unknown player color!")
+            };
         }
     }
 
@@ -220,7 +233,7 @@ public class CheckersBrain
                 var x = fromX + xIncrement;
                 var y = fromY + yIncrement;
                 var c = 1;
-                var gamePiecesOnPath = new List<GamePieceWithPosition>();
+                var gamePiecesOnPath = new List<GamePiecePosition>();
                 while (x >= 0 && x < Width && y >= 0 && y < Height &&
                        (c <= 2 || (gamePiece.IsCrowned && _checkersRuleset.FlyingKings)) &&
                        gamePiecesOnPath.Count < 2)
@@ -229,7 +242,7 @@ public class CheckersBrain
                     if (gamePieceOnPath != null)
                     {
                         if (gamePieceOnPath.Value.Player == gamePiece.Player) break;
-                        gamePiecesOnPath.Add(new GamePieceWithPosition(gamePieceOnPath.Value, x, y));
+                        gamePiecesOnPath.Add(new GamePiecePosition(x, y));
                     }
                     else
                     {
@@ -336,7 +349,7 @@ public class CheckersBrain
             : CalculatedMoves![fromX, fromY];
     }
 
-    public bool IsPieceMovableBasic(EPlayerColor playerColor, int x, int y)
+    private bool IsPieceMovableBasic(EPlayerColor playerColor, int x, int y)
     {
         if (Ended) return false;
         var gamePiece = _pieces[x, y];
@@ -412,7 +425,7 @@ public class CheckersBrain
         ai.Move(this);
     }
 
-    public void IncrementMoveCounter()
+    private void IncrementMoveCounter()
     {
         switch (CurrentTurnPlayerColor)
         {
@@ -472,6 +485,24 @@ public class CheckersBrain
             _checkersGame.Winner = EPlayerColor.White;
             _checkersGame.EndedAt = DateTime.Now.ToUniversalTime();
         }
+
+        if (AvailableMoves().Count == 0)
+        {
+            Forfeit();
+        }
+    }
+
+    public void Forfeit()
+    {
+        if (Ended) return;
+        _checkersGame.EndedAt = DateTime.UtcNow;
+        _checkersGame.Winner = OtherPlayer;
+    }
+
+    public void Draw()
+    {
+        if (Ended) return;
+        _checkersGame.EndedAt = DateTime.UtcNow;
     }
 
     private CheckersState GetCheckersState()
