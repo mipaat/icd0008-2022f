@@ -7,7 +7,8 @@ internal delegate float GameStateHeuristicFunc(CheckersBrain checkersBrain, EPla
 
 internal class HeuristicMove : IComparable<HeuristicMove>
 {
-    private HeuristicMove(Move move, CheckersBrain resultingCheckersBrain, GameStateHeuristicFunc gameStateHeuristicFunc,
+    private HeuristicMove(Move move, CheckersBrain resultingCheckersBrain,
+        GameStateHeuristicFunc gameStateHeuristicFunc,
         EPlayerColor playerColor)
     {
         Move = move;
@@ -19,6 +20,7 @@ internal class HeuristicMove : IComparable<HeuristicMove>
     public readonly Move Move;
     private readonly CheckersBrain _resultingCheckersBrain;
     private List<HeuristicMove>? _children;
+    private bool _nextLevelCalculated;
     private readonly EPlayerColor _playerColor;
 
     private readonly GameStateHeuristicFunc _gameStateHeuristicFunc;
@@ -39,8 +41,12 @@ internal class HeuristicMove : IComparable<HeuristicMove>
     {
         get
         {
-            if (IsEndState || _children == null || _children.Count == 0) return GameStateHeuristic;
-            return _playerColor == _resultingCheckersBrain.CurrentTurnPlayerColor
+            if (IsEndState || _children == null || _children.Count == 0 || !_nextLevelCalculated)
+            {
+                return GameStateHeuristic;
+            }
+
+            return _playerColor == _resultingCheckersBrain[Move.ToX, Move.ToY]!.Value.Player
                 ? _children!.Max(move => move.Heuristic)
                 : _children!.Min(move => move.Heuristic);
         }
@@ -66,6 +72,8 @@ internal class HeuristicMove : IComparable<HeuristicMove>
                 finished &= heuristicMove.CalculateNextLevel(timeoutException);
             }
 
+            _nextLevelCalculated = true;
+
             return finished;
         }
 
@@ -79,7 +87,8 @@ internal class HeuristicMove : IComparable<HeuristicMove>
         return finished;
     }
 
-    public static List<HeuristicMove> GetHeuristicMoves(CheckersBrain checkersBrain, GameStateHeuristicFunc gameStateHeuristicFunc,
+    public static List<HeuristicMove> GetHeuristicMoves(CheckersBrain checkersBrain,
+        GameStateHeuristicFunc gameStateHeuristicFunc,
         EPlayerColor playerColor)
     {
         var result = new List<HeuristicMove>();
@@ -92,6 +101,7 @@ internal class HeuristicMove : IComparable<HeuristicMove>
             newCheckersBrain.Move(move.FromX, move.FromY, move.ToX, move.ToY);
             result.Add(new HeuristicMove(move, newCheckersBrain, gameStateHeuristicFunc, playerColor));
         }
+
         if (checkersState != null) checkersGame.CheckersStates!.Remove(checkersState);
         return result;
     }
