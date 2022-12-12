@@ -38,10 +38,17 @@ public class CheckersBrain
         var checkersRuleset = checkersGame.CheckersRuleset!;
         _checkersRuleset = checkersRuleset;
 
+        _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
         if (_checkersGame.CurrentCheckersState != null)
         {
             var currentCheckersState = _checkersGame.CurrentCheckersState;
-            _pieces = currentCheckersState.GamePieces!;
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    _pieces[x, y] = currentCheckersState.GamePieces![x, y];
+                }
+            }
             WhiteMoves = currentCheckersState.WhiteMoves;
             BlackMoves = currentCheckersState.BlackMoves;
             LastMovedToX = currentCheckersState.LastMovedToX;
@@ -50,7 +57,6 @@ public class CheckersBrain
         }
         else
         {
-            _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
             InitializePieces();
         }
     }
@@ -421,7 +427,7 @@ public class CheckersBrain
 
     public bool EndTurnAllowed => LastMoveState == EMoveState.CanContinue && !_checkersRuleset.MustCapture;
 
-    private (int BlackPieces, int WhitePieces) PieceCounts
+    public (int BlackPieces, int WhitePieces) PieceCounts
     {
         get
         {

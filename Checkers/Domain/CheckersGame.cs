@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain;
 
-public class CheckersGame : AbstractDatabaseEntity
+public class CheckersGame : AbstractDatabaseEntity, ICloneable
 {
     public string? WhitePlayerName { get; set; }
     public string? BlackPlayerName { get; set; }
@@ -34,5 +34,27 @@ public class CheckersGame : AbstractDatabaseEntity
         result += EndedAt == null ? "" : $", Ended at {EndedAt}";
         result += ")";
         return result;
+    }
+
+    public CheckersGame GetClone()
+    {
+        return new CheckersGame
+        {
+            WhitePlayerName = WhitePlayerName,
+            BlackPlayerName = BlackPlayerName,
+            WhiteAiType = WhiteAiType,
+            BlackAiType = BlackAiType,
+            CheckersRulesetId = CheckersRulesetId,
+            CheckersRuleset = CheckersRuleset,
+            CheckersStates = CheckersStates?.ToList(),
+            StartedAt = StartedAt,
+            EndedAt = EndedAt,
+            Winner = Winner
+        };
+    }
+
+    public object Clone()
+    {
+        return GetClone();
     }
 }

@@ -3,5 +3,6 @@
 public enum EAiType
 {
     Random,
-    Simple
+    Simple,
+    SimpleMinMax
 }

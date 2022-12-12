@@ -4,10 +4,11 @@ namespace GameBrain.AI;
 
 public static class CheckersAiContext
 {
-    private static readonly List<ICheckersAi> CheckersAis = new List<ICheckersAi>
+    private static readonly List<ICheckersAi> CheckersAis = new()
     {
         new CheckersAiRandom(),
-        new CheckersAiSimple()
+        new CheckersAiSimple(),
+        new CheckersAiMinMaxSimple()
     };
 
     public static ICheckersAi? GetCheckersAi(EAiType aiType)
