@@ -10,60 +10,77 @@
 <p>
     <a asp-page="Create">Create New</a>
 </p>
+<p>
+    <a asp-page="" asp-route-showNonSaved="@(!Model.ShowNonSaved)">@(Model.ShowNonSaved ? "Show only saved rulesets" : "Show non-saved rulesets as well")</a>
+</p>
 <table class="table">
     <thead>
-        <tr>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Id)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].BuiltIn)
+        </th>
+        @if (Model.ShowNonSaved)
+        {
             <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].BuiltIn)
+                @Html.DisplayNameFor(model => model.CheckersRulesets[0].Saved)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Saved)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Width)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Height)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CreatedAt) (UTC)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].LastModified) (UTC)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].BlackMovesFirst)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].MustCapture)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanCaptureBackwards)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].CanCaptureBackwardsDuringMultiCapture)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CheckersRuleset[0].FlyingKings)
-            </th>
-            <th></th>
-        </tr>
+        }
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Width)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Height)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Description)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CreatedAt) (UTC)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].LastModified) (UTC)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].BlackMovesFirst)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].MustCapture)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CanCaptureBackwards)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CanCaptureBackwardsDuringMultiCapture)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CheckersRulesets[0].FlyingKings)
+        </th>
+        <th></th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.CheckersRuleset) {
+    @foreach (var item in Model.CheckersRulesets)
+    {
         <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.BuiltIn)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Saved)
-            </td>
+
+            @if (Model.ShowNonSaved)
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.Saved)
+                </td>
+            }
             <td>
                 @Html.DisplayFor(modelItem => item.Width)
             </td>
@@ -99,10 +116,14 @@
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a>
+                @if (item.Saved && !item.BuiltIn)
+                {
+                    @: |
+                    <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
-}
+    }
     </tbody>
 </table>

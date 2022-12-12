@@ -1,32 +1,29 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using DAL.Db;
 using Domain;
 
 namespace WebApp.Pages.CheckersRulesets
 {
     public class IndexModel : PageModel
     {
-        private readonly DAL.Db.AppDbContext _context;
+        private readonly IRepositoryContext _ctx;
 
-        public IndexModel(DAL.Db.AppDbContext context)
+        public IndexModel(IRepositoryContext ctx)
         {
-            _context = context;
+            _ctx = ctx;
         }
 
-        public IList<CheckersRuleset> CheckersRuleset { get;set; } = default!;
+        public IList<CheckersRuleset> CheckersRulesets { get; set; } = default!;
 
-        public async Task OnGetAsync()
+        [BindProperty(SupportsGet = true)] public bool ShowNonSaved { get; set; }
+
+        public Task OnGet()
         {
-            if (_context.CheckersRulesets != null)
-            {
-                CheckersRuleset = await _context.CheckersRulesets.ToListAsync();
-            }
+            CheckersRulesets =
+                (ShowNonSaved ? _ctx.CheckersRulesetRepository.GetAll() : _ctx.CheckersRulesetRepository.GetAllSaved())
+                .ToList();
+            return Task.CompletedTask;
         }
     }
 }

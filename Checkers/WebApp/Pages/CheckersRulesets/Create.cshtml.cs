@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,11 +13,11 @@ namespace WebApp.Pages.CheckersRulesets
 {
     public class CreateModel : PageModel
     {
-        private readonly DAL.Db.AppDbContext _context;
+        private readonly IRepositoryContext _ctx;
 
-        public CreateModel(DAL.Db.AppDbContext context)
+        public CreateModel(IRepositoryContext ctx)
         {
-            _context = context;
+            _ctx = ctx;
         }
 
         public IActionResult OnGet()
@@ -29,17 +30,16 @@ namespace WebApp.Pages.CheckersRulesets
         
 
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public async Task<IActionResult> OnPostAsync()
+        public Task<IActionResult> OnPost()
         {
-          if (!ModelState.IsValid || _context.CheckersRulesets == null || CheckersRuleset == null)
+            if (!ModelState.IsValid)
             {
-                return Page();
+                return Task.FromResult<IActionResult>(Page());
             }
 
-            _context.CheckersRulesets.Add(CheckersRuleset);
-            await _context.SaveChangesAsync();
+            _ctx.CheckersRulesetRepository.Add(CheckersRuleset);
 
-            return RedirectToPage("./Index");
+            return Task.FromResult<IActionResult>(RedirectToPage("./Index"));
         }
     }
 }

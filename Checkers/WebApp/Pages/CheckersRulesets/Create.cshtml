@@ -1,4 +1,5 @@
 @page
+@using System.Globalization
 @model WebApp.Pages.CheckersRulesets.CreateModel
 
 @{
@@ -8,78 +9,78 @@
 <h1>Create</h1>
 
 <h4>CheckersRuleset</h4>
-<hr />
+<hr/>
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group form-check">
+            <div class="form-group form-check d-none">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.BuiltIn" /> @Html.DisplayNameFor(model => model.CheckersRuleset.BuiltIn)
+                    <input class="form-check-input" asp-for="CheckersRuleset.BuiltIn"/> @Html.DisplayNameFor(model => model.CheckersRuleset.BuiltIn)
                 </label>
             </div>
-            <div class="form-group form-check">
+            <div class="form-group form-check d-none">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.Saved" /> @Html.DisplayNameFor(model => model.CheckersRuleset.Saved)
+                    <input class="form-check-input" asp-for="CheckersRuleset.Saved" checked="checked"/> @Html.DisplayNameFor(model => model.CheckersRuleset.Saved)
                 </label>
             </div>
             <div class="form-group">
                 <label asp-for="CheckersRuleset.Width" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Width" class="form-control" />
+                <input asp-for="CheckersRuleset.Width" class="form-control" value="8"/>
                 <span asp-validation-for="CheckersRuleset.Width" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CheckersRuleset.Height" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Height" class="form-control" />
+                <input asp-for="CheckersRuleset.Height" class="form-control" value="8"/>
                 <span asp-validation-for="CheckersRuleset.Height" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CheckersRuleset.Title" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Title" class="form-control" />
+                <input asp-for="CheckersRuleset.Title" class="form-control"/>
                 <span asp-validation-for="CheckersRuleset.Title" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CheckersRuleset.Description" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Description" class="form-control" />
+                <input asp-for="CheckersRuleset.Description" class="form-control"/>
                 <span asp-validation-for="CheckersRuleset.Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="CheckersRuleset.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.CreatedAt) (UTC)</label>
-                <input asp-for="CheckersRuleset.CreatedAt" class="form-control" />
+            <div class="form-group d-none">
+                <label asp-for="CheckersRuleset.CreatedAt" class="control-label"></label>
+                <input asp-for="CheckersRuleset.CreatedAt" class="form-control" value="@DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture)"/>
                 <span asp-validation-for="CheckersRuleset.CreatedAt" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="CheckersRuleset.LastModified" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.LastModified) (UTC)</label>
-                <input asp-for="CheckersRuleset.LastModified" class="form-control" />
+            <div class="form-group d-none">
+                <label asp-for="CheckersRuleset.LastModified" class="control-label"></label>
+                <input asp-for="CheckersRuleset.LastModified" class="form-control" value="@DateTime.UtcNow.ToString("s", CultureInfo.InvariantCulture)"/>
                 <span asp-validation-for="CheckersRuleset.LastModified" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.BlackMovesFirst" /> @Html.DisplayNameFor(model => model.CheckersRuleset.BlackMovesFirst)
+                    <input class="form-check-input" asp-for="CheckersRuleset.BlackMovesFirst" checked="checked"/> @Html.DisplayNameFor(model => model.CheckersRuleset.BlackMovesFirst)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.MustCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.MustCapture)
+                    <input class="form-check-input" asp-for="CheckersRuleset.MustCapture" checked="checked"/> @Html.DisplayNameFor(model => model.CheckersRuleset.MustCapture)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwards" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwards)
+                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwards"/> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwards)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwardsDuringMultiCapture)
+                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwardsDuringMultiCapture" checked="checked"/> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwardsDuringMultiCapture)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.FlyingKings" /> @Html.DisplayNameFor(model => model.CheckersRuleset.FlyingKings)
+                    <input class="form-check-input" asp-for="CheckersRuleset.FlyingKings"/> @Html.DisplayNameFor(model => model.CheckersRuleset.FlyingKings)
                 </label>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary"/>
             </div>
         </form>
     </div>
@@ -90,5 +91,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }
