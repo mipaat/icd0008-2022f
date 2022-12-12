@@ -115,7 +115,10 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
 
     protected override Move? GetMove(CheckersBrain checkersBrain)
     {
-        var availableMoves =
+        var availableMoves = checkersBrain.AvailableMoves();
+        if (availableMoves.Count == 1) return availableMoves[0];
+
+        var availableHeuristicMoves =
             HeuristicMove.GetHeuristicMoves(checkersBrain, GetGameStateHeuristic, checkersBrain.CurrentTurnPlayerColor);
 
         var timer = new Timer(500);
@@ -129,7 +132,7 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
             while (!finished)
             {
                 var depthReached = true;
-                foreach (var heuristicMove in availableMoves)
+                foreach (var heuristicMove in availableHeuristicMoves)
                 {
                     depthReached = depthReached && heuristicMove.CalculateNextLevel(timeoutException);
                 }
@@ -142,6 +145,6 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
             timer.Stop();
         }
 
-        return availableMoves.OrderBy(_ => Random.Next()).Max()?.Move;
+        return availableHeuristicMoves.OrderBy(_ => Random.Next()).Max()?.Move;
     }
 }
