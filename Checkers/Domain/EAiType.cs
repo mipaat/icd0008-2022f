@@ -2,5 +2,6 @@
 
 public enum EAiType
 {
-    Random
+    Random,
+    Simple
 }
