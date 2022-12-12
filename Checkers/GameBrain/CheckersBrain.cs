@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Domain;
+using GameBrain.AI;
 
 namespace GameBrain;
 

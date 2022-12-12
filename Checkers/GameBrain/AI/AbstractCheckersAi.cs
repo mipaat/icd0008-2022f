@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace GameBrain;
+namespace GameBrain.AI;
 
 public abstract class AbstractCheckersAi : ICheckersAi
 {
