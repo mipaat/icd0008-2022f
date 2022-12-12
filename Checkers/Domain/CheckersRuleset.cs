@@ -87,6 +87,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
             BlackMovesFirst = BlackMovesFirst,
             BuiltIn = false,
             Saved = saved ?? Saved,
+            MustCapture = MustCapture,
             CanCaptureBackwards = CanCaptureBackwards,
             CanCaptureBackwardsDuringMultiCapture = CanCaptureBackwardsDuringMultiCapture,
             FlyingKings = FlyingKings,
