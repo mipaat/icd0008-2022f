@@ -1,7 +1,6 @@
 @page
 @using Domain
 @using Microsoft.AspNetCore.Html
-@using System.Text.Encodings.Web
 @using GameBrain
 @model WebApp.Pages.CheckersGames.Play
 
@@ -12,6 +11,20 @@
     BlackMoves: @Model.Brain.BlackMoves
     WhiteMoves: @Model.Brain.WhiteMoves
 </pre>
+
+@if (Model.Brain.EndTurnAllowed)
+{
+    <form method="GET" action="">
+        <input value="@Model.GameId" name="id" type="hidden">
+        @if (Model.PlayerId != null)
+        {
+            <input value="@Model.PlayerId" name="playerId" type="hidden">
+        }
+        <input value="@(true.ToString())" name="endTurn" type="hidden">
+        <button type="submit">End turn</button>
+    </form>
+}
+
 <table class="table table-bordered game-board-table">
     @for (var y = 0; y < Model.Brain.Height; y++)
     {
@@ -52,18 +65,14 @@
     }
 </table>
 
-@if (Model.Brain.EndTurnAllowed)
+@section Scripts
 {
-    <form method="GET" action="">
-        <input value="@Model.GameId" name="id" type="hidden">
-        <input value="@Model.Swap.ToString()" name="swap" type="hidden">
-        @if (!Model.Swap)
-        {
-            <input value="@Model.PlayerId" name="playerId" type="hidden">
-        }
-        <input value="@(true.ToString())" name="endTurn" type="hidden">
-        <button type="submit">End turn</button>
-    </form>
+    @if (Model.Brain.IsAiTurn || Model.PlayerColor != Model.Brain.CurrentTurnPlayerColor)
+    {
+        <script>
+            setTimeout(() => {window.location = '/CheckersGames/Play?@GetBaseParams()&aiMoveAllowed=true'}, 1000)
+        </script>
+    }
 }
 
 @functions

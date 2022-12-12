@@ -1,0 +1,28 @@
+@page
+@model WebApp.Pages.CheckersGames.Ended
+
+<div class="align-middle">
+    Game Ended!
+    @if (Model.Brain.Tied)
+    {
+        <span>TIED</span>
+    }
+    @if (Model.Brain.Winner != null)
+    {
+        @if (Model.PlayerId == null)
+        {
+            <span>Winner: @Model.Brain.Winner (@Model.Brain.PlayerName(Model.Brain.Winner!.Value))</span>
+        }
+        @if (Model.PlayerId != null)
+        {
+            @if (Model.Brain.Winner == Model.PlayerColor)
+            {
+                <span>YOU WON!</span>
+            }
+            @if (Model.Brain.Winner != Model.PlayerColor)
+            {
+                <span>YOU LOST!</span>
+            }
+        }
+    }
+</div>

@@ -84,6 +84,7 @@ public class Play : PageModel
         {
             return RedirectToPage("/Index", new { error = $"Game with ID {id.Value} appears to be corrupted!" });
         }
+
         if (game == null)
         {
             return RedirectToPage("/Index", new { error = $"No game with ID {id.Value} found!" });
@@ -99,15 +100,21 @@ public class Play : PageModel
         GameId = id.Value;
         Brain = new CheckersBrain(game);
 
-        
+        if (Brain.Ended)
+        {
+            return RedirectToPage("./Ended", new { Id = GameId, PlayerId });
+        }
 
         if (Brain.IsAiTurn)
         {
+            if (!aiMoveAllowed) return Page();
+
             var aiColor = Brain.CurrentTurnPlayerColor;
             while (Brain.CurrentTurnPlayerColor == aiColor)
             {
                 Brain.MoveAi();
             }
+
             _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
             return Reset;
         }
