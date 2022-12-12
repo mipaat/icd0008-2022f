@@ -139,7 +139,7 @@ var deleteGameMenuFactory = new MenuFactory("Delete game", _ =>
             $"{checkersGame.Id} | {checkersGame.CheckersRuleset!.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
             _ =>
             {
-                repoCtx.CheckersGameRepository.Remove(checkersGame.Id);
+                repoCtx.CheckersGameRepository.Remove(checkersGame);
                 return EMenuFunction.MainMenu;
             }));
     }

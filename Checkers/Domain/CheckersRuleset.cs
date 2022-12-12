@@ -48,7 +48,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
     public bool MustCapture { get; set; } = true;
     public bool CanCaptureBackwards { get; set; }
     public bool CanCaptureBackwardsDuringMultiCapture { get; set; }
-    public bool FlyingKings { get; set; } = false;
+    public bool FlyingKings { get; set; }
 
     private const int MinDimension = 4;
 
