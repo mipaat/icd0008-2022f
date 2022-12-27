@@ -34,9 +34,10 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
             .ToList();
     }
 
-    public new CheckersGame? GetById(int id)
+    public override CheckersGame? GetById(int id, bool noTracking = false)
     {
-        var entity = ThisDbSet
+        var dbSet = noTracking ? ThisDbSet.AsNoTracking() : ThisDbSet.AsQueryable();
+        var entity = dbSet
             .Include(cg => cg.CheckersStates)
             .Include(cg => cg.CheckersRuleset)
             .FirstOrDefault(cg => id.Equals(cg.Id));
@@ -45,7 +46,7 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
 
     protected override DbSet<CheckersGame> ThisDbSet => DbContext.CheckersGames;
 
-    public new CheckersGame Remove(CheckersGame entity)
+    public override CheckersGame Remove(CheckersGame entity)
     {
         var removedEntity = base.Remove(entity);
 

@@ -15,9 +15,9 @@ public class CheckersStateRepository : AbstractDbRepository<CheckersState>, IChe
 
     public ICollection<CheckersState> GetByCheckersGameId(int checkersGameId)
     {
-        return ThisDbSet
+        return RunPreFetchActions(ThisDbSet
             .Where(cs => checkersGameId.Equals(cs.CheckersGameId))
-            .OrderBy(cs => cs.CreatedAt)
+            .OrderBy(cs => cs.CreatedAt))
             .ToList();
     }
 }

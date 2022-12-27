@@ -10,10 +10,10 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
     public EAiType? BlackAiType { get; set; }
 
     public int CheckersRulesetId { get; set; }
-    [JsonIgnore] public CheckersRuleset? CheckersRuleset { get; set; }
+    [ExpectedNotNull] [JsonIgnore] public CheckersRuleset? CheckersRuleset { get; set; }
 
-    [JsonIgnore] public ICollection<CheckersState>? CheckersStates { get; set; }
-    [JsonIgnore] public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);
+    [ExpectedNotNull] [JsonIgnore] public ICollection<CheckersState>? CheckersStates { get; set; }
+    [ExpectedNotNull] [JsonIgnore] public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);
 
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }

@@ -9,16 +9,25 @@ namespace ConsoleClient;
 
 public class ConsoleGame
 {
-    private readonly CheckersBrain _checkersBrain;
+    private CheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
     private readonly IRepositoryContext _repositoryContext;
+    private readonly EPlayerColor? _playMode;
 
     public ConsoleGame(ConsoleWindow consoleWindow, CheckersBrain checkersBrain,
-        IRepositoryContext repositoryContext)
+        IRepositoryContext repositoryContext, EPlayerColor? playMode = null)
     {
         _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;
         _repositoryContext = repositoryContext;
+        _playMode = playMode;
+    }
+
+    private void Refresh()
+    {
+        var checkersGame = _repositoryContext.CheckersGameRepository.GetById(_checkersBrain.CheckersGame.Id);
+        if (checkersGame == null) throw new IllegalStateException("CheckersGame was null after refresh!");
+        _checkersBrain = new CheckersBrain(checkersGame);
     }
 
     private static string GetPieceDisplay(GamePiece? gamePiece)
@@ -42,7 +51,7 @@ public class ConsoleGame
             var coordsString = EncodeLetterCoords(i);
             var conformedCoordsString = coordsString.Length > 3 ? "N/A" : coordsString.PadLeft(2).PadRight(3);
             result.Append(conformedCoordsString);
-            result.Append(" ");
+            result.Append(' ');
         }
 
         return result.ToString();
@@ -87,66 +96,97 @@ public class ConsoleGame
         _consoleWindow.AddLine(BoundaryLine(_checkersBrain.Width));
     }
 
+    private void MakePlayerMove(ConsoleInput input)
+    {
+        var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
+        var matches = rx.Matches(input.Text);
+        if (matches.Count == 1)
+        {
+            try
+            {
+                var groups = matches[0].Groups;
+                var x1 = DecodeLetterCoords(groups[1].Value.ToUpper());
+                var y1 = _checkersBrain.Height - int.Parse(groups[2].Value);
+                var x2 = DecodeLetterCoords(groups[3].Value.ToUpper());
+                var y2 = _checkersBrain.Height - int.Parse(groups[4].Value);
+                if (_checkersBrain.IsMoveValid(_checkersBrain.CurrentTurnPlayerColor, x1, y1, x2,
+                        y2))
+                {
+                    _checkersBrain.Move(x1, y1, x2, y2);
+                    _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                }
+                else
+                {
+                    _consoleWindow.PopUpMessageBox("Invalid move!");
+                }
+            }
+            catch (Exception e)
+            {
+                _consoleWindow.PopUpMessageBox("Input caused the following error: " +
+                                               e.ToString().Split("\n")[0]);
+            }
+        }
+    }
+
+    private void RunAiTurn()
+    {
+        _consoleWindow.Render();
+        var timer = new System.Timers.Timer(1000);
+        var timerElapsed = false;
+        timer.Elapsed += (_, _) => timerElapsed = true;
+        _checkersBrain.MoveAi();
+        while (!timerElapsed)
+        {
+        }
+
+        _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+    }
+
+    private bool HandlePlayerInput()
+    {
+        var prompt = "Ctrl+Q to quit! Coordinate pairs (e.g A4D7) to move!";
+        if (_checkersBrain.EndTurnAllowed) prompt += " E to end turn!";
+
+        var input = _consoleWindow
+            .RenderAndAwaitTextInput(
+                prompt,
+                keepRenderQueue: true);
+        var inputTextNormalized = input.Text.ToLower();
+
+        if (input.IsKeyPress)
+        {
+            return input.KeyInfo is { Key: ConsoleKey.Q, Modifiers: ConsoleModifiers.Control };
+        }
+
+        if (inputTextNormalized == "e" && _checkersBrain.EndTurnAllowed)
+        {
+            _checkersBrain.EndTurn();
+            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            return false;
+        }
+
+        MakePlayerMove(input);
+        return false;
+    }
+    
     public void Run()
     {
-        var breakControl = true;
-        var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
-        while (breakControl)
+        var shouldQuit = false;
+        while (!shouldQuit)
         {
+            Refresh();
             AddBoardToRenderQueue();
-            var prompt = "Q to quit! Coordinate pairs (e.g A4D7) to move!";
-            if (_checkersBrain.EndTurnAllowed) prompt += " E to end turn!";
-            var input = _consoleWindow
-                .RenderAndAwaitTextInput(
-                    prompt,
-                    keepRenderQueue: true)?.ToLower() ?? "";
-            switch (input)
+            if (_checkersBrain.IsAiTurn)
             {
-                case "q":
-                    breakControl = false;
-                    break;
-                case "e":
-                    if (_checkersBrain.EndTurnAllowed)
-                    {
-                        _checkersBrain.EndTurn();
-                    }
-                    break;
-                default:
-                    var matches = rx.Matches(input);
-                    if (matches.Count == 1)
-                    {
-                        try
-                        {
-                            var groups = matches[0].Groups;
-                            var x1 = DecodeLetterCoords(groups[1].Value.ToUpper());
-                            var y1 = _checkersBrain.Height - int.Parse(groups[2].Value);
-                            var x2 = DecodeLetterCoords(groups[3].Value.ToUpper());
-                            var y2 = _checkersBrain.Height - int.Parse(groups[4].Value);
-                            if (_checkersBrain.IsMoveValid(_checkersBrain.CurrentTurnPlayerColor, x1, y1, x2, y2))
-                            {
-                                _checkersBrain.Move(x1, y1, x2, y2);
-                            }
-                            else
-                            {
-                                _consoleWindow.PopUpMessageBox("Invalid move!");
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            _consoleWindow.PopUpMessageBox("Input caused the following error: " +
-                                                                e.ToString().Split("\n")[0]);
-                        }
-                    }
-
-                    break;
+                RunAiTurn();
+            }
+            else
+            {
+                shouldQuit = HandlePlayerInput();
             }
 
             _consoleWindow.ClearRenderQueue();
         }
-
-        var saveGameInput = _consoleWindow.PopupPromptBoolInput("Save game?");
-
-        if (saveGameInput) _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.GetSaveGameState());
     }
 
     private static string BoundaryLine(int cells)

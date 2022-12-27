@@ -93,8 +93,7 @@ internal class HeuristicMove : IComparable<HeuristicMove>
     {
         var result = new List<HeuristicMove>();
 
-        var checkersGame = checkersBrain.GetSaveGameState();
-        var checkersState = checkersGame.CurrentCheckersState;
+        var checkersGame = checkersBrain.CheckersGame;
         foreach (var move in checkersBrain.AvailableMoves())
         {
             var newCheckersBrain = new CheckersBrain(checkersGame.GetClone());
@@ -102,7 +101,6 @@ internal class HeuristicMove : IComparable<HeuristicMove>
             result.Add(new HeuristicMove(move, newCheckersBrain, gameStateHeuristicFunc, playerColor));
         }
 
-        if (checkersState != null) checkersGame.CheckersStates!.Remove(checkersState);
         return result;
     }
 }

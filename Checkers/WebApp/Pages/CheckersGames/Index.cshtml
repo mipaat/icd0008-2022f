@@ -1,4 +1,6 @@
 @page
+@using Domain
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebApp.Pages.CheckersGames.IndexModel
 
 @{
@@ -13,6 +15,8 @@
 <table class="table">
     <thead>
     <tr>
+        <th>
+        </th>
         <th>
             @Html.DisplayNameFor(model => model.CheckersGame[0].Id)
         </th>
@@ -48,6 +52,9 @@
     {
         <tr>
             <td>
+                <a asp-page="./Launch" asp-route-id="@item.Id" class="btn btn-primary">@GameLaunchButtonText(item)</a>
+            </td>
+            <td>
                 @Html.DisplayFor(modelItem => item.Id)
             </td>
             <td>
@@ -77,7 +84,6 @@
                 @Html.DisplayFor(modelItem => item.Winner)
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id">Play (shared window)</a> |
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
@@ -86,3 +92,11 @@
     }
     </tbody>
 </table>
+
+@functions
+{
+    String GameLaunchButtonText(CheckersGame checkersGame)
+    {
+        return checkersGame.Ended ? "Results" : "Play";
+    }
+}

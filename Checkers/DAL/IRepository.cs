@@ -3,11 +3,11 @@ using Domain;
 namespace DAL;
 
 public interface IRepository<T>
-    where T : class, IDatabaseEntity
+    where T : class, IDatabaseEntity, new()
 {
     ICollection<T> GetAll();
 
-    T? GetById(int id);
+    T? GetById(int id, bool noTracking = false);
 
     void Add(T entity);
 
@@ -22,4 +22,6 @@ public interface IRepository<T>
     bool Exists(int id);
 
     void Refresh(T entity);
+
+    void RefreshPartial(T entity);
 }

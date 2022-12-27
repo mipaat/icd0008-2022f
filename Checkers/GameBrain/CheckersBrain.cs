@@ -11,7 +11,7 @@ public record Move(int FromX, int FromY, int ToX, int ToY, List<GamePiecePositio
 public class CheckersBrain
 {
     private readonly CheckersRuleset _checkersRuleset;
-    private readonly CheckersGame _checkersGame;
+    public CheckersGame CheckersGame { get; }
     public int Width => _checkersRuleset.Width;
     public int Height => _checkersRuleset.Height;
 
@@ -24,24 +24,24 @@ public class CheckersBrain
 
     public GamePiece? this[int x, int y] => _pieces[x, y];
 
-    private string? WhitePlayerName => _checkersGame.WhitePlayerName;
-    private string? BlackPlayerName => _checkersGame.BlackPlayerName;
+    private string? WhitePlayerName => CheckersGame.WhitePlayerName;
+    private string? BlackPlayerName => CheckersGame.BlackPlayerName;
 
-    public EPlayerColor? Winner => _checkersGame.Winner;
-    public bool Tied => _checkersGame.Tied;
-    public bool Ended => _checkersGame.Ended;
+    public EPlayerColor? Winner => CheckersGame.Winner;
+    public bool Tied => CheckersGame.Tied;
+    public bool Ended => CheckersGame.Ended;
 
     public CheckersBrain(CheckersGame checkersGame)
     {
-        _checkersGame = checkersGame;
+        CheckersGame = checkersGame;
 
         var checkersRuleset = checkersGame.CheckersRuleset!;
         _checkersRuleset = checkersRuleset;
 
         _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
-        if (_checkersGame.CurrentCheckersState != null)
+        if (CheckersGame.CurrentCheckersState != null)
         {
-            var currentCheckersState = _checkersGame.CurrentCheckersState;
+            var currentCheckersState = CheckersGame.CurrentCheckersState;
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
@@ -59,13 +59,14 @@ public class CheckersBrain
         {
             InitializePieces();
         }
+        CheckGameEndConditions();
     }
 
     public CheckersBrain(CheckersRuleset checkersRuleset,
         string? whitePlayerName, string? blackPlayerName,
         EAiType? whiteAiType = null, EAiType? blackAiType = null)
     {
-        _checkersGame = new CheckersGame
+        CheckersGame = new CheckersGame
         {
             WhitePlayerName = whitePlayerName,
             BlackPlayerName = blackPlayerName,
@@ -79,6 +80,8 @@ public class CheckersBrain
         _checkersRuleset = checkersRuleset;
         _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
         InitializePieces();
+        CheckGameEndConditions();
+        SaveGameState();
     }
 
     private int RowsPerPlayer()
@@ -190,8 +193,8 @@ public class CheckersBrain
         {
             return CurrentTurnPlayerColor switch
             {
-                EPlayerColor.Black => _checkersGame.BlackAiType,
-                EPlayerColor.White => _checkersGame.WhiteAiType,
+                EPlayerColor.Black => CheckersGame.BlackAiType,
+                EPlayerColor.White => CheckersGame.WhiteAiType,
                 _ => null
             };
         }
@@ -217,7 +220,7 @@ public class CheckersBrain
     {
         var result = new List<Move>();
 
-        if (_pieces[fromX, fromY] == null) return result;
+        if (Ended || _pieces[fromX, fromY] == null) return result;
         var gamePiece = _pieces[fromX, fromY]!.Value;
 
         if (!IsPieceMovableBasic(gamePiece.Player, fromX, fromY)) return result;
@@ -294,7 +297,6 @@ public class CheckersBrain
     {
         CalculatedMoves = new List<Move>[Width, Height];
         CalculatedMovesCount = 0;
-        if (Ended) return;
         for (var fromX = 0; fromX < Width; fromX++)
         {
             for (var fromY = 0; fromY < Height; fromY++)
@@ -414,6 +416,8 @@ public class CheckersBrain
             IncrementMoveCounter();
             CheckGameEndConditions();
         }
+        
+        SaveGameState();
     }
 
     public void MoveAi()
@@ -469,6 +473,8 @@ public class CheckersBrain
         LastMoveState = EMoveState.Finished;
         
         CheckGameEndConditions();
+        
+        SaveGameState();
     }
 
     private void CheckGameEndConditions()
@@ -477,13 +483,13 @@ public class CheckersBrain
         var pieceCounts = PieceCounts;
         if (pieceCounts.WhitePieces == 0)
         {
-            _checkersGame.Winner = EPlayerColor.Black;
-            _checkersGame.EndedAt = DateTime.Now.ToUniversalTime();
+            CheckersGame.Winner = EPlayerColor.Black;
+            CheckersGame.EndedAt = DateTime.Now.ToUniversalTime();
         }
         if (pieceCounts.BlackPieces == 0)
         {
-            _checkersGame.Winner = EPlayerColor.White;
-            _checkersGame.EndedAt = DateTime.Now.ToUniversalTime();
+            CheckersGame.Winner = EPlayerColor.White;
+            CheckersGame.EndedAt = DateTime.Now.ToUniversalTime();
         }
 
         if (AvailableMoves().Count == 0)
@@ -495,14 +501,14 @@ public class CheckersBrain
     public void Forfeit()
     {
         if (Ended) return;
-        _checkersGame.EndedAt = DateTime.UtcNow;
-        _checkersGame.Winner = OtherPlayer;
+        CheckersGame.EndedAt = DateTime.UtcNow;
+        CheckersGame.Winner = OtherPlayer;
     }
 
     public void Draw()
     {
         if (Ended) return;
-        _checkersGame.EndedAt = DateTime.UtcNow;
+        CheckersGame.EndedAt = DateTime.UtcNow;
     }
 
     private CheckersState GetCheckersState()
@@ -531,11 +537,8 @@ public class CheckersBrain
         };
     }
 
-    public CheckersGame GetSaveGameState()
+    private void SaveGameState()
     {
-        if (_checkersGame.CheckersStates == null) throw new InsufficientCheckersStatesException(_checkersGame);
-        _checkersGame.CheckersStates.Add(GetCheckersState());
-
-        return _checkersGame;
+        CheckersGame.CheckersStates!.Add(GetCheckersState());
     }
 }

@@ -1,9 +1,10 @@
 using Domain;
+using GameBrain;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Db;
 
-public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, IDatabaseEntity
+public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, IDatabaseEntity, new()
 {
     protected readonly AppDbContext DbContext;
     protected readonly IRepositoryContext RepositoryContext;
@@ -65,13 +66,14 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return RunPreFetchActions(ThisDbSet).ToList();
     }
 
-    public T? GetById(int id)
+    public virtual T? GetById(int id, bool noTracking = false)
     {
-        var entity = ThisDbSet.FirstOrDefault(t => id.Equals(t.Id));
+        var dbSet = noTracking ? ThisDbSet.AsNoTracking() : ThisDbSet.AsQueryable();
+        var entity = dbSet.FirstOrDefault(t => id.Equals(t.Id));
         return entity == null ? entity : RunPreFetchActions(entity);
     }
 
-    public void Add(T entity)
+    public virtual void Add(T entity)
     {
         if (Exists(entity.Id))
             throw new ArgumentException(
@@ -88,7 +90,7 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         DbContext.SaveChanges();
     }
 
-    public void Upsert(T entity)
+    public virtual void Upsert(T entity)
     {
         ThisDbSet.Update(RunPreSaveActions(entity));
         DbContext.SaveChanges();
@@ -100,7 +102,7 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return entity == null ? entity : Remove(entity);
     }
 
-    public T Remove(T entity)
+    public virtual T Remove(T entity)
     {
         var removedEntity = ThisDbSet.Remove(RunPreSaveActions(entity)).Entity;
         DbContext.SaveChanges();
@@ -114,6 +116,16 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 
     public void Refresh(T entity)
     {
-        DbContext.Entry(entity).Reload();
+        var fetchedEntity = GetById(entity.Id, true);
+        if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
+        entity.Refresh(fetchedEntity);
+    }
+
+    public void RefreshPartial(T entity)
+    {
+        var tempEntity = new T();
+        tempEntity.Refresh(entity);
+        Refresh(entity);
+        entity.Refresh(tempEntity, true);
     }
 }

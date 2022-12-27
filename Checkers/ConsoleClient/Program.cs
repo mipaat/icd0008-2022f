@@ -21,11 +21,38 @@ RepositoryContext repoDb = new RepositoryContext(ctx);
 DAL.FileSystem.RepositoryContext repoFs = new DAL.FileSystem.RepositoryContext();
 IRepositoryContext repoCtx = repoDb;
 
+EPlayerColor? GetPlayMode(Menu parentMenu)
+{
+    EPlayerColor? result = null;
+    var menuItems = new List<MenuItem>
+    {
+        new("Play as both in shared window", _ =>
+        {
+            result = null;
+            return EMenuFunction.Exit;
+        }),
+        new("Play as black", _ =>
+        {
+            result = EPlayerColor.Black;
+            return EMenuFunction.Exit;
+        }),
+        new("Play as white", _ =>
+        {
+            result = EPlayerColor.White;
+            return EMenuFunction.Exit;
+        })
+    };
+
+    var selectPlayModeMenuFactory = new MenuFactory($"Select playing mode", _ => menuItems, false);
+    var selectPlayModeMenu = selectPlayModeMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
+    selectPlayModeMenu.Run();
+    return result;
+}
+
 EAiType? GetPlayerType(string playerIdentifier, Menu parentMenu)
 {
-    var menuItems = new List<MenuItem>();
     EAiType? result = null;
-    menuItems.Add(new MenuItem("Player", EMenuFunction.Exit));
+    var menuItems = new List<MenuItem> { new("Player", EMenuFunction.Exit) };
     foreach (var enumValue in Enum.GetValues(typeof(EAiType)))
     {
         menuItems.Add(new MenuItem(enumValue.ToString() ?? "???", _ =>
@@ -47,10 +74,9 @@ EMenuFunction RunConsoleGame(Menu menu)
     try
     {
         ConsoleGame consoleGame;
-        // TODO: AI selection
         if (selectedCheckersGame != null)
         {
-            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx);
+            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx, GetPlayMode(menu));
         }
         else
         {
@@ -59,7 +85,6 @@ EMenuFunction RunConsoleGame(Menu menu)
             var blackPlayerAiType = GetPlayerType("black player", menu);
             var blackPlayerName =
                 menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the black player:");
-            // TODO: Allow users to randomize starting order?
             consoleGame = new ConsoleGame(menu.ConsoleWindow,
                 new CheckersBrain(
                     selectedCheckersRuleset.GetClone(false),
@@ -67,7 +92,8 @@ EMenuFunction RunConsoleGame(Menu menu)
                     blackPlayerName,
                     whitePlayerAiType,
                     blackPlayerAiType),
-                repoCtx);
+                repoCtx,
+                GetPlayMode(menu));
         }
 
         consoleGame.Run();

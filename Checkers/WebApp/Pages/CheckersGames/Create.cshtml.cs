@@ -35,22 +35,6 @@ namespace WebApp.Pages.CheckersGames
             }
         }
 
-        public IEnumerable<SelectListItem> AiTypeOptions
-        {
-            get
-            {
-                var result = new List<SelectListItem>();
-                var enumValues = Enum.GetValues(typeof(EAiType));
-                result.Add(new SelectListItem("No AI", ""));
-                foreach (var value in enumValues)
-                {
-                    result.Add(new SelectListItem(value.ToString(), ((int)value).ToString()));
-                }
-
-                return result;
-            }
-        }
-
         [BindProperty] public string? WhitePlayerName { get; set; }
         [BindProperty] public string? BlackPlayerName { get; set; }
         [BindProperty] public EAiType? WhiteAiType { get; set; }
@@ -71,7 +55,7 @@ namespace WebApp.Pages.CheckersGames
 
             var checkersBrain =
                 new CheckersBrain(checkersRuleset, WhitePlayerName, BlackPlayerName, WhiteAiType, BlackAiType);
-            var checkersGame = checkersBrain.GetSaveGameState();
+            var checkersGame = checkersBrain.CheckersGame;
             _ctx.CheckersGameRepository.Add(checkersGame);
 
             return RedirectToPage("./Launch", new { id = checkersGame.Id });

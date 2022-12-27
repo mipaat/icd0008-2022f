@@ -115,7 +115,7 @@ public class Play : PageModel
                 Brain.MoveAi();
             }
 
-            _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
+            _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             return Reset;
         }
 
@@ -123,7 +123,7 @@ public class Play : PageModel
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
-            _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
+            _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             return Reset;
         }
 
@@ -137,7 +137,7 @@ public class Play : PageModel
             if (IsMovableTo(ToX!.Value, ToY!.Value))
             {
                 Brain.Move(FromX!.Value, FromY!.Value, ToX!.Value, ToY!.Value);
-                _ctx.CheckersGameRepository.Upsert(Brain.GetSaveGameState());
+                _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             }
 
             return Brain.LastMoveState == EMoveState.CanContinue

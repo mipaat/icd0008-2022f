@@ -1,61 +1,50 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using DAL.Db;
 using Domain;
 
 namespace WebApp.Pages.CheckersGames
 {
     public class DeleteModel : PageModel
     {
-        private readonly DAL.Db.AppDbContext _context;
+        private readonly IRepositoryContext _ctx;
 
-        public DeleteModel(DAL.Db.AppDbContext context)
+        public DeleteModel(IRepositoryContext ctx)
         {
-            _context = context;
+            _ctx = ctx;
         }
 
-        [BindProperty]
-      public CheckersGame CheckersGame { get; set; } = default!;
+        [BindProperty] public CheckersGame CheckersGame { get; set; } = default!;
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public IActionResult OnGet(int? id)
         {
-            if (id == null || _context.CheckersGames == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var checkersgame = await _context.CheckersGames.FirstOrDefaultAsync(m => m.Id == id);
+            var checkersGame = _ctx.CheckersGameRepository.GetById(id.Value);
 
-            if (checkersgame == null)
+            if (checkersGame == null)
             {
                 return NotFound();
             }
-            else 
-            {
-                CheckersGame = checkersgame;
-            }
+
+            CheckersGame = checkersGame;
+
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int? id)
+        public IActionResult OnPost(int? id)
         {
-            if (id == null || _context.CheckersGames == null)
+            if (id == null)
             {
                 return NotFound();
             }
-            var checkersgame = await _context.CheckersGames.FindAsync(id);
 
-            if (checkersgame != null)
-            {
-                CheckersGame = checkersgame;
-                _context.CheckersGames.Remove(CheckersGame);
-                await _context.SaveChangesAsync();
-            }
+            var checkersGame = _ctx.CheckersGameRepository.Remove(id.Value);
+
+            if (checkersGame == null) return NotFound();
 
             return RedirectToPage("./Index");
         }

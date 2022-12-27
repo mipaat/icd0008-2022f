@@ -10,14 +10,14 @@ public class CheckersState : AbstractDatabaseEntity
 
     public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 
-    [JsonIgnore] [NotMapped] public GamePiece?[,]? GamePieces { get; set; }
+    [ExpectedNotNull] [JsonIgnore] [NotMapped] public GamePiece?[,]? GamePieces { get; set; }
     public string SerializedGamePieces { get; set; } = default!;
 
     public int WhiteMoves { get; set; }
     public int BlackMoves { get; set; }
-    public int? LastMovedToX { get; set; }
-    public int? LastMovedToY { get; set; }
-    public EMoveState? LastMoveState { get; set; }
+    [PreferNotNull] public int? LastMovedToX { get; set; }
+    [PreferNotNull] public int? LastMovedToY { get; set; }
+    [PreferNotNull] public EMoveState? LastMoveState { get; set; }
 
     private record CompressedGamePieces(int X, int Y)
     {

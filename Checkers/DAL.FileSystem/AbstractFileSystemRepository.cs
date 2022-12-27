@@ -1,10 +1,11 @@
 using System.Reflection;
 using Domain;
+using GameBrain;
 
 namespace DAL.FileSystem;
 
 public abstract class AbstractFileSystemRepository<T> : IRepository<T>
-    where T : class, IDatabaseEntity
+    where T : class, IDatabaseEntity, new()
 {
     private const string FileExtension = ".json";
     protected abstract string RepositoryName { get; }
@@ -98,7 +99,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return result;
     }
 
-    public T? GetById(int id)
+    public T? GetById(int id, bool noTracking = false)
     {
         EnsureDirectoryExists();
         if (!Exists(id)) return null;
@@ -172,13 +173,15 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     public void Refresh(T entity)
     {
         var fetchedEntity = GetById(entity.Id);
-        if (fetchedEntity == null) return;
-        const BindingFlags bindingAttr = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-        var fields = fetchedEntity.GetType()
-            .GetFields(bindingAttr);
-        foreach (var field in fields)
-        {
-            entity.GetType().GetField(field.Name, bindingAttr)?.SetValue(entity, field.GetValue(fetchedEntity));
-        }
+        if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
+        entity.Refresh(fetchedEntity);
+    }
+
+    public void RefreshPartial(T entity)
+    {
+        var tempEntity = new T();
+        tempEntity.Refresh(entity);
+        Refresh(entity);
+        entity.Refresh(tempEntity, true);
     }
 }

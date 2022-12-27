@@ -1,48 +1,7 @@
 ﻿using System.Text;
+using System;
 
 namespace ConsoleUI;
-
-public class ConsoleLine
-{
-    private readonly string _content;
-    public readonly EAlignment Align;
-    public readonly ConsoleColor? BackgroundColor;
-    private readonly bool _truncationPreferRight;
-    private readonly int? _patternRepetitionAmount;
-
-    private int PatternRepetitionAmount => _patternRepetitionAmount ?? Console.WindowWidth / _content.Length + 1;
-
-    public ConsoleLine(string content = "", ConsoleColor? backgroundColor = null, EAlignment align = EAlignment.Left,
-        bool truncationPreferRight = false, int? patternRepetitionAmount = 1)
-    {
-        _content = content;
-        BackgroundColor = backgroundColor;
-        Align = align;
-        _truncationPreferRight = truncationPreferRight;
-        _patternRepetitionAmount = patternRepetitionAmount;
-    }
-
-    public string Content()
-    {
-        {
-            if (PatternRepetitionAmount > 1)
-            {
-                var repeatingStringBuilder = new StringBuilder(_content.Length * PatternRepetitionAmount).Insert(0,
-                    _content,
-                    PatternRepetitionAmount); //TODO: Optimize
-
-                var result = repeatingStringBuilder.ToString();
-                return result[..Math.Min(Console.WindowWidth, result.Length)];
-            }
-
-            return _content.Length > Console.WindowWidth
-                ? _truncationPreferRight
-                    ? "..." + _content[(_content.Length - Console.WindowWidth + 3)..]
-                    : _content[..(Console.WindowWidth - 3)] + "..."
-                : _content;
-        }
-    }
-}
 
 public class ConsoleWindow
 {
@@ -186,9 +145,31 @@ public class ConsoleWindow
         WriteLine(line?.Content(), line?.Align, line?.BackgroundColor);
     }
 
-    private void WriteLine(string? line = null, EAlignment? align = null, ConsoleColor? backgroundColor = null)
+    private void WriteLineNoCursorAdvance(string? line = null, EAlignment? align = null,
+        ConsoleColor? backgroundColor = null)
     {
-        var content = line ?? "";
+        var content = CheckStringValid(line ?? "");
+        var shortenContent = content.Length > Console.WindowWidth;
+        if (shortenContent)
+        {
+            int newWidth;
+            switch (align)
+            {
+                default:
+                    newWidth = Console.WindowWidth - 3;
+                    content = content[..newWidth] + "...";
+                    break;
+                case EAlignment.Center:
+                    var middle = content.Length / 2;
+                    newWidth = Console.WindowWidth - 6;
+                    content = string.Concat("...", content.AsSpan(middle - newWidth / 2, newWidth), "...");
+                    break;
+                case EAlignment.Right:
+                    newWidth = Console.WindowWidth - 3;
+                    content = string.Concat("...", content.AsSpan(content.Length - newWidth, newWidth));
+                    break;
+            }
+        }
 
         var result = new StringBuilder(content);
 
@@ -214,6 +195,10 @@ public class ConsoleWindow
         }
 
         var resultString = result.ToString();
+
+        var initialCursorLeft = Console.CursorLeft;
+        var initialCursorTop = Console.CursorTop;
+
         Console.Write(resultString[..leftAddedSpace]);
 
         var previousBackgroundColor = Console.BackgroundColor;
@@ -224,6 +209,16 @@ public class ConsoleWindow
         Console.BackgroundColor = previousBackgroundColor;
 
         Console.Write(resultString[(leftAddedSpace + content.Length)..]);
+        
+        // For some reason Console.Write() adds a newline SOMETIMES
+        // The following lines undo that by forcing the console cursor to the expected position
+        Console.CursorLeft = Math.Min(initialCursorLeft + leftAddedSpace + content.Length, Console.WindowWidth - 1);
+        Console.CursorTop = initialCursorTop;
+    }
+
+    private void WriteLine(string? line = null, EAlignment? align = null, ConsoleColor? backgroundColor = null)
+    {
+        WriteLineNoCursorAdvance(line, align, backgroundColor);
 
         CursorPosition++;
     }
@@ -304,7 +299,79 @@ public class ConsoleWindow
         }
     }
 
-    public string? RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)
+    public ConsoleInput AwaitInput(params ConsoleKeyInfoBasic[] customExitConditions)
+    {
+        var result = new ConsoleInput();
+        var shouldBreak = false;
+        var exitConditions = new List<ConsoleKeyInfoBasic>
+        {
+            new(ConsoleKey.Q, false, false, true),
+            new(ConsoleKey.Escape)
+        };
+        exitConditions.AddRange(customExitConditions);
+
+        var initialCursorLeft = Console.CursorLeft;
+
+        do
+        {
+            var keyInfo = Console.ReadKey(true);
+            if (exitConditions.Exists(cki => cki.Equals(keyInfo)))
+            {
+                result.Clear();
+                result.Add(keyInfo);
+                shouldBreak = true;
+            }
+            else
+            {
+                switch (keyInfo.Key)
+                {
+                    case ConsoleKey.Enter:
+                        shouldBreak = true;
+                        break;
+                    case ConsoleKey.Backspace:
+                        result.RemoveLeft();
+                        break;
+                    case ConsoleKey.Delete:
+                        result.RemoveRight();
+                        break;
+                    case ConsoleKey.LeftArrow:
+                        result.MoveLeft();
+                        break;
+                    case ConsoleKey.RightArrow:
+                        result.MoveRight();
+                        break;
+                    case ConsoleKey.UpArrow:
+                        break;
+                    case ConsoleKey.DownArrow:
+                        break;
+                    case ConsoleKey.End:
+                        result.MoveRight(result.Size - result.Position);
+                        break;
+                    case ConsoleKey.Home:
+                        result.MoveLeft(result.Position);
+                        break;
+                    default:
+                        result.Add(keyInfo);
+                        Console.Write(keyInfo.KeyChar);
+                        break;
+                }
+            }
+
+            var previousCursorVisible = CursorVisible;
+            CursorVisible = false;
+            Console.CursorLeft = initialCursorLeft;
+
+            WriteLineNoCursorAdvance(result.Text);
+
+            CursorVisible = previousCursorVisible;
+            Console.CursorLeft = initialCursorLeft + result.Position;
+        } while (!shouldBreak);
+
+        Console.CursorLeft = initialCursorLeft;
+        return result;
+    }
+
+    public ConsoleInput RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)
     {
         var previousRenderQueue = new List<ConsoleLine>(_renderQueue);
 
@@ -313,7 +380,7 @@ public class ConsoleWindow
 
         var previousCursorVisible = CursorVisible;
         CursorVisible = true;
-        var result = Console.ReadLine();
+        var result = AwaitInput();
         CursorVisible = previousCursorVisible;
         ResetCursorPosition();
 
