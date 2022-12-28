@@ -61,7 +61,7 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 
     protected abstract DbSet<T> ThisDbSet { get; }
 
-    public ICollection<T> GetAll()
+    public virtual ICollection<T> GetAll()
     {
         return RunPreFetchActions(ThisDbSet).ToList();
     }

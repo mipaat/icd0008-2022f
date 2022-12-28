@@ -1,9 +1,10 @@
 using Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace DAL.Db;
 
-public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheckersGameRepository
+public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheckersGameRepository
 {
     public CheckersGameRepository(AppDbContext dbContext, IRepositoryContext repoContext) : base(dbContext, repoContext)
     {
@@ -23,10 +24,17 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
         });
     }
 
-    public new ICollection<CheckersGame> GetAll()
+    public override ICollection<CheckersGame> GetAll()
     {
-        return RunPreFetchActions(ThisDbSet
-                .Include(cg => cg.CheckersStates)
+        return GetAll(false);
+    }
+
+    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates)
+    {
+        var checkersStatesIncluded = includeAllCheckersStates
+            ? ThisDbSet.Include(cg => cg.CheckersStates)!
+            : ThisDbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
+        return RunPreFetchActions(checkersStatesIncluded
                 .Include(cg => cg.CheckersRuleset)
             )
             .ToList()
@@ -36,9 +44,16 @@ public class CheckersGameRepository : AbstractDbRepository<CheckersGame>, ICheck
 
     public override CheckersGame? GetById(int id, bool noTracking = false)
     {
+        return GetById(id, noTracking, false);
+    }
+
+    public CheckersGame? GetById(int id, bool noTracking, bool includeAllCheckersStates)
+    {
         var dbSet = noTracking ? ThisDbSet.AsNoTracking() : ThisDbSet.AsQueryable();
-        var entity = dbSet
-            .Include(cg => cg.CheckersStates)
+        var checkersStatesIncluded = includeAllCheckersStates
+            ? dbSet.Include(cg => cg.CheckersStates)!
+            : dbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
+        var entity = checkersStatesIncluded
             .Include(cg => cg.CheckersRuleset)
             .FirstOrDefault(cg => id.Equals(cg.Id));
         return entity == null ? entity : RunPreFetchActions(entity);

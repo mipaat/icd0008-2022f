@@ -2,7 +2,7 @@ using Domain;
 
 namespace DAL.FileSystem;
 
-public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>, ICheckersGameRepository
+public sealed class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>, ICheckersGameRepository
 {
     protected override string RepositoryName => "CheckersGame";
 
@@ -34,7 +34,7 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
         return base.Serialize(entity);
     }
 
-    public new CheckersGame Remove(CheckersGame entity)
+    public override CheckersGame Remove(CheckersGame entity)
     {
         foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
         {
@@ -48,8 +48,20 @@ public class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>
         return result;
     }
 
-    public new ICollection<CheckersGame> GetAll()
+    public override ICollection<CheckersGame> GetAll()
     {
         return base.GetAll().OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt).ToList();
+    }
+
+    public CheckersGame? GetById(int id, bool noTracking, bool includeAllCheckersStates)
+    {
+        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
+        return GetById(id, noTracking);
+    }
+
+    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates)
+    {
+        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
+        return GetAll();
     }
 }

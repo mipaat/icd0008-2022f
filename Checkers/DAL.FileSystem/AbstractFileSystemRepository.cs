@@ -1,4 +1,3 @@
-using System.Reflection;
 using Domain;
 using GameBrain;
 
@@ -82,7 +81,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     protected readonly IRepositoryContext RepositoryContext;
 
-    public ICollection<T> GetAll()
+    public virtual ICollection<T> GetAll()
     {
         EnsureDirectoryExists();
 
@@ -99,7 +98,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return result;
     }
 
-    public T? GetById(int id, bool noTracking = false)
+    public virtual T? GetById(int id, bool noTracking = false)
     {
         EnsureDirectoryExists();
         if (!Exists(id)) return null;
@@ -111,7 +110,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return entity;
     }
 
-    public void Add(T entity)
+    public virtual void Add(T entity)
     {
         EnsureDirectoryExists();
 
@@ -127,7 +126,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         File.WriteAllText(GetFilePath(entity.Id), fileContent);
     }
 
-    public void Update(T entity)
+    public virtual void Update(T entity)
     {
         EnsureDirectoryExists();
 
@@ -158,7 +157,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return entity == null ? entity : Remove(entity);
     }
 
-    public T Remove(T entity)
+    public virtual T Remove(T entity)
     {
         File.Delete(GetFilePath(entity.Id));
         entity.Id = 0;

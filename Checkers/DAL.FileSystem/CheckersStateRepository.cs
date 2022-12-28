@@ -2,7 +2,7 @@ using Domain;
 
 namespace DAL.FileSystem;
 
-public class CheckersStateRepository : AbstractFileSystemRepository<CheckersState>, ICheckersStateRepository
+public sealed class CheckersStateRepository : AbstractFileSystemRepository<CheckersState>, ICheckersStateRepository
 {
     public CheckersStateRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
     {

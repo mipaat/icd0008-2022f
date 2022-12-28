@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Db;
 
-public class CheckersStateRepository : AbstractDbRepository<CheckersState>, ICheckersStateRepository
+public sealed class CheckersStateRepository : AbstractDbRepository<CheckersState>, ICheckersStateRepository
 {
     public CheckersStateRepository(AppDbContext dbContext, IRepositoryContext repoContext) : base(dbContext, repoContext)
     {

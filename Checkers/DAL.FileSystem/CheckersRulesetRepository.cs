@@ -2,26 +2,24 @@ using Domain;
 
 namespace DAL.FileSystem;
 
-public class CheckersRulesetRepository : AbstractFileSystemRepository<CheckersRuleset>, ICheckersRulesetRepository
+public sealed class CheckersRulesetRepository : AbstractFileSystemRepository<CheckersRuleset>, ICheckersRulesetRepository
 {
     protected override string RepositoryName => "CheckersRuleset";
 
-    public CheckersRulesetRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
+    public CheckersRulesetRepository(IRepositoryContext repositoryContext, bool initializeDefaultRulesets = false) : base(repositoryContext)
     {
+        PreSaveActions.Add(cr => cr.UpdateLastModified());
+        
+        if (!initializeDefaultRulesets) return;
+
+        var checkersRulesets = GetAllSaved();
         foreach (var checkersRuleset in DefaultCheckersRulesets.DefaultRulesets)
         {
-            if (!ExistsEquivalent(checkersRuleset))
+            if (!checkersRulesets.Any(other => other.IsEquivalent(checkersRuleset)))
             {
                 Add(checkersRuleset);
             }
         }
-
-        PreSaveActions.Add(cr => cr.UpdateLastModified());
-    }
-
-    private bool ExistsEquivalent(CheckersRuleset checkersRuleset)
-    {
-        return GetAll().ToList().Exists(other => other.IsEquivalent(checkersRuleset));
     }
 
     public ICollection<CheckersRuleset> GetAllSaved()
