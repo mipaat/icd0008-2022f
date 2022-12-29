@@ -44,10 +44,6 @@ namespace WebApp.Pages.CheckersGames
                 return Page();
             }
 
-            var checkersGame = _ctx.CheckersGameRepository.GetById(CheckersGame.Id, true);
-
-            if (checkersGame == null) return NotFound();
-
             _ctx.CheckersGameRepository.RefreshPartial(CheckersGame);
             _ctx.CheckersGameRepository.Update(CheckersGame);
 

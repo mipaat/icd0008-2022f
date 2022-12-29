@@ -13,11 +13,11 @@ namespace WebApp.Pages.CheckersGames
             _ctx = ctx;
         }
 
-        public IList<CheckersGame> CheckersGame { get; set; } = default!;
+        public IList<CheckersGame> CheckersGames { get; set; } = default!;
 
         public Task OnGet()
         {
-            CheckersGame = _ctx.CheckersGameRepository.GetAll().ToList();
+            CheckersGames = _ctx.CheckersGameRepository.GetAll().ToList();
             return Task.CompletedTask;
         }
     }

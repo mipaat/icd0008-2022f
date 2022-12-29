@@ -110,10 +110,19 @@ public class Play : PageModel
             if (!aiMoveAllowed) return Page();
 
             var aiColor = Brain.CurrentTurnPlayerColor;
+            var timer = new System.Timers.Timer(1000);
+            var timerElapsed = false;
+            timer.Elapsed += (_, _) => timerElapsed = true;
+            timer.Start();
             while (Brain.CurrentTurnPlayerColor == aiColor)
             {
                 Brain.MoveAi();
             }
+
+            while (!timerElapsed)
+            {
+            }
+            timer.Stop();
 
             _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             return Reset;

@@ -4,28 +4,29 @@
 @using GameBrain
 @model WebApp.Pages.CheckersGames.Play
 
-<pre>
-    Your player ID: @Model.PlayerId
-    Your color: @Model.PlayerColor
-    Current turn: @Model.Brain.CurrentTurnPlayerColor
-    BlackMoves: @Model.Brain.BlackMoves
-    WhiteMoves: @Model.Brain.WhiteMoves
-</pre>
+<div class="d-flex flex-row flex-wrap gap-2 justify-content-center gameplay-info-bar">
+    <div class="btn btn-light btn-outline-dark fake-button">Current turn: @Model.Brain.CurrentTurnPlayerColor</div>
+    @if (Model.PlayerId != null)
+    {
+        <div class="btn btn-light btn-outline-dark fake-button">@PlayerNameDisplay()</div>
+    }
+    @if (Model.Brain.EndTurnAllowed)
+    {
+        <form method="GET" action="">
+            <input value="@Model.GameId" name="id" type="hidden">
+            @if (Model.PlayerId != null)
+            {
+                <input value="@Model.PlayerId" name="playerId" type="hidden">
+            }
+            <input value="@(true.ToString())" name="endTurn" type="hidden">
+            <button type="submit" class="btn btn-primary">End turn</button>
+        </form>
+    }
+</div>
 
-@if (Model.Brain.EndTurnAllowed)
-{
-    <form method="GET" action="">
-        <input value="@Model.GameId" name="id" type="hidden">
-        @if (Model.PlayerId != null)
-        {
-            <input value="@Model.PlayerId" name="playerId" type="hidden">
-        }
-        <input value="@(true.ToString())" name="endTurn" type="hidden">
-        <button type="submit">End turn</button>
-    </form>
-}
-
+<div class="overflow-auto">
 <table class="table table-bordered game-board-table">
+    <tbody>
     @for (var y = 0; y < Model.Brain.Height; y++)
     {
         <tr>
@@ -33,7 +34,7 @@
             {
                 var gamePiece = Model.Brain[x, y];
                 <td @GetSelectOnClickText(x, y)
-                    class="@GetBoardCellClasses(x, y)">
+                    class="text-center @GetBoardCellClasses(x, y)">
                     @switch (gamePiece?.Player)
                     {
                         case EPlayerColor.Black:
@@ -63,14 +64,22 @@
             }
         </tr>
     }
+    </tbody>
 </table>
+</div>
 
 @section Scripts
 {
-    @if (Model.Brain.IsAiTurn || Model.PlayerColor != Model.Brain.CurrentTurnPlayerColor)
+    @if (Model.Brain.IsAiTurn)
     {
         <script>
-            setTimeout(() => {window.location = '/CheckersGames/Play?@GetBaseParams()&aiMoveAllowed=true'}, 1000)
+            window.location = '/CheckersGames/Play?@GetBaseParams()&aiMoveAllowed=true';
+        </script>
+    }
+    @if (Model.PlayerColor != Model.Brain.CurrentTurnPlayerColor)
+    {
+        <script>
+            setTimeout(() => {window.location = '/CheckersGames/Play?@GetBaseParams()'}, 1000)
         </script>
     }
 }
@@ -112,5 +121,10 @@
     bool IsSelectedPiece(int x, int y)
     {
         return Model.FromSet && Model.FromX == x && Model.FromY == y;
+    }
+
+    String PlayerNameDisplay()
+    {
+        return $"You are: {Model.PlayerColor}" + (Model.PlayerName != null && Model.PlayerName.Length > 0 ? $" ({Model.PlayerName})" : "");
     }
 }
