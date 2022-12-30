@@ -59,8 +59,9 @@ internal class HeuristicMove : IComparable<HeuristicMove>
         return Heuristic.CompareTo(other.Heuristic);
     }
 
-    public bool CalculateNextLevel(TimeoutException? timeoutException)
+    public bool CalculateNextLevel(ref TimeoutException? timeoutException)
     {
+        CheckTimeout(ref timeoutException);
         if (IsEndState) return true;
         bool finished;
         if (_children != null)
@@ -68,8 +69,8 @@ internal class HeuristicMove : IComparable<HeuristicMove>
             finished = true;
             foreach (var heuristicMove in _children)
             {
-                if (timeoutException != null) throw timeoutException;
-                finished &= heuristicMove.CalculateNextLevel(timeoutException);
+                CheckTimeout(ref timeoutException);
+                finished &= heuristicMove.CalculateNextLevel(ref timeoutException);
             }
 
             _nextLevelCalculated = true;
@@ -77,31 +78,52 @@ internal class HeuristicMove : IComparable<HeuristicMove>
             return finished;
         }
 
-        _children = GetHeuristicMoves(_resultingCheckersBrain, _gameStateHeuristicFunc, _playerColor);
+        CheckTimeout(ref timeoutException);
+        _children = GetHeuristicMoves(_resultingCheckersBrain, _gameStateHeuristicFunc, _playerColor, ref timeoutException);
         finished = true;
         foreach (var heuristicMove in _children)
         {
+            CheckTimeout(ref timeoutException);
             finished &= heuristicMove.IsEndState;
         }
 
         return finished;
     }
 
-    public static List<HeuristicMove> GetHeuristicMoves(CheckersBrain checkersBrain,
+    public static List<HeuristicMove> GetHeuristicMoves(
+        CheckersBrain checkersBrain,
         GameStateHeuristicFunc gameStateHeuristicFunc,
         EPlayerColor playerColor)
+    {
+        TimeoutException? _ = null;
+        return GetHeuristicMoves(checkersBrain, gameStateHeuristicFunc, playerColor, ref _);
+    }
+
+    private static List<HeuristicMove> GetHeuristicMoves(
+        CheckersBrain checkersBrain,
+        GameStateHeuristicFunc gameStateHeuristicFunc,
+        EPlayerColor playerColor,
+        ref TimeoutException? timeoutException)
     {
         var result = new List<HeuristicMove>();
 
         var checkersGame = checkersBrain.CheckersGame;
+        CheckTimeout(ref timeoutException);
         foreach (var move in checkersBrain.AvailableMoves())
         {
+            CheckTimeout(ref timeoutException);
             var newCheckersBrain = new CheckersBrain(checkersGame.GetClone());
+            CheckTimeout(ref timeoutException);
             newCheckersBrain.Move(move.FromX, move.FromY, move.ToX, move.ToY);
             result.Add(new HeuristicMove(move, newCheckersBrain, gameStateHeuristicFunc, playerColor));
         }
 
         return result;
+    }
+
+    private static void CheckTimeout(ref TimeoutException? timeoutException)
+    {
+        if (timeoutException != null) throw timeoutException;
     }
 }
 
@@ -119,7 +141,7 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
         var availableHeuristicMoves =
             HeuristicMove.GetHeuristicMoves(checkersBrain, GetGameStateHeuristic, checkersBrain.CurrentTurnPlayerColor);
 
-        var timer = new Timer(500);
+        var timer = new Timer(900);
         TimeoutException? timeoutException = null;
         timer.Elapsed += (_, _) => timeoutException = new TimeoutException();
 
@@ -132,7 +154,7 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
                 var depthReached = true;
                 foreach (var heuristicMove in availableHeuristicMoves)
                 {
-                    depthReached = depthReached && heuristicMove.CalculateNextLevel(timeoutException);
+                    depthReached = depthReached && heuristicMove.CalculateNextLevel(ref timeoutException);
                 }
 
                 finished = depthReached;
