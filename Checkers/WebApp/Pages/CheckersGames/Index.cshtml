@@ -1,6 +1,7 @@
 @page
 @using Domain
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using WebApp.MyLibraries
 @model WebApp.Pages.CheckersGames.IndexModel
 
 @{
@@ -8,6 +9,29 @@
 }
 
 <h1>Index</h1>
+
+<div class="d-flex gap-4">
+    <form method="GET">
+        <label for="playerNameQuery">Search by player name</label><br/>
+        <input id="playerNameQuery" type="search" name="playerNameQuery" value="@Model.PlayerNameQuery"/>
+        <button type="submit">Search</button>
+    </form>
+    <form method="GET">
+        <label for="rulesetNameQuery">Search by ruleset name</label><br/>
+        <input id="rulesetNameQuery" type="search" name="rulesetNameQuery" value="@Model.RulesetNameQuery"/>
+        <button type="submit">Search</button>
+    </form>
+    <form method="GET">
+        <label for="aiQuery">Search by AI</label><br/>
+        <select id="aiQuery" asp-items="@Utils.AiTypeOptionsSelected(Model.AiQuery)" name="aiQuery"></select>
+        <button type="submit" name="aiQuerySubmit" value="@true.ToString()">Search</button>
+    </form>
+    <form method="GET">
+        <label for="completionFilter">Filter by completion</label><br/>
+        <select id="completionFilter" asp-items="@CompletionFilterOptions(Model.CompletionFilter)" name="completionFilter"></select>
+        <button type="submit">Search</button>
+    </form>
+</div>
 
 <p>
     <a asp-page="Create">Create New</a>
@@ -101,8 +125,13 @@
 
 @functions
 {
-    String GameLaunchButtonText(CheckersGame checkersGame)
+    static string GameLaunchButtonText(CheckersGame checkersGame)
     {
         return checkersGame.Ended ? "Results" : "Play";
+    }
+
+    IEnumerable<SelectListItem> CompletionFilterOptions(ECompletionFilter? selected = null)
+    {
+        return Utils.EnumOptions(typeof(ECompletionFilter), new SelectListItem("All", ""), selected);
     }
 }

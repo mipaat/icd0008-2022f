@@ -5,7 +5,7 @@ namespace WebApp.MyLibraries;
 
 public static class Utils
 {
-    private static IEnumerable<SelectListItem> EnumOptions(Type enumType, SelectListItem? emptyOption = null)
+    public static IEnumerable<SelectListItem> EnumOptions(Type enumType, SelectListItem? emptyOption = null, Enum? selected = null)
     {
         if (!enumType.IsEnum)
             throw new ArgumentException($"Argument {nameof(enumType)} must be an Enum, but was {enumType}");
@@ -14,14 +14,18 @@ public static class Utils
         if (emptyOption != null) result.Add(emptyOption);
         foreach (var value in enumValues)
         {
-            result.Add(new SelectListItem(value.ToString(), ((int)value).ToString()));
+            result.Add(new SelectListItem(value.ToString(), ((int)value).ToString(), value.Equals(selected)));
         }
 
         return result;
     }
 
-    public static IEnumerable<SelectListItem> AiTypeOptions =>
-        EnumOptions(typeof(EAiType), new SelectListItem("No AI", ""));
+    public static IEnumerable<SelectListItem> AiTypeOptionsSelected(EAiType? selected = null)
+    {
+        return EnumOptions(typeof(EAiType), new SelectListItem("No AI", ""), selected);
+    }
+
+    public static IEnumerable<SelectListItem> AiTypeOptions => AiTypeOptionsSelected();
 
     public static IEnumerable<SelectListItem> PlayerColorOptions =>
         EnumOptions(typeof(EPlayerColor), new SelectListItem("", ""));
