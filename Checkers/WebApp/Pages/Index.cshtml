@@ -4,7 +4,19 @@
     ViewData["Title"] = "Home page";
 }
 
+@if (Model.Error != null)
+{
+    <p class="alert alert-danger">An error occurred: @Model.Error</p>
+}
+
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <div>
+        <h1 class="display-4">Checkers</h1>
+        <h2>By Mikkel Paat</h2>
+        <h4>Made in the 2nd half of 2022 for the icd0008 course in TalTech</h4>
+    </div>
+    <div class="m-5">
+        <a asp-page="CheckersGames/Create" class="btn btn-primary">Start a new game</a>
+        <a asp-page="CheckersGames/Index" class="btn btn-primary">Look at existing games</a>
+    </div>
 </div>
