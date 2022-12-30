@@ -39,14 +39,45 @@
     </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model.Entities)
+    @for (var i = 0; i < Model.Entities.Count; i++)
     {
         <tr>
+            @{ var item = Model.Entities[i]; }
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
             </td>
             <td>
-                @Utils.ShortenSerializedGamePieces(item)
+                @if (item.SerializedGamePieces.Length > 50)
+                {
+                    <div class="collapse expandGamePieces-@i show" id="gamePiecesShortened-@i">
+                        @Utils.ShortenSerializedGamePieces(item)
+                        <a data-bs-toggle="collapse"
+                           href=".expandGamePieces-@i"
+                           role="button"
+                           aria-expanded="false"
+                           aria-controls="gamePiecesExpanded-@i gamePiecesShortened-@i">
+                            Expand
+                        </a>
+                    </div>
+                    <div class="collapse expandGamePieces-@i" id="gamePiecesExpanded-@i">
+                        <div class="card card-body game-pieces-expanded-content">
+                            @item.SerializedGamePieces
+                        </div>
+                        <a data-bs-toggle="collapse"
+                           href=".expandGamePieces-@i"
+                           role="button"
+                           aria-expanded="true"
+                           aria-controls="gamePiecesExpanded-@i gamePiecesShortened-@i">
+                            Show less
+                        </a>
+                    </div>
+                }
+                @if (item.SerializedGamePieces.Length <= 50)
+                {
+                    <div class="card card-body">
+                        @item.SerializedGamePieces
+                    </div>
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhiteMoves)

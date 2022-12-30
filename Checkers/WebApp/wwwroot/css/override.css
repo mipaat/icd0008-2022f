@@ -53,3 +53,7 @@
     margin: auto auto 1em;
     width: fit-content;
 }
+
+.game-pieces-expanded-content {
+    max-width: 22em;
+}
