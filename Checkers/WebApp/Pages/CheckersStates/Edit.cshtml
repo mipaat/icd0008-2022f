@@ -14,46 +14,46 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="CheckersState.CheckersGameId" class="control-label"></label>
-                <select asp-for="CheckersState.CheckersGameId" class="form-control" asp-items="ViewBag.CheckersGameId"></select>
-                <span asp-validation-for="CheckersState.CheckersGameId" class="text-danger"></span>
+                <label asp-for="Entity.CheckersGameId" class="control-label"></label>
+                <select asp-for="Entity.CheckersGameId" class="form-control" asp-items="ViewBag.CheckersGameId"></select>
+                <span asp-validation-for="Entity.CheckersGameId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersState.CreatedAt) (UTC)</label>
-                <input asp-for="CheckersState.CreatedAt" class="form-control" />
-                <span asp-validation-for="CheckersState.CreatedAt" class="text-danger"></span>
+                <label asp-for="Entity.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)</label>
+                <input asp-for="Entity.CreatedAt" class="form-control" />
+                <span asp-validation-for="Entity.CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.SerializedGamePieces" class="control-label"></label>
-                <input asp-for="CheckersState.SerializedGamePieces" class="form-control" />
-                <span asp-validation-for="CheckersState.SerializedGamePieces" class="text-danger"></span>
+                <label asp-for="Entity.SerializedGamePieces" class="control-label"></label>
+                <input asp-for="Entity.SerializedGamePieces" class="form-control" />
+                <span asp-validation-for="Entity.SerializedGamePieces" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.WhiteMoves" class="control-label"></label>
-                <input asp-for="CheckersState.WhiteMoves" class="form-control" />
-                <span asp-validation-for="CheckersState.WhiteMoves" class="text-danger"></span>
+                <label asp-for="Entity.WhiteMoves" class="control-label"></label>
+                <input asp-for="Entity.WhiteMoves" class="form-control" />
+                <span asp-validation-for="Entity.WhiteMoves" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.BlackMoves" class="control-label"></label>
-                <input asp-for="CheckersState.BlackMoves" class="form-control" />
-                <span asp-validation-for="CheckersState.BlackMoves" class="text-danger"></span>
+                <label asp-for="Entity.BlackMoves" class="control-label"></label>
+                <input asp-for="Entity.BlackMoves" class="form-control" />
+                <span asp-validation-for="Entity.BlackMoves" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.LastMovedToX" class="control-label"></label>
-                <input asp-for="CheckersState.LastMovedToX" class="form-control" />
-                <span asp-validation-for="CheckersState.LastMovedToX" class="text-danger"></span>
+                <label asp-for="Entity.LastMovedToX" class="control-label"></label>
+                <input asp-for="Entity.LastMovedToX" class="form-control" />
+                <span asp-validation-for="Entity.LastMovedToX" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.LastMovedToY" class="control-label"></label>
-                <input asp-for="CheckersState.LastMovedToY" class="form-control" />
-                <span asp-validation-for="CheckersState.LastMovedToY" class="text-danger"></span>
+                <label asp-for="Entity.LastMovedToY" class="control-label"></label>
+                <input asp-for="Entity.LastMovedToY" class="form-control" />
+                <span asp-validation-for="Entity.LastMovedToY" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersState.LastMoveState" class="control-label"></label>
-                <input asp-for="CheckersState.LastMoveState" class="form-control" />
-                <span asp-validation-for="CheckersState.LastMoveState" class="text-danger"></span>
+                <label asp-for="Entity.LastMoveState" class="control-label"></label>
+                <input asp-for="Entity.LastMoveState" class="form-control" />
+                <span asp-validation-for="Entity.LastMoveState" class="text-danger"></span>
             </div>
-            <input type="hidden" asp-for="CheckersState.Id" />
+            <input type="hidden" asp-for="Entity.Id" />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

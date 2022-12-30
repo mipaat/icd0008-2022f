@@ -1,4 +1,5 @@
 @page
+@using WebApp.MyLibraries
 @model WebApp.Pages.CheckersStates.IndexModel
 
 @{
@@ -14,38 +15,38 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].CreatedAt) (UTC)
+            @Html.DisplayNameFor(model => model.Entities[0].CreatedAt) (UTC)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].SerializedGamePieces)
+            @Html.DisplayNameFor(model => model.Entities[0].SerializedGamePieces)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].WhiteMoves)
+            @Html.DisplayNameFor(model => model.Entities[0].WhiteMoves)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].BlackMoves)
+            @Html.DisplayNameFor(model => model.Entities[0].BlackMoves)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].LastMovedToX)
+            @Html.DisplayNameFor(model => model.Entities[0].LastMovedToX)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].LastMovedToY)
+            @Html.DisplayNameFor(model => model.Entities[0].LastMovedToY)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersState[0].LastMoveState)
+            @Html.DisplayNameFor(model => model.Entities[0].LastMoveState)
         </th>
         <th></th>
     </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model.CheckersState)
+    @foreach (var item in Model.Entities)
     {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
             </td>
             <td>
-                @IndexModel.ShortenSerializedGamePieces(item)
+                @Utils.ShortenSerializedGamePieces(item)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhiteMoves)

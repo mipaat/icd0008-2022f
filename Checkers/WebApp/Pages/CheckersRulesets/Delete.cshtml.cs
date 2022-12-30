@@ -1,63 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using DAL.Db;
+using DAL;
 using Domain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersRulesets
 {
-    public class DeleteModel : PageModel
+    public class DeleteModel : DeleteModel<CheckersRuleset>
     {
-        private readonly DAL.Db.AppDbContext _context;
+        protected override IRepository<CheckersRuleset> Repository => Ctx.CheckersRulesetRepository;
 
-        public DeleteModel(DAL.Db.AppDbContext context)
+        public DeleteModel(IRepositoryContext ctx) : base(ctx)
         {
-            _context = context;
-        }
-
-        [BindProperty]
-      public CheckersRuleset CheckersRuleset { get; set; } = default!;
-
-        public async Task<IActionResult> OnGetAsync(int? id)
-        {
-            if (id == null || _context.CheckersRulesets == null)
-            {
-                return NotFound();
-            }
-
-            var checkersruleset = await _context.CheckersRulesets.FirstOrDefaultAsync(m => m.Id == id);
-
-            if (checkersruleset == null)
-            {
-                return NotFound();
-            }
-            else 
-            {
-                CheckersRuleset = checkersruleset;
-            }
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostAsync(int? id)
-        {
-            if (id == null || _context.CheckersRulesets == null)
-            {
-                return NotFound();
-            }
-            var checkersruleset = await _context.CheckersRulesets.FindAsync(id);
-
-            if (checkersruleset != null)
-            {
-                CheckersRuleset = checkersruleset;
-                _context.CheckersRulesets.Remove(CheckersRuleset);
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToPage("./Index");
         }
     }
 }

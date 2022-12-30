@@ -2,19 +2,12 @@ using DAL;
 using Domain;
 using GameBrain;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames;
 
-public class Ended : PageModel
+public class Ended : PageModelDb
 {
-    private readonly IRepositoryContext _ctx;
-
-    public Ended(IRepositoryContext ctx)
-    {
-        _ctx = ctx;
-    }
-    
     public CheckersBrain Brain { get; set; } = default!;
 
     [BindProperty(SupportsGet = true)] public int? PlayerId { get; set; }
@@ -34,7 +27,7 @@ public class Ended : PageModel
 
     public IActionResult OnGet(int id)
     {
-        var checkersGame = _ctx.CheckersGameRepository.GetById(id);
+        var checkersGame = Ctx.CheckersGameRepository.GetById(id);
         if (checkersGame == null)
             return RedirectToPage("/Index", new { error = $"No CheckersGame with ID {id} found!" });
         
@@ -47,5 +40,9 @@ public class Ended : PageModel
                 });
 
         return Page();
+    }
+
+    public Ended(IRepositoryContext ctx) : base(ctx)
+    {
     }
 }

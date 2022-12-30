@@ -15,70 +15,70 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.BuiltIn" /> @Html.DisplayNameFor(model => model.CheckersRuleset.BuiltIn)
+                    <input class="form-check-input" asp-for="Entity.BuiltIn" /> @Html.DisplayNameFor(model => model.Entity.BuiltIn)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.Saved" /> @Html.DisplayNameFor(model => model.CheckersRuleset.Saved)
+                    <input class="form-check-input" asp-for="Entity.Saved" /> @Html.DisplayNameFor(model => model.Entity.Saved)
                 </label>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.Width" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Width" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.Width" class="text-danger"></span>
+                <label asp-for="Entity.Width" class="control-label"></label>
+                <input asp-for="Entity.Width" class="form-control" />
+                <span asp-validation-for="Entity.Width" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.Height" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Height" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.Height" class="text-danger"></span>
+                <label asp-for="Entity.Height" class="control-label"></label>
+                <input asp-for="Entity.Height" class="form-control" />
+                <span asp-validation-for="Entity.Height" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.Title" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Title" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.Title" class="text-danger"></span>
+                <label asp-for="Entity.Title" class="control-label"></label>
+                <input asp-for="Entity.Title" class="form-control" />
+                <span asp-validation-for="Entity.Title" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.Description" class="control-label"></label>
-                <input asp-for="CheckersRuleset.Description" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.Description" class="text-danger"></span>
+                <label asp-for="Entity.Description" class="control-label"></label>
+                <input asp-for="Entity.Description" class="form-control" />
+                <span asp-validation-for="Entity.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.CreatedAt) (UTC)</label>
-                <input asp-for="CheckersRuleset.CreatedAt" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.CreatedAt" class="text-danger"></span>
+                <label asp-for="Entity.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)</label>
+                <input asp-for="Entity.CreatedAt" class="form-control" />
+                <span asp-validation-for="Entity.CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersRuleset.LastModified" class="control-label">@Html.DisplayNameFor(model => model.CheckersRuleset.LastModified) (UTC)</label>
-                <input asp-for="CheckersRuleset.LastModified" class="form-control" />
-                <span asp-validation-for="CheckersRuleset.LastModified" class="text-danger"></span>
+                <label asp-for="Entity.LastModified" class="control-label">@Html.DisplayNameFor(model => model.Entity.LastModified) (UTC)</label>
+                <input asp-for="Entity.LastModified" class="form-control" />
+                <span asp-validation-for="Entity.LastModified" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.BlackMovesFirst" /> @Html.DisplayNameFor(model => model.CheckersRuleset.BlackMovesFirst)
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.MustCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.MustCapture)
+                    <input class="form-check-input" asp-for="Entity.BlackMovesFirst" /> @Html.DisplayNameFor(model => model.Entity.BlackMovesFirst)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwards" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwards)
+                    <input class="form-check-input" asp-for="Entity.MustCapture" /> @Html.DisplayNameFor(model => model.Entity.MustCapture)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.CanCaptureBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.CheckersRuleset.CanCaptureBackwardsDuringMultiCapture)
+                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwards" /> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwards)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="CheckersRuleset.FlyingKings" /> @Html.DisplayNameFor(model => model.CheckersRuleset.FlyingKings)
+                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwardsDuringMultiCapture)
                 </label>
             </div>
-            <input type="hidden" asp-for="CheckersRuleset.Id" />
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="Entity.FlyingKings" /> @Html.DisplayNameFor(model => model.Entity.FlyingKings)
+                </label>
+            </div>
+            <input type="hidden" asp-for="Entity.Id" />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

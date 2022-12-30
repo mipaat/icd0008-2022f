@@ -1,33 +1,15 @@
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+using DAL;
 using Domain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersStates
 {
-    public class IndexModel : PageModel
+    public class IndexModel : IndexModel<CheckersState>
     {
-        private readonly DAL.Db.AppDbContext _context;
+        protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
 
-        public IndexModel(DAL.Db.AppDbContext context)
+        public IndexModel(IRepositoryContext ctx) : base(ctx)
         {
-            _context = context;
-        }
-
-        public IList<CheckersState> CheckersState { get; set; } = default!;
-
-        public async Task OnGetAsync()
-        {
-            if (_context.CheckersStates != null)
-            {
-                CheckersState = await _context.CheckersStates.ToListAsync();
-            }
-        }
-
-        public static string ShortenSerializedGamePieces(CheckersState checkersState)
-        {
-            return checkersState.SerializedGamePieces.Length > 50
-                ? checkersState.SerializedGamePieces[..47] + "..."
-                : checkersState.SerializedGamePieces;
         }
     }
 }

@@ -17,55 +17,55 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Id)
+            @Html.DisplayNameFor(model => model.Entities[0].Id)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].BuiltIn)
+            @Html.DisplayNameFor(model => model.Entities[0].BuiltIn)
         </th>
         @if (Model.ShowNonSaved)
         {
             <th>
-                @Html.DisplayNameFor(model => model.CheckersRulesets[0].Saved)
+                @Html.DisplayNameFor(model => model.Entities[0].Saved)
             </th>
         }
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Width)
+            @Html.DisplayNameFor(model => model.Entities[0].Width)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Height)
+            @Html.DisplayNameFor(model => model.Entities[0].Height)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Title)
+            @Html.DisplayNameFor(model => model.Entities[0].Title)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].Description)
+            @Html.DisplayNameFor(model => model.Entities[0].Description)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CreatedAt) (UTC)
+            @Html.DisplayNameFor(model => model.Entities[0].CreatedAt) (UTC)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].LastModified) (UTC)
+            @Html.DisplayNameFor(model => model.Entities[0].LastModified) (UTC)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].BlackMovesFirst)
+            @Html.DisplayNameFor(model => model.Entities[0].BlackMovesFirst)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].MustCapture)
+            @Html.DisplayNameFor(model => model.Entities[0].MustCapture)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CanCaptureBackwards)
+            @Html.DisplayNameFor(model => model.Entities[0].CanCaptureBackwards)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].CanCaptureBackwardsDuringMultiCapture)
+            @Html.DisplayNameFor(model => model.Entities[0].CanCaptureBackwardsDuringMultiCapture)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CheckersRulesets[0].FlyingKings)
+            @Html.DisplayNameFor(model => model.Entities[0].FlyingKings)
         </th>
         <th></th>
     </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model.CheckersRulesets)
+    @foreach (var item in Model.Entities)
     {
         <tr>
             <td>

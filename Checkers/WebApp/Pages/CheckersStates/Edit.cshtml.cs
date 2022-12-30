@@ -1,78 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using DAL.Db;
+using DAL;
 using Domain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersStates
 {
-    public class EditModel : PageModel
+    public class EditModel : EditModel<CheckersState>
     {
-        private readonly DAL.Db.AppDbContext _context;
+        protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
 
-        public EditModel(DAL.Db.AppDbContext context)
+        public EditModel(IRepositoryContext ctx) : base(ctx)
         {
-            _context = context;
-        }
-
-        [BindProperty]
-        public CheckersState CheckersState { get; set; } = default!;
-
-        public async Task<IActionResult> OnGetAsync(int? id)
-        {
-            if (id == null || _context.CheckersStates == null)
-            {
-                return NotFound();
-            }
-
-            var checkersstate =  await _context.CheckersStates.FirstOrDefaultAsync(m => m.Id == id);
-            if (checkersstate == null)
-            {
-                return NotFound();
-            }
-            CheckersState = checkersstate;
-            ViewData["CheckersGameId"] = new SelectList(_context.CheckersGames, "Id", "Id");
-            return Page();
-        }
-
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see https://aka.ms/RazorPagesCRUD.
-        public async Task<IActionResult> OnPostAsync()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
-
-            _context.Attach(CheckersState).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CheckersStateExists(CheckersState.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return RedirectToPage("./Index");
-        }
-
-        private bool CheckersStateExists(int id)
-        {
-          return (_context.CheckersStates?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

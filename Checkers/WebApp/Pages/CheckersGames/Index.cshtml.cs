@@ -1,24 +1,15 @@
 using DAL;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Domain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames
 {
-    public class IndexModel : PageModel
+    public class IndexModel : IndexModel<CheckersGame>
     {
-        private readonly IRepositoryContext _ctx;
-
-        public IndexModel(IRepositoryContext ctx)
+        public IndexModel(IRepositoryContext ctx) : base(ctx)
         {
-            _ctx = ctx;
         }
 
-        public IList<CheckersGame> CheckersGames { get; set; } = default!;
-
-        public Task OnGet()
-        {
-            CheckersGames = _ctx.CheckersGameRepository.GetAll().ToList();
-            return Task.CompletedTask;
-        }
+        protected override IRepository<CheckersGame> Repository => Ctx.CheckersGameRepository;
     }
 }

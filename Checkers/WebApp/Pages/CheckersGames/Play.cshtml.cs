@@ -2,19 +2,12 @@ using DAL;
 using Domain;
 using GameBrain;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames;
 
-public class Play : PageModel
+public class Play : PageModelDb
 {
-    private readonly IRepositoryContext _ctx;
-
-    public Play(IRepositoryContext ctx)
-    {
-        _ctx = ctx;
-    }
-
     public CheckersBrain Brain { get; set; } = default!;
     [BindProperty(SupportsGet = true)] public int? PlayerId { get; set; }
     public int GameId { get; set; }
@@ -78,7 +71,7 @@ public class Play : PageModel
         CheckersGame? game;
         try
         {
-            game = _ctx.CheckersGameRepository.GetById(id.Value);
+            game = Ctx.CheckersGameRepository.GetById(id.Value);
         }
         catch (InsufficientCheckersStatesException)
         {
@@ -124,7 +117,7 @@ public class Play : PageModel
             }
             timer.Stop();
 
-            _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
+            Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             return Reset;
         }
 
@@ -132,7 +125,7 @@ public class Play : PageModel
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
-            _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
+            Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             return Reset;
         }
 
@@ -146,7 +139,7 @@ public class Play : PageModel
             if (IsMovableTo(ToX!.Value, ToY!.Value))
             {
                 Brain.Move(FromX!.Value, FromY!.Value, ToX!.Value, ToY!.Value);
-                _ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
+                Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
             }
 
             return Brain.LastMoveState == EMoveState.CanContinue
@@ -160,5 +153,9 @@ public class Play : PageModel
         }
 
         return Page();
+    }
+
+    public Play(IRepositoryContext ctx) : base(ctx)
+    {
     }
 }

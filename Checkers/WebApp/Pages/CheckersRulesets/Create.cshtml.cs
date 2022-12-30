@@ -1,25 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using DAL;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using DAL.Db;
 using Domain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersRulesets
 {
-    public class CreateModel : PageModel
+    public class CreateModel : PageModelDb
     {
-        private readonly IRepositoryContext _ctx;
-
-        public CreateModel(IRepositoryContext ctx)
-        {
-            _ctx = ctx;
-        }
-
         public IActionResult OnGet()
         {
             return Page();
@@ -37,9 +24,13 @@ namespace WebApp.Pages.CheckersRulesets
                 return Task.FromResult<IActionResult>(Page());
             }
 
-            _ctx.CheckersRulesetRepository.Add(CheckersRuleset);
+            Ctx.CheckersRulesetRepository.Add(CheckersRuleset);
 
             return Task.FromResult<IActionResult>(RedirectToPage("./Index"));
+        }
+
+        public CreateModel(IRepositoryContext ctx) : base(ctx)
+        {
         }
     }
 }

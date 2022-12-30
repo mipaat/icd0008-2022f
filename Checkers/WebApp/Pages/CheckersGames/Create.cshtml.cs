@@ -1,21 +1,14 @@
 using DAL;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Domain;
 using GameBrain;
+using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames
 {
-    public class CreateModel : PageModel
+    public class CreateModel : PageModelDb
     {
-        private readonly IRepositoryContext _ctx;
-
-        public CreateModel(IRepositoryContext ctx)
-        {
-            _ctx = ctx;
-        }
-
         public IActionResult OnGet()
         {
             return Page();
@@ -26,7 +19,7 @@ namespace WebApp.Pages.CheckersGames
             get
             {
                 var result = new List<SelectListItem>();
-                foreach (var checkersRuleset in _ctx.CheckersRulesetRepository.GetAllSaved())
+                foreach (var checkersRuleset in Ctx.CheckersRulesetRepository.GetAllSaved())
                 {
                     result.Add(new SelectListItem(checkersRuleset.TitleText, checkersRuleset.Id.ToString()));
                 }
@@ -49,16 +42,20 @@ namespace WebApp.Pages.CheckersGames
                 return Page();
             }
 
-            var checkersRuleset = _ctx.CheckersRulesetRepository.GetById(CheckersRulesetId)?.GetClone(false);
+            var checkersRuleset = Ctx.CheckersRulesetRepository.GetById(CheckersRulesetId)?.GetClone(false);
 
             if (checkersRuleset == null) return Page();
 
             var checkersBrain =
                 new CheckersBrain(checkersRuleset, WhitePlayerName, BlackPlayerName, WhiteAiType, BlackAiType);
             var checkersGame = checkersBrain.CheckersGame;
-            _ctx.CheckersGameRepository.Add(checkersGame);
+            Ctx.CheckersGameRepository.Add(checkersGame);
 
             return RedirectToPage("./Launch", new { id = checkersGame.Id });
+        }
+
+        public CreateModel(IRepositoryContext ctx) : base(ctx)
+        {
         }
     }
 }

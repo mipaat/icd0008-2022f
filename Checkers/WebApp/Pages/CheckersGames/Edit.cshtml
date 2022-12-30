@@ -1,4 +1,5 @@
 @page
+@using WebApp.MyLibraries
 @model WebApp.Pages.CheckersGames.EditModel
 
 @{
@@ -14,46 +15,46 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="CheckersGame.WhitePlayerName" class="control-label"></label>
-                <input asp-for="CheckersGame.WhitePlayerName" class="form-control" />
-                <span asp-validation-for="CheckersGame.WhitePlayerName" class="text-danger"></span>
+                <label asp-for="Entity.WhitePlayerName" class="control-label"></label>
+                <input asp-for="Entity.WhitePlayerName" class="form-control" />
+                <span asp-validation-for="Entity.WhitePlayerName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.BlackPlayerName" class="control-label"></label>
-                <input asp-for="CheckersGame.BlackPlayerName" class="form-control" />
-                <span asp-validation-for="CheckersGame.BlackPlayerName" class="text-danger"></span>
+                <label asp-for="Entity.BlackPlayerName" class="control-label"></label>
+                <input asp-for="Entity.BlackPlayerName" class="form-control" />
+                <span asp-validation-for="Entity.BlackPlayerName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.WhiteAiType" class="control-label"></label>
-                <select asp-for="CheckersGame.WhiteAiType" class="form-control" asp-items="@Utils.AiTypeOptions"></select>
-                <span asp-validation-for="CheckersGame.WhiteAiType" class="text-danger"></span>
+                <label asp-for="Entity.WhiteAiType" class="control-label"></label>
+                <select asp-for="Entity.WhiteAiType" class="form-control" asp-items="@Utils.AiTypeOptions"></select>
+                <span asp-validation-for="Entity.WhiteAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.BlackAiType" class="control-label"></label>
-                <select asp-for="CheckersGame.BlackAiType" class="form-control" asp-items="@Utils.AiTypeOptions"></select>
-                <span asp-validation-for="CheckersGame.BlackAiType" class="text-danger"></span>
+                <label asp-for="Entity.BlackAiType" class="control-label"></label>
+                <select asp-for="Entity.BlackAiType" class="form-control" asp-items="@Utils.AiTypeOptions"></select>
+                <span asp-validation-for="Entity.BlackAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.CheckersRuleset" class="control-label"></label>
-                <input asp-for="CheckersGame.CheckersRuleset" class="form-control" readonly value="@(Model.CheckersGame.CheckersRuleset!.Id + " - " + @Model.CheckersGame.CheckersRuleset?.TitleText)" />
-                <span asp-validation-for="CheckersGame.CheckersRuleset" class="text-danger"></span>
+                <label asp-for="Entity.CheckersRuleset" class="control-label"></label>
+                <input asp-for="Entity.CheckersRuleset" class="form-control" readonly value="@(Model.Entity.CheckersRuleset!.Id + " - " + @Model.Entity.CheckersRuleset?.TitleText)" />
+                <span asp-validation-for="Entity.CheckersRuleset" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.StartedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersGame.StartedAt) (UTC)</label>
-                <input asp-for="CheckersGame.StartedAt" class="form-control" />
-                <span asp-validation-for="CheckersGame.StartedAt" class="text-danger"></span>
+                <label asp-for="Entity.StartedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.StartedAt) (UTC)</label>
+                <input asp-for="Entity.StartedAt" class="form-control" />
+                <span asp-validation-for="Entity.StartedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.EndedAt" class="control-label">@Html.DisplayNameFor(model => model.CheckersGame.EndedAt) (UTC)</label>
-                <input asp-for="CheckersGame.EndedAt" class="form-control" />
-                <span asp-validation-for="CheckersGame.EndedAt" class="text-danger"></span>
+                <label asp-for="Entity.EndedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.EndedAt) (UTC)</label>
+                <input asp-for="Entity.EndedAt" class="form-control" />
+                <span asp-validation-for="Entity.EndedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="CheckersGame.Winner" class="control-label"></label>
-                <select asp-for="CheckersGame.Winner" class="form-control" asp-items="@Utils.PlayerColorOptions"></select>
-                <span asp-validation-for="CheckersGame.Winner" class="text-danger"></span>
+                <label asp-for="Entity.Winner" class="control-label"></label>
+                <select asp-for="Entity.Winner" class="form-control" asp-items="@Utils.PlayerColorOptions"></select>
+                <span asp-validation-for="Entity.Winner" class="text-danger"></span>
             </div>
-            <input type="hidden" asp-for="CheckersGame.Id" />
+            <input type="hidden" asp-for="Entity.Id" />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
