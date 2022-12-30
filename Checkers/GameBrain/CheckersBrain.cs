@@ -49,6 +49,7 @@ public class CheckersBrain
                     _pieces[x, y] = currentCheckersState.GamePieces![x, y];
                 }
             }
+
             WhiteMoves = currentCheckersState.WhiteMoves;
             BlackMoves = currentCheckersState.BlackMoves;
             LastMovedToX = currentCheckersState.LastMovedToX;
@@ -59,6 +60,7 @@ public class CheckersBrain
         {
             InitializePieces();
         }
+
         CheckGameEndConditions();
     }
 
@@ -169,17 +171,14 @@ public class CheckersBrain
         }
     }
 
-    public EPlayerColor OtherPlayer
+    public EPlayerColor OtherPlayer(EPlayerColor playerColor)
     {
-        get
+        return playerColor switch
         {
-            return CurrentTurnPlayerColor switch
-            {
-                EPlayerColor.Black => EPlayerColor.White,
-                EPlayerColor.White => EPlayerColor.Black,
-                _ => throw new IllegalStateException("Unknown player color!")
-            };
-        }
+            EPlayerColor.Black => EPlayerColor.White,
+            EPlayerColor.White => EPlayerColor.Black,
+            _ => throw new IllegalStateException("Unknown player color!")
+        };
     }
 
     public bool IsAiTurn => CurrentTurnAiType != null;
@@ -416,7 +415,7 @@ public class CheckersBrain
             IncrementMoveCounter();
             CheckGameEndConditions();
         }
-        
+
         SaveGameState();
     }
 
@@ -471,9 +470,9 @@ public class CheckersBrain
         IncrementMoveCounter();
 
         LastMoveState = EMoveState.Finished;
-        
+
         CheckGameEndConditions();
-        
+
         SaveGameState();
     }
 
@@ -486,6 +485,7 @@ public class CheckersBrain
             CheckersGame.Winner = EPlayerColor.Black;
             CheckersGame.EndedAt = DateTime.Now.ToUniversalTime();
         }
+
         if (pieceCounts.BlackPieces == 0)
         {
             CheckersGame.Winner = EPlayerColor.White;
@@ -498,11 +498,36 @@ public class CheckersBrain
         }
     }
 
-    public void Forfeit()
+    public void Forfeit(EPlayerColor? playerColor = null)
     {
         if (Ended) return;
         CheckersGame.EndedAt = DateTime.UtcNow;
-        CheckersGame.Winner = OtherPlayer;
+        CheckersGame.Winner = OtherPlayer(playerColor ?? CurrentTurnPlayerColor);
+    }
+
+    public void ProposeDraw(EPlayerColor? playerColor = null)
+    {
+        CheckersGame.DrawProposedBy = playerColor ?? CurrentTurnPlayerColor;
+    }
+
+    public void AcceptDraw(EPlayerColor? playerColor = null)
+    {
+        if (CheckersGame.DrawProposedBy == null)
+            throw new NotAllowedException("Can't accept draw - no draw was proposed!");
+        if (CheckersGame.DrawProposedBy == (playerColor ?? CurrentTurnPlayerColor))
+            throw new NotAllowedException(
+                $"Draw can't be accepted by the player that proposed it ({CheckersGame.DrawProposedBy})!");
+        Draw();
+    }
+
+    public void RejectDraw(EPlayerColor? playerColor = null)
+    {
+        if (CheckersGame.DrawProposedBy == null)
+            throw new NotAllowedException("Can't accept draw - no draw was proposed!");
+        if (CheckersGame.DrawProposedBy == (playerColor ?? CurrentTurnPlayerColor))
+            throw new NotAllowedException(
+                $"Draw can't be accepted by the player that proposed it ({CheckersGame.DrawProposedBy})!");
+        CheckersGame.DrawProposedBy = null;
     }
 
     public void Draw()

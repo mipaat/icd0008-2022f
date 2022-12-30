@@ -2,6 +2,7 @@ using DAL;
 using Domain;
 using GameBrain;
 using Microsoft.AspNetCore.Mvc;
+using WebApp.MyLibraries;
 using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames;
@@ -61,11 +62,18 @@ public class Play : PageModelDb
         return !Brain.IsAiTurn && FromSet && Brain.IsMoveValid(PlayerColor, FromX!.Value, FromY!.Value, x, y);
     }
 
-    public IActionResult OnGet(int? id, bool endTurn = false, bool aiMoveAllowed = false)
+    public bool DrawResolutionExpected => Brain.CheckersGame.DrawProposedBy == Brain.OtherPlayer(PlayerColor) && !Brain.Ended;
+
+    private void SaveGame()
+    {
+        Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
+    }
+
+    private CheckersGame GetCheckersGameById(int? id)
     {
         if (id == null)
         {
-            return RedirectToPage("/Index", new { error = "NULL is not a valid game ID!" });
+            throw new PageException("NULL is not a valid game ID!");
         }
 
         CheckersGame? game;
@@ -75,23 +83,110 @@ public class Play : PageModelDb
         }
         catch (InsufficientCheckersStatesException)
         {
-            return RedirectToPage("/Index", new { error = $"Game with ID {id.Value} appears to be corrupted!" });
+            throw new PageException($"Game with ID {id.Value} appears to be corrupted!");
         }
 
         if (game == null)
         {
-            return RedirectToPage("/Index", new { error = $"No game with ID {id.Value} found!" });
+            throw new PageException($"No game with ID {id.Value} found!");
         }
 
         if (game.CheckersRuleset == null || game.CurrentCheckersState == null)
         {
-            return RedirectToPage("/Index", new { error = $"Failed to load game with ID {id.Value}!" });
+            throw new PageException($"Failed to load game with ID {id.Value}!");
         }
 
-        game.CurrentCheckersState.DeserializeGamePieces();
+        return game;
+    }
 
-        GameId = id.Value;
+    private void InitializeProperties(int? id)
+    {
+        var game = GetCheckersGameById(id);
+        
+        game.CurrentCheckersState!.DeserializeGamePieces();
+
+        GameId = id!.Value;
         Brain = new CheckersBrain(game);
+    }
+
+    private IActionResult MakeAiMove()
+    {
+        var aiColor = Brain.CurrentTurnPlayerColor;
+        var timer = new System.Timers.Timer(1000);
+        var timerElapsed = false;
+        timer.Elapsed += (_, _) => timerElapsed = true;
+        timer.Start();
+        while (Brain.CurrentTurnPlayerColor == aiColor)
+        {
+            Brain.MoveAi();
+        }
+
+        while (!timerElapsed)
+        {
+        }
+
+        timer.Stop();
+
+        SaveGame();
+        return Reset;
+    }
+
+    private IActionResult MakeMove()
+    {
+        if (IsMovableTo(ToX!.Value, ToY!.Value))
+        {
+            Brain.Move(FromX!.Value, FromY!.Value, ToX!.Value, ToY!.Value);
+            SaveGame();
+        }
+
+        return Brain.LastMoveState == EMoveState.CanContinue
+            ? RedirectToPage("",
+                new
+                {
+                    id = GameId, playerId = PlayerId, fromX = Brain.LastMovedToX,
+                    FromY = Brain.LastMovedToY
+                })
+            : Reset;
+    }
+
+    public IActionResult OnGet(int? id, bool endTurn = false, bool aiMoveAllowed = false,
+        bool forfeit = false, bool proposeDraw = false, bool? acceptDraw = null)
+    {
+        try
+        {
+            InitializeProperties(id);
+        }
+        catch (PageException e)
+        {
+            return e.RedirectTarget;
+        }
+
+        if (DrawResolutionExpected && acceptDraw == null && !Brain.IsAiTurn) return Page();
+
+        if (forfeit)
+        {
+            Brain.Forfeit(PlayerColor);
+            SaveGame();
+        }
+
+        if (proposeDraw)
+        {
+            Brain.ProposeDraw(PlayerColor);
+            SaveGame();
+        }
+
+        if (acceptDraw != null && DrawResolutionExpected)
+        {
+            if (acceptDraw.Value)
+            {
+                Brain.AcceptDraw(PlayerColor);
+            }
+            else
+            {
+                Brain.RejectDraw(PlayerColor);
+            }
+            SaveGame();
+        }
 
         if (Brain.Ended)
         {
@@ -100,32 +195,14 @@ public class Play : PageModelDb
 
         if (Brain.IsAiTurn)
         {
-            if (!aiMoveAllowed) return Page();
-
-            var aiColor = Brain.CurrentTurnPlayerColor;
-            var timer = new System.Timers.Timer(1000);
-            var timerElapsed = false;
-            timer.Elapsed += (_, _) => timerElapsed = true;
-            timer.Start();
-            while (Brain.CurrentTurnPlayerColor == aiColor)
-            {
-                Brain.MoveAi();
-            }
-
-            while (!timerElapsed)
-            {
-            }
-            timer.Stop();
-
-            Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
-            return Reset;
+            return aiMoveAllowed ? MakeAiMove() : Page();
         }
 
         if (endTurn && Brain.EndTurnAllowed && PlayerColor ==
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
         {
             Brain.EndTurn();
-            Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
+            SaveGame();
             return Reset;
         }
 
@@ -136,20 +213,7 @@ public class Play : PageModelDb
 
         if (FromSet && ToSet)
         {
-            if (IsMovableTo(ToX!.Value, ToY!.Value))
-            {
-                Brain.Move(FromX!.Value, FromY!.Value, ToX!.Value, ToY!.Value);
-                Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
-            }
-
-            return Brain.LastMoveState == EMoveState.CanContinue
-                ? RedirectToPage("",
-                    new
-                    {
-                        id = GameId, playerId = PlayerId, fromX = Brain.LastMovedToX,
-                        FromY = Brain.LastMovedToY
-                    })
-                : Reset;
+            return MakeMove();
         }
 
         return Page();

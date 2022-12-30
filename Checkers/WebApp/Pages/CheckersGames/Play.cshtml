@@ -4,69 +4,118 @@
 @using GameBrain
 @model WebApp.Pages.CheckersGames.Play
 
-<div class="d-flex flex-row flex-wrap gap-2 justify-content-center gameplay-info-bar">
-    <div class="btn btn-light btn-outline-dark fake-button">Current turn: @Model.Brain.CurrentTurnPlayerColor</div>
-    @if (Model.PlayerId != null)
-    {
-        <div class="btn btn-light btn-outline-dark fake-button">@PlayerNameDisplay()</div>
-    }
-    @if (Model.Brain.EndTurnAllowed)
-    {
+@if (Model.DrawResolutionExpected)
+{
+    <div class="text-center">
+        <p class="display-6">Your opponent offered to end this game with a draw</p>
+        <form method="GET" action="" class="mb-1">
+            <input value="@Model.GameId" name="id" type="hidden">
+            @if (Model.PlayerId != null)
+            {
+                <input value="@Model.PlayerId" name="playerId" type="hidden">
+            }
+            <input value="@(true.ToString())" name="acceptDraw" type="hidden">
+            <button type="submit" class="btn btn-success">Accept Draw</button>
+        </form>
         <form method="GET" action="">
             <input value="@Model.GameId" name="id" type="hidden">
             @if (Model.PlayerId != null)
             {
                 <input value="@Model.PlayerId" name="playerId" type="hidden">
             }
-            <input value="@(true.ToString())" name="endTurn" type="hidden">
-            <button type="submit" class="btn btn-primary">End turn</button>
+            <input value="@(false.ToString())" name="acceptDraw" type="hidden">
+            <button type="submit" class="btn btn-danger">Reject Draw</button>
         </form>
-    }
-</div>
+    </div>
+}
 
-<div class="overflow-auto">
-<table class="table table-bordered game-board-table">
-    <tbody>
-    @for (var y = 0; y < Model.Brain.Height; y++)
-    {
-        <tr>
-            @for (var x = 0; x < Model.Brain.Width; x++)
+@if (!Model.DrawResolutionExpected)
+{
+    <div class="d-flex flex-row flex-wrap gap-2 justify-content-center gameplay-info-bar">
+        <div class="btn btn-light btn-outline-dark fake-button">Current turn: @Model.Brain.CurrentTurnPlayerColor</div>
+        @if (Model.PlayerId != null)
+        {
+            <div class="btn btn-light btn-outline-dark fake-button">@PlayerNameDisplay()</div>
+        }
+        @if (Model.Brain.EndTurnAllowed)
+        {
+            <form method="GET" action="">
+                <input value="@Model.GameId" name="id" type="hidden">
+                @if (Model.PlayerId != null)
+                {
+                    <input value="@Model.PlayerId" name="playerId" type="hidden">
+                }
+                <input value="@(true.ToString())" name="endTurn" type="hidden">
+                <button type="submit" class="btn btn-primary">End turn</button>
+            </form>
+        }
+        <form method="GET" action="">
+            <input value="@Model.GameId" name="id" type="hidden">
+            @if (Model.PlayerId != null)
             {
-                var gamePiece = Model.Brain[x, y];
-                <td @GetSelectOnClickText(x, y)
-                    class="text-center @GetBoardCellClasses(x, y)">
-                    @switch (gamePiece?.Player)
-                    {
-                        case EPlayerColor.Black:
-                            @switch (gamePiece.Value.IsCrowned)
-                            {
-                                case false:
-                                    <img src="/images/CheckersPieceBlack.png" alt="Black"/>
-                                    break;
-                                case true:
-                                    <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
-                                    break;
-                            }
-                            break;
-                        case EPlayerColor.White:
-                            @switch (gamePiece.Value.IsCrowned)
-                            {
-                                case false:
-                                    <img src="/images/CheckersPieceWhite.png" alt="White"/>
-                                    break;
-                                case true:
-                                    <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
-                                    break;
-                            }
-                            break;
-                    }
-                </td>
+                <input value="@Model.PlayerId" name="playerId" type="hidden">
             }
-        </tr>
-    }
-    </tbody>
-</table>
-</div>
+            <input value="@(true.ToString())" name="forfeit" type="hidden">
+            <button type="submit" class="btn btn-primary">Forfeit</button>
+        </form>
+        @if (Model.Brain.CheckersGame.DrawProposedBy == null)
+        {
+            <form method="GET" action="">
+                <input value="@Model.GameId" name="id" type="hidden">
+                @if (Model.PlayerId != null)
+                {
+                    <input value="@Model.PlayerId" name="playerId" type="hidden">
+                }
+                <input value="@(true.ToString())" name="proposeDraw" type="hidden">
+                <button type="submit" class="btn btn-primary">Propose Draw</button>
+            </form>
+        }
+    </div>
+
+    <div class="overflow-auto">
+        <table class="table table-bordered game-board-table">
+            <tbody>
+            @for (var y = 0; y < Model.Brain.Height; y++)
+            {
+                <tr>
+                    @for (var x = 0; x < Model.Brain.Width; x++)
+                    {
+                        var gamePiece = Model.Brain[x, y];
+                        <td @GetSelectOnClickText(x, y)
+                            class="text-center @GetBoardCellClasses(x, y)">
+                            @switch (gamePiece?.Player)
+                            {
+                                case EPlayerColor.Black:
+                                    @switch (gamePiece.Value.IsCrowned)
+                                    {
+                                        case false:
+                                            <img src="/images/CheckersPieceBlack.png" alt="Black"/>
+                                            break;
+                                        case true:
+                                            <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
+                                            break;
+                                    }
+                                    break;
+                                case EPlayerColor.White:
+                                    @switch (gamePiece.Value.IsCrowned)
+                                    {
+                                        case false:
+                                            <img src="/images/CheckersPieceWhite.png" alt="White"/>
+                                            break;
+                                        case true:
+                                            <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
+                                            break;
+                                    }
+                                    break;
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
 
 @section Scripts
 {
@@ -79,7 +128,7 @@
     @if (Model.PlayerColor != Model.Brain.CurrentTurnPlayerColor)
     {
         <script>
-            setTimeout(() => {window.location = '/CheckersGames/Play?@GetBaseParams()'}, 1000)
+            setTimeout(() => {window.location = '/CheckersGames/Play?@GetBaseParams()'}, 2000)
         </script>
     }
 }

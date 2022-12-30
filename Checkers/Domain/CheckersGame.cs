@@ -18,6 +18,7 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
     public EPlayerColor? Winner { get; set; }
+    public EPlayerColor? DrawProposedBy { get; set; }
 
     public ICollection<CheckersState> AssertSufficientCheckersStates()
     {
