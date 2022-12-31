@@ -14,8 +14,9 @@ public record ConsoleKeyInfoBasic(ConsoleKey Key)
             Mods |= ConsoleModifiers.Control;
     }
 
-    public bool Equals(ConsoleKeyInfo consoleKeyInfo)
+    public bool Equals(ConsoleKeyInfo? consoleKeyInfo)
     {
-        return consoleKeyInfo.Modifiers == Mods && consoleKeyInfo.Key == Key;
+        if (consoleKeyInfo == null) return false;
+        return consoleKeyInfo.Value.Modifiers == Mods && consoleKeyInfo.Value.Key == Key;
     }
-};
+}

@@ -53,10 +53,10 @@ public sealed class CheckersGameRepository : AbstractFileSystemRepository<Checke
         return base.GetAll().OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt).ToList();
     }
 
-    public CheckersGame? GetById(int id, bool noTracking, bool includeAllCheckersStates)
+    public CheckersGame? GetById(int id, bool includeAllCheckersStates)
     {
         // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
-        return GetById(id, noTracking);
+        return GetById(id);
     }
 
     public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates)

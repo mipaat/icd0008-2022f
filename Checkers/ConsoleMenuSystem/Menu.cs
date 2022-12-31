@@ -119,7 +119,7 @@ public class Menu
             if (i < menuItems.Count)
             {
                 var menuItem = menuItems[i];
-                ConsoleWindow.AddLine(menuItem.Text, i == CursorPosition ? ConsoleColor.White : null);
+                ConsoleWindow.AddLine(menuItem.Text, backgroundColor: i == CursorPosition ? ConsoleColor.White : null);
             }
             else
             {

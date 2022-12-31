@@ -1,6 +1,5 @@
 using Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace DAL.Db;
 
@@ -10,7 +9,8 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
     {
         PreSaveActions.Add(cg =>
         {
-            foreach (var checkersState in cg.AssertSufficientCheckersStates())
+            if (cg.CheckersStates == null) return;
+            foreach (var checkersState in cg.CheckersStates)
             {
                 checkersState.SerializeGamePieces();
             }
@@ -36,20 +36,20 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
             : ThisDbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
         return RunPreFetchActions(checkersStatesIncluded
                 .Include(cg => cg.CheckersRuleset)
+                .ToList()
             )
-            .ToList()
             .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
             .ToList();
     }
 
-    public override CheckersGame? GetById(int id, bool noTracking = false)
+    public override CheckersGame? GetById(int id)
     {
-        return GetById(id, noTracking, false);
+        return GetById(id, false);
     }
 
-    public CheckersGame? GetById(int id, bool noTracking, bool includeAllCheckersStates)
+    public CheckersGame? GetById(int id, bool includeAllCheckersStates)
     {
-        var dbSet = noTracking ? ThisDbSet.AsNoTracking() : ThisDbSet.AsQueryable();
+        var dbSet = ThisDbSet;
         var checkersStatesIncluded = includeAllCheckersStates
             ? dbSet.Include(cg => cg.CheckersStates)!
             : dbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));

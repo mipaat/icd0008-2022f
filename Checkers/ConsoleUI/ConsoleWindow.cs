@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System;
 
 namespace ConsoleUI;
 
@@ -125,12 +124,21 @@ public class ConsoleWindow
         return content;
     }
 
-    public void AddLine(string content = "", ConsoleColor? backgroundColor = null, bool truncationPreferRight = false)
+    public void AddLine(string content = "", int? index = null, ConsoleColor? backgroundColor = null, bool truncationPreferRight = false)
     {
         CheckStringValid(content);
 
-        _renderQueue.Add(new ConsoleLine(content, backgroundColor,
-            truncationPreferRight: truncationPreferRight));
+        var consoleLine = new ConsoleLine(content, backgroundColor,
+            truncationPreferRight: truncationPreferRight);
+
+        if (index == null)
+        {
+            _renderQueue.Add(consoleLine);
+        }
+        else
+        {
+            _renderQueue.Insert(index.Value, consoleLine);
+        }
     }
 
     public void AddLinePattern(string pattern, int? amount = null)
@@ -285,9 +293,10 @@ public class ConsoleWindow
         while (true)
         {
             var textInput = PopupPromptTextInput(prompt, rePrompt);
+            string? customRePrompt = null;
             if (int.TryParse(textInput, out var input))
             {
-                if (validityFunc != null && !validityFunc(input, out rePrompt))
+                if (validityFunc != null && !validityFunc(input, out customRePrompt))
                 {
                     continue;
                 }
@@ -295,11 +304,29 @@ public class ConsoleWindow
                 return input;
             }
 
-            rePrompt = $"Couldn't get integer from '{textInput}'!";
+            rePrompt = customRePrompt ?? $"Couldn't get integer from '{textInput}'!";
         }
     }
 
-    public ConsoleInput AwaitInput(params ConsoleKeyInfoBasic[] customExitConditions)
+    private static ConsoleKeyInfo? ReadKey(int? waitForMs)
+    {
+        var timerElapsed = false;
+        System.Timers.Timer? timer = null;
+        if (waitForMs != null)
+        {
+            timer = new System.Timers.Timer(waitForMs.Value);
+            timer.Elapsed += (_, _) => timerElapsed = true;
+        }
+        
+        timer?.Start();
+        while (!timerElapsed && !Console.KeyAvailable)
+        {
+        }
+        timer?.Stop();
+        return Console.KeyAvailable ? Console.ReadKey(true) : null;
+    }
+
+    public ConsoleInput AwaitInput(int? waitForMs = null, bool outputText = false, params ConsoleKeyInfoBasic[] customExitConditions)
     {
         var result = new ConsoleInput();
         var shouldBreak = false;
@@ -314,7 +341,14 @@ public class ConsoleWindow
 
         do
         {
-            var keyInfo = Console.ReadKey(true);
+            var nullableKeyInfo = ReadKey(waitForMs);
+            if (nullableKeyInfo == null)
+            {
+                if (waitForMs == null) throw new Exception("Read key should not be null after waiting indefinitely");
+                break;
+            }
+
+            var keyInfo = nullableKeyInfo.Value;
             if (exitConditions.Exists(cki => cki.Equals(keyInfo)))
             {
                 result.Clear();
@@ -357,21 +391,24 @@ public class ConsoleWindow
                 }
             }
 
-            var previousCursorVisible = CursorVisible;
-            CursorVisible = false;
-            Console.CursorLeft = initialCursorLeft;
+            if (outputText)
+            {
+                var previousCursorVisible = CursorVisible;
+                CursorVisible = false;
+                Console.CursorLeft = initialCursorLeft;
 
-            WriteLineNoCursorAdvance(result.Text);
+                WriteLineNoCursorAdvance(result.Text);
 
-            CursorVisible = previousCursorVisible;
-            Console.CursorLeft = initialCursorLeft + result.Position;
+                CursorVisible = previousCursorVisible;
+                Console.CursorLeft = initialCursorLeft + result.Position;
+            }
         } while (!shouldBreak);
 
         Console.CursorLeft = initialCursorLeft;
         return result;
     }
 
-    public ConsoleInput RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false)
+    public ConsoleInput RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false, params ConsoleKeyInfoBasic[] customExitConditions)
     {
         var previousRenderQueue = new List<ConsoleLine>(_renderQueue);
 
@@ -380,7 +417,7 @@ public class ConsoleWindow
 
         var previousCursorVisible = CursorVisible;
         CursorVisible = true;
-        var result = AwaitInput();
+        var result = AwaitInput(null, true, customExitConditions);
         CursorVisible = previousCursorVisible;
         ResetCursorPosition();
 

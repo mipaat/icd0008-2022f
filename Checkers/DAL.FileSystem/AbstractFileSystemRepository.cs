@@ -98,7 +98,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         return result;
     }
 
-    public virtual T? GetById(int id, bool noTracking = false)
+    public virtual T? GetById(int id)
     {
         EnsureDirectoryExists();
         if (!Exists(id)) return null;
@@ -174,13 +174,5 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         var fetchedEntity = GetById(entity.Id);
         if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
         entity.Refresh(fetchedEntity);
-    }
-
-    public void RefreshPartial(T entity)
-    {
-        var tempEntity = new T();
-        tempEntity.Refresh(entity);
-        Refresh(entity);
-        entity.Refresh(tempEntity, true);
     }
 }

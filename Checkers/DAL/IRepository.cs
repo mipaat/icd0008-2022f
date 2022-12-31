@@ -7,7 +7,7 @@ public interface IRepository<T>
 {
     ICollection<T> GetAll();
 
-    T? GetById(int id, bool noTracking = false);
+    T? GetById(int id);
 
     void Add(T entity);
 
@@ -22,6 +22,4 @@ public interface IRepository<T>
     bool Exists(int id);
 
     void Refresh(T entity);
-
-    void RefreshPartial(T entity);
 }

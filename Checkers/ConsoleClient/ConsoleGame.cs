@@ -23,9 +23,12 @@ public class ConsoleGame
         _playMode = playMode;
     }
 
+    private static ConsoleKeyInfoBasic QuitButton { get; } = new(ConsoleKey.Q);
+
     private void Refresh()
     {
-        var checkersGame = _repositoryContext.CheckersGameRepository.GetById(_checkersBrain.CheckersGame.Id);
+        var checkersGame = _checkersBrain.CheckersGame;
+        _repositoryContext.CheckersGameRepository.Refresh(checkersGame);
         if (checkersGame == null) throw new IllegalStateException("CheckersGame was null after refresh!");
         _checkersBrain = new CheckersBrain(checkersGame);
     }
@@ -96,6 +99,18 @@ public class ConsoleGame
         _consoleWindow.AddLine(BoundaryLine(_checkersBrain.Width));
     }
 
+    private void ReRenderBoard()
+    {
+        _consoleWindow.ClearRenderQueue();
+        AddBoardToRenderQueue();
+        _consoleWindow.Render();
+    }
+
+    private static bool IsQuitInput(ConsoleInput input)
+    {
+        return input.KeyInfo is { Key: ConsoleKey.Q, Modifiers: ConsoleModifiers.Control } || QuitButton.Equals(input.KeyInfo);
+    }
+
     private void MakePlayerMove(ConsoleInput input)
     {
         var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
@@ -113,6 +128,7 @@ public class ConsoleGame
                         y2))
                 {
                     _checkersBrain.Move(x1, y1, x2, y2);
+                    ReRenderBoard();
                     _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
                 }
                 else
@@ -123,18 +139,25 @@ public class ConsoleGame
             catch (Exception e)
             {
                 _consoleWindow.PopUpMessageBox("Input caused the following error: " +
-                                               e.ToString().Split("\n")[0]);
+                                               e.ToString().ReplaceLineEndings("   ").Replace('\r', '<'));
             }
         }
     }
 
     private void RunAiTurn()
     {
+        AddBoardToRenderQueue();
         _consoleWindow.Render();
         var timer = new System.Timers.Timer(1000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
-        _checkersBrain.MoveAi();
+        var aiColor = _checkersBrain.CurrentTurnPlayerColor;
+        timer.Start();
+        while (_checkersBrain.CurrentTurnPlayerColor == aiColor && !_checkersBrain.Ended)
+        {
+            _checkersBrain.MoveAi();
+        }
+
         while (!timerElapsed)
         {
         }
@@ -142,25 +165,90 @@ public class ConsoleGame
         _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
     }
 
-    private bool HandlePlayerInput()
+    private bool DrawResolutionRequired => _checkersBrain.CheckersGame.DrawProposedBy ==
+                                           _checkersBrain.OtherPlayer(_checkersBrain.CurrentTurnPlayerColor);
+
+    private bool HandlePlayerTurn()
     {
-        var prompt = "Ctrl+Q to quit! Coordinate pairs (e.g A4D7) to move!";
-        if (_checkersBrain.EndTurnAllowed) prompt += " E to end turn!";
+        var controls = "Quit: Q, Forfeit: F";
+        if (_checkersBrain.EndTurnAllowed) controls += ", End turn: E";
+        if (_checkersBrain.CheckersGame.DrawProposedBy == null)
+        {
+            controls += ", Propose Draw: D";
+        }
+
+        _consoleWindow.AddLine(controls);
+
+        if (DrawResolutionRequired)
+        {
+            _consoleWindow.AddLine("Accept opponent's proposal to end game with draw: D");
+        }
+
+        AddBoardToRenderQueue();
+        var prompt = "Type coordinate pairs (e.g A4D7) to move!";
 
         var input = _consoleWindow
             .RenderAndAwaitTextInput(
                 prompt,
                 keepRenderQueue: true);
-        var inputTextNormalized = input.Text.ToLower();
+        var normalizedInputText = input.Text.Trim().ToLower();
 
-        if (input.IsKeyPress)
+        if (normalizedInputText == "q")
         {
-            return input.KeyInfo is { Key: ConsoleKey.Q, Modifiers: ConsoleModifiers.Control };
+            return true;
         }
 
-        if (inputTextNormalized == "e" && _checkersBrain.EndTurnAllowed)
+        var expectedCurrentTurnPlayerColor = _checkersBrain.CurrentTurnPlayerColor;
+        var previousDrawProposer = _checkersBrain.CheckersGame.DrawProposedBy;
+        Refresh();
+        if (expectedCurrentTurnPlayerColor != _checkersBrain.CurrentTurnPlayerColor)
+            throw new IllegalStateException(
+                $"Game turn changed unexpectedly from {expectedCurrentTurnPlayerColor} to {_checkersBrain.CurrentTurnPlayerColor}!");
+
+        if (_checkersBrain.Ended) return false;
+        if (previousDrawProposer != _checkersBrain.CheckersGame.DrawProposedBy) return HandlePlayerTurn();
+
+        if (normalizedInputText == "d")
         {
-            _checkersBrain.EndTurn();
+            if (_checkersBrain.CheckersGame.DrawProposedBy ==
+                _checkersBrain.OtherPlayer(_checkersBrain.CurrentTurnPlayerColor))
+            {
+                _checkersBrain.AcceptDraw();
+            }
+            else
+            {
+                _checkersBrain.ProposeDraw();
+            }
+
+            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            return false;
+        }
+
+        if (DrawResolutionRequired)
+        {
+            _checkersBrain.RejectDraw();
+            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+        }
+
+        if (normalizedInputText == "e")
+        {
+            if (_checkersBrain.EndTurnAllowed)
+            {
+                _checkersBrain.EndTurn();
+                ReRenderBoard();
+                _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            }
+            else
+            {
+                _consoleWindow.PopUpMessageBox("Ending turn is not allowed!");
+            }
+
+            return false;
+        }
+
+        if (normalizedInputText == "f")
+        {
+            _checkersBrain.Forfeit();
             _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
             return false;
         }
@@ -168,24 +256,92 @@ public class ConsoleGame
         MakePlayerMove(input);
         return false;
     }
-    
+
+    private bool AwaitOtherPlayerMove()
+    {
+        var forfeitInput = new ConsoleKeyInfoBasic(ConsoleKey.F);
+        var timer = new System.Timers.Timer(2000);
+        var timerElapsed = false;
+        timer.Elapsed += (_, _) => timerElapsed = true;
+        timer.Start();
+        while (!timerElapsed)
+        {
+            _consoleWindow.AddLine("Waiting for opponent to move");
+            _consoleWindow.AddLine("Press Q if you want to quit");
+            AddBoardToRenderQueue();
+            _consoleWindow.Render();
+
+            var input = _consoleWindow.AwaitInput(100);
+
+            if (IsQuitInput(input))
+            {
+                timer.Stop();
+                return true;
+            }
+
+            if (forfeitInput.Equals(input.KeyInfo))
+            {
+                timer.Stop();
+                _checkersBrain.Forfeit(_playMode);
+                _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                return false;
+            }
+        }
+
+        timer.Stop();
+        return false;
+    }
+
+    private bool ShowEndScreen()
+    {
+        while (true)
+        {
+            _consoleWindow.AddLine("Game ended!");
+            _consoleWindow.AddLine(_checkersBrain.Tied ? "TIED" : $"Winner: {_checkersBrain.Winner}");
+            _consoleWindow.AddLine("Press Q to quit!");
+            _consoleWindow.AddLine();
+            AddBoardToRenderQueue();
+            _consoleWindow.Render();
+            var input = _consoleWindow.AwaitInput(null, false, QuitButton);
+            if (IsQuitInput(input)) return true;
+        }
+    }
+
     public void Run()
     {
         var shouldQuit = false;
         while (!shouldQuit)
         {
-            Refresh();
-            AddBoardToRenderQueue();
-            if (_checkersBrain.IsAiTurn)
+            try
             {
-                RunAiTurn();
+                Refresh();
+                if (_checkersBrain.Ended)
+                {
+                    shouldQuit = ShowEndScreen();
+                }
+                else
+                {
+                    if (_checkersBrain.IsAiTurn)
+                    {
+                        RunAiTurn();
+                    }
+                    else
+                    {
+                        if (_playMode == _checkersBrain.CurrentTurnPlayerColor || _playMode == null)
+                        {
+                            shouldQuit = HandlePlayerTurn();
+                        }
+                        else
+                        {
+                            shouldQuit = AwaitOtherPlayerMove();
+                        }
+                    }
+                }
             }
-            else
+            catch (Exception e)
             {
-                shouldQuit = HandlePlayerInput();
+                _consoleWindow.PopUpMessageBox($"Error: {e.GetType()} - {e.Message}");
             }
-
-            _consoleWindow.ClearRenderQueue();
         }
     }
 

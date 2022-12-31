@@ -19,7 +19,6 @@ public abstract class EditModel<T> : EntityModel<T> where T : class, IDatabaseEn
             return Page();
         }
 
-        Repository.RefreshPartial(Entity);
         Repository.Update(Entity);
 
         return RedirectToPage("./Index");

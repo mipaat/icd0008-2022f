@@ -29,14 +29,12 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return entity;
     }
 
-    private static IQueryable<T> RunActions(IQueryable<T> entities, ICollection<Action<T>> actions)
+    private static void RunActions(IEnumerable<T> entities, ICollection<Action<T>> actions)
     {
         foreach (var entity in entities)
         {
             RunActions(entity, actions);
         }
-
-        return entities;
     }
 
     private T RunPreSaveActions(T entity)
@@ -49,14 +47,16 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return RunActions(entity, PreFetchActions);
     }
 
-    protected IQueryable<T> RunPreSaveActions(IQueryable<T> entities)
+    protected IList<T> RunPreFetchActions(IList<T> entities)
     {
-        return RunActions(entities, PreSaveActions);
+        RunActions(entities, PreFetchActions);
+        return entities;
     }
 
     protected IQueryable<T> RunPreFetchActions(IQueryable<T> entities)
     {
-        return RunActions(entities, PreFetchActions);
+        RunActions(entities, PreFetchActions);
+        return entities;
     }
 
     protected abstract DbSet<T> ThisDbSet { get; }
@@ -66,10 +66,9 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return RunPreFetchActions(ThisDbSet).ToList();
     }
 
-    public virtual T? GetById(int id, bool noTracking = false)
+    public virtual T? GetById(int id)
     {
-        var dbSet = noTracking ? ThisDbSet.AsNoTracking() : ThisDbSet.AsQueryable();
-        var entity = dbSet.FirstOrDefault(t => id.Equals(t.Id));
+        var entity = ThisDbSet.FirstOrDefault(t => id.Equals(t.Id));
         return entity == null ? entity : RunPreFetchActions(entity);
     }
 
@@ -92,8 +91,14 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 
     public virtual void Upsert(T entity)
     {
-        ThisDbSet.Update(RunPreSaveActions(entity));
-        DbContext.SaveChanges();
+        if (Exists(entity.Id))
+        {
+            Update(entity);
+        }
+        else
+        {
+            Add(entity);
+        }
     }
 
     public T? Remove(int id)
@@ -116,16 +121,8 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 
     public void Refresh(T entity)
     {
-        var fetchedEntity = GetById(entity.Id, true);
+        var fetchedEntity = GetById(entity.Id);
         if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
         entity.Refresh(fetchedEntity);
-    }
-
-    public void RefreshPartial(T entity)
-    {
-        var tempEntity = new T();
-        tempEntity.Refresh(entity);
-        Refresh(entity);
-        entity.Refresh(tempEntity, true);
     }
 }

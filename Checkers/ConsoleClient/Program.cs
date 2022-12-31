@@ -21,9 +21,10 @@ RepositoryContext repoDb = new RepositoryContext(ctx);
 DAL.FileSystem.RepositoryContext repoFs = new DAL.FileSystem.RepositoryContext();
 IRepositoryContext repoCtx = repoDb;
 
-EPlayerColor? GetPlayMode(Menu parentMenu)
+EPlayerColor? GetPlayMode(Menu parentMenu, CheckersGame checkersGame)
 {
     EPlayerColor? result = null;
+    if (checkersGame.BlackAiType != null || checkersGame.WhiteAiType != null || checkersGame.Ended) return result;
     var menuItems = new List<MenuItem>
     {
         new("Play as both in shared window", _ =>
@@ -76,7 +77,7 @@ EMenuFunction RunConsoleGame(Menu menu)
         ConsoleGame consoleGame;
         if (selectedCheckersGame != null)
         {
-            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx, GetPlayMode(menu));
+            consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(selectedCheckersGame), repoCtx, GetPlayMode(menu, selectedCheckersGame));
         }
         else
         {
@@ -85,15 +86,17 @@ EMenuFunction RunConsoleGame(Menu menu)
             var blackPlayerAiType = GetPlayerType("black player", menu);
             var blackPlayerName =
                 menu.ConsoleWindow.PopupPromptTextInput("Please enter a name for the black player:");
+            var checkersBrain = new CheckersBrain(
+                selectedCheckersRuleset.GetClone(false),
+                whitePlayerName,
+                blackPlayerName,
+                whitePlayerAiType,
+                blackPlayerAiType);
+            repoCtx.CheckersGameRepository.Add(checkersBrain.CheckersGame);
             consoleGame = new ConsoleGame(menu.ConsoleWindow,
-                new CheckersBrain(
-                    selectedCheckersRuleset.GetClone(false),
-                    whitePlayerName,
-                    blackPlayerName,
-                    whitePlayerAiType,
-                    blackPlayerAiType),
+                checkersBrain,
                 repoCtx,
-                GetPlayMode(menu));
+                GetPlayMode(menu, checkersBrain.CheckersGame));
         }
 
         consoleGame.Run();

@@ -342,6 +342,7 @@ public class CheckersBrain
     public List<Move>
         AvailableMoves(int fromX, int fromY)
     {
+        if (Ended) return new List<Move>();
         if (!MovesCalculated) CalculateAllAvailableMoves();
         if (!_checkersRuleset.MustCapture) return CalculatedMoves![fromX, fromY];
         if (!CapturingMovesCalculated) CalculateAllCapturingMoves();
@@ -377,6 +378,7 @@ public class CheckersBrain
 
     public bool IsMoveValid(EPlayerColor playerColor, int sourceX, int sourceY, int destinationX, int destinationY)
     {
+        if (Ended) return false;
         if (!IsPieceMovableBasic(playerColor, sourceX, sourceY)) return false;
         var availableMoves = AvailableMoves(sourceX, sourceY);
         return availableMoves.Exists(move => move.ToX == destinationX && move.ToY == destinationY);
