@@ -119,99 +119,100 @@ public class MainMenuCreator
         return result;
     }
 
-    private MenuItem GetEditableCheckersRulesetMenuItem(CheckersRuleset checkersRuleset, string? menuItemText = null)
+    private MenuItem GetEditableCheckersRulesetMenuItem(CheckersRuleset? checkersRuleset, string? menuItemText = null)
     {
+        var checkersRulesetReal = checkersRuleset ?? new CheckersRuleset();
         return new MenuItem(
             menuItemText ??
-            (checkersRuleset.BuiltIn ? $"{checkersRuleset.TitleText} (Built-in)" : checkersRuleset.TitleText), m =>
+            (checkersRulesetReal.BuiltIn ? $"{checkersRulesetReal.TitleText} (Built-in)" : checkersRulesetReal.TitleText), m =>
             {
                 var previousCursorPosition = 0;
                 var result = EMenuFunction.Refresh;
                 while (result == EMenuFunction.Refresh)
                 {
                     var editCheckersRulesetsMenuFactory = new MenuFactory(
-                        _ => checkersRuleset.BuiltIn
+                        _ => checkersRulesetReal.BuiltIn
                             ? "Viewing built-in Checkers ruleset"
                             : "Editing custom Checkers ruleset",
                         _ =>
                         {
                             var rulesetMenuItems = new List<MenuItem>
                             {
-                                new($"Game board width: {checkersRuleset.Width}", m2 =>
+                                new($"Game board width: {checkersRulesetReal.Width}", m2 =>
                                 {
-                                    checkersRuleset.Width = m2.ConsoleWindow.PopupPromptIntInput(
+                                    checkersRulesetReal.Width = m2.ConsoleWindow.PopupPromptIntInput(
                                         "Enter game board width",
                                         CheckersRuleset.IsDimensionValid);
                                     return EMenuFunction.Continue;
                                 }),
-                                new($"Game board height: {checkersRuleset.Height}", m2 =>
+                                new($"Game board height: {checkersRulesetReal.Height}", m2 =>
                                 {
-                                    checkersRuleset.Height = m2.ConsoleWindow.PopupPromptIntInput(
+                                    checkersRulesetReal.Height = m2.ConsoleWindow.PopupPromptIntInput(
                                         "Enter game board height",
                                         CheckersRuleset.IsDimensionValid);
                                     return EMenuFunction.Continue;
                                 }),
-                                new($"Black moves first: {checkersRuleset.BlackMovesFirst}", _ =>
+                                new($"Black moves first: {checkersRulesetReal.BlackMovesFirst}", _ =>
                                 {
-                                    checkersRuleset.BlackMovesFirst = !checkersRuleset.BlackMovesFirst;
+                                    checkersRulesetReal.BlackMovesFirst = !checkersRulesetReal.BlackMovesFirst;
                                     return EMenuFunction.Continue;
                                 }),
-                                new($"Must capture piece if able: {checkersRuleset.MustCapture}", _ =>
+                                new($"Must capture piece if able: {checkersRulesetReal.MustCapture}", _ =>
                                 {
-                                    checkersRuleset.MustCapture = !checkersRuleset.MustCapture;
+                                    checkersRulesetReal.MustCapture = !checkersRulesetReal.MustCapture;
                                     return EMenuFunction.Continue;
                                 }),
-                                new($"Can capture backwards: {checkersRuleset.CanCaptureBackwards}", _ =>
+                                new($"Can capture backwards: {checkersRulesetReal.CanCaptureBackwards}", _ =>
                                 {
-                                    checkersRuleset.CanCaptureBackwards = !checkersRuleset.CanCaptureBackwards;
+                                    checkersRulesetReal.CanCaptureBackwards = !checkersRulesetReal.CanCaptureBackwards;
                                     return EMenuFunction.Continue;
                                 }),
                                 new(
-                                    $"Can capture backwards during multi-capture: {checkersRuleset.CanCaptureBackwardsDuringMultiCapture}",
+                                    $"Can capture backwards during multi-capture: {checkersRulesetReal.CanCaptureBackwardsDuringMultiCapture}",
                                     _ =>
                                     {
-                                        checkersRuleset.CanCaptureBackwardsDuringMultiCapture =
-                                            !checkersRuleset.CanCaptureBackwardsDuringMultiCapture;
+                                        checkersRulesetReal.CanCaptureBackwardsDuringMultiCapture =
+                                            !checkersRulesetReal.CanCaptureBackwardsDuringMultiCapture;
                                         return EMenuFunction.Continue;
                                     }),
-                                new($"Kings can move multiple cells: {checkersRuleset.FlyingKings}",
+                                new($"Kings can move multiple cells: {checkersRulesetReal.FlyingKings}",
                                     _ =>
                                     {
-                                        checkersRuleset.FlyingKings =
-                                            !checkersRuleset.FlyingKings;
+                                        checkersRulesetReal.FlyingKings =
+                                            !checkersRulesetReal.FlyingKings;
                                         return EMenuFunction.Continue;
                                     }),
-                                new("Ruleset title: " + checkersRuleset.Title, m2 =>
+                                new("Ruleset title: " + checkersRulesetReal.Title, m2 =>
                                 {
-                                    checkersRuleset.Title =
+                                    checkersRulesetReal.Title =
                                         m2.ConsoleWindow.PopupPromptTextInput("Enter a title for your ruleset!");
                                     return EMenuFunction.Continue;
                                 }),
-                                new("Ruleset description: " + checkersRuleset.Description, m2 =>
+                                new("Ruleset description: " + checkersRulesetReal.Description, m2 =>
                                 {
-                                    checkersRuleset.Description =
+                                    checkersRulesetReal.Description =
                                         m2.ConsoleWindow.PopupPromptTextInput(
                                             "You may enter a description for your ruleset");
                                     return EMenuFunction.Continue;
                                 })
                             };
 
-                            if (!checkersRuleset.BuiltIn)
+                            if (!checkersRulesetReal.BuiltIn)
                             {
                                 rulesetMenuItems.Add(new MenuItem("Save", _ =>
                                 {
-                                    RepoCtx.CheckersRulesetRepository.Upsert(checkersRuleset);
+                                    RepoCtx.CheckersRulesetRepository.Upsert(checkersRulesetReal);
                                     return EMenuFunction.Back;
                                 }));
                                 rulesetMenuItems.Add(new MenuItem("Delete", _ =>
                                 {
-                                    RepoCtx.CheckersRulesetRepository.Remove(checkersRuleset);
+                                    RepoCtx.CheckersRulesetRepository.Remove(checkersRulesetReal);
                                     return EMenuFunction.Back;
                                 }));
                             }
 
                             rulesetMenuItems.Add(
-                                GetEditableCheckersRulesetMenuItem(checkersRuleset.GetClone(), "Create a copy"));
+                                GetEditableCheckersRulesetMenuItem(checkersRulesetReal.GetClone(), "Create a copy"));
 
                             return rulesetMenuItems;
                         }
@@ -225,7 +226,18 @@ public class MainMenuCreator
                 }
 
                 return result;
-            });
+            })
+        {
+            CustomCallBack = (input, menu, _) =>
+            {
+                if (checkersRuleset == null) return;
+                if (input is not {KeyInfo.Key: ConsoleKey.Delete}) return;
+                var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, checkersRulesetReal.TitleText);
+                if (!confirmDelete) return;
+                RepoCtx.CheckersRulesetRepository.Remove(checkersRulesetReal);
+                menu.ClearMenuItemsCache();
+            }
+        };
     }
 
     private MenuFactory CreateOptionsMenuFactory()
@@ -233,16 +245,19 @@ public class MainMenuCreator
         var manageCheckersRulesetsMenuFactory = new MenuFactory("Manage Checkers rulesets", _ =>
         {
             var checkersRulesets = new List<MenuItem>
-                { GetEditableCheckersRulesetMenuItem(new CheckersRuleset(), "CREATE NEW RULESET") };
+                { GetEditableCheckersRulesetMenuItem(null, "CREATE NEW RULESET") };
 
             foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
             {
-                RepoCtx.CheckersRulesetRepository.Refresh(checkersRuleset); // TODO: figure out a better way to do this
+                RepoCtx.CheckersRulesetRepository.Refresh(checkersRuleset);  // Re-fetch from DB to clear unsaved changes
                 checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(checkersRuleset));
             }
 
             return checkersRulesets;
-        });
+        })
+        {
+            CustomHeader = "Press DELETE to delete"
+        };
 
         var swapPersistenceEngine = new MenuItem(RepoChangeText, (_, mi) =>
         {
