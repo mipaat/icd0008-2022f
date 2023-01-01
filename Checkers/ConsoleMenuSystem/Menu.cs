@@ -33,6 +33,7 @@ public class Menu
             {
                 _menuItemsCache = _menuItemsFunc(this);
             }
+
             var result = _menuItemsCache.ToList();
 
             if (AppendDefaultMenuItems) result.AddRange(BuiltInMenuItems);
@@ -107,8 +108,8 @@ public class Menu
     public int IncrementCursorPosition(int amount = 1)
     {
         var menuItems = MenuItems;
-        if (amount < 0) amount = menuItems.Count + amount;
         amount %= menuItems.Count;
+        if (amount < 0) amount = menuItems.Count + amount;
         CursorPosition = (CursorPosition + amount) % MenuItems.Count;
         return CursorPosition;
     }
@@ -145,27 +146,40 @@ public class Menu
         return Math.Max(MenuItems.Aggregate(0, (i, item) => Math.Max(i, item.Text.Length)), Title.Length);
     }
 
+    private int MenuItemsHeight =>
+        Height - (2 + (CustomHeader != null ? 1 : 0)); // -2 for the surrounding separator lines
+
+    private int Page
+    {
+        get => CursorPosition / MenuItemsHeight;
+        set
+        {
+            var normalizedValue = value;
+            normalizedValue %= MaxPage + 1;
+            if (normalizedValue < 0) normalizedValue = MaxPage + normalizedValue + 1;
+            var relativePositionOnPage = CursorPosition - MenuItemsStart;
+            CursorPosition = normalizedValue * MenuItemsHeight;
+            CursorPosition = Math.Min(CursorPosition + relativePositionOnPage, MenuItems.Count - 1);
+        }
+    }
+    private int MenuItemsStart => Page * MenuItemsHeight;
+    private int MaxPage => (MenuItems.Count - 1) / MenuItemsHeight;
+
     private EMenuFunction MenuLoop()
     {
         do
         {
             ConsoleWindow.AddLine(Title);
 
-            var menuItemsHeight = Height - 2; // -2 for the surrounding separator lines
             if (CustomHeader != null)
             {
                 ConsoleWindow.AddLine(CustomHeader.ReplaceLineEndings("").Replace('\r', '<'));
-                menuItemsHeight--;
             }
 
-            var page = CursorPosition / menuItemsHeight;
-            var menuItemsStart = page * menuItemsHeight;
+            ConsoleWindow.AddLinePattern(Page == 0 ? "_" : "▲", Math.Max(LongestLine(), 20));
+            WriteMenuItems(MenuItemsStart, MenuItemsStart + MenuItemsHeight);
 
-            ConsoleWindow.AddLinePattern(page == 0 ? "_" : "▲", Math.Max(LongestLine(), 20));
-            WriteMenuItems(menuItemsStart, menuItemsStart + menuItemsHeight);
-
-            var maxPage = (MenuItems.Count - 1) / menuItemsHeight;
-            ConsoleWindow.AddLinePattern(page < maxPage ? "▼" : "_", Math.Max(LongestLine(), 20));
+            ConsoleWindow.AddLinePattern(Page < MaxPage ? "▼" : "_", Math.Max(LongestLine(), 20));
 
             ConsoleWindow.Render();
 
@@ -187,10 +201,10 @@ public class Menu
                     }
                     break;
                 case ConsoleKey.RightArrow:
-                    IncrementCursorPosition(menuItemsHeight);
+                    Page++;
                     break;
                 case ConsoleKey.LeftArrow:
-                    DecrementCursorPosition(menuItemsHeight);
+                    Page--;
                     break;
                 case ConsoleKey.Enter:
                     var menuFunction = SelectedMenuItem!.Run(this);
@@ -219,7 +233,6 @@ public class Menu
 
     public EMenuFunction Run()
     {
-        
         var result = MenuLoop();
         ClearMenuItemsCache();
         return result;
