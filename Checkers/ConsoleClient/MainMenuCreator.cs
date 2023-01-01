@@ -78,14 +78,7 @@ public class MainMenuCreator
                             return RunConsoleGame(m);
                         })
                     {
-                        CustomCallBack = (input, menu, _) =>
-                        {
-                            if (input is not { KeyInfo.Key: ConsoleKey.Delete }) return;
-                            var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, $"CheckersGame with ID {checkersGame.Id}");
-                            if (!confirmDelete) return;
-                            RepoCtx.CheckersGameRepository.Remove(checkersGame);
-                            menu.ClearMenuItemsCache();
-                        }
+                        CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersGame)
                     }
                 );
             }
@@ -228,15 +221,7 @@ public class MainMenuCreator
                 return result;
             })
         {
-            CustomCallBack = (input, menu, _) =>
-            {
-                if (checkersRuleset == null) return;
-                if (input is not {KeyInfo.Key: ConsoleKey.Delete}) return;
-                var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, checkersRulesetReal.TitleText);
-                if (!confirmDelete) return;
-                RepoCtx.CheckersRulesetRepository.Remove(checkersRulesetReal);
-                menu.ClearMenuItemsCache();
-            }
+            CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersRulesetReal)
         };
     }
 
@@ -334,6 +319,33 @@ public class MainMenuCreator
         var selectAiMenu = selectAiMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
         selectAiMenu.Run();
         return result;
+    }
+
+    private CustomMenuItemCallback GetDeleteDbEntityMenuItemCallback<T>(T entity) where T : class, IDatabaseEntity, new()
+    {
+        return (input, menu, _) =>
+        {
+            if (input is not { KeyInfo.Key: ConsoleKey.Delete }) return;
+            var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, $"{typeof(T)} with ID {entity.Id}");
+            if (!confirmDelete) return;
+            var repo = RepoCtx.GetRepo(entity);
+            if (repo == null)
+            {
+                menu.ConsoleWindow.PopUpMessageBox("Failed to delete item! (Failed to find repository)");
+                return;
+            }
+
+            try
+            {
+                repo.Remove(entity);
+            }
+            catch (Exception e)
+            {
+                menu.ConsoleWindow.PopUpMessageBox($"Failed to delete item! ({e.Message})");
+            }
+            
+            menu.ClearMenuItemsCache();
+        };
     }
 
     EMenuFunction RunConsoleGame(Menu menu)

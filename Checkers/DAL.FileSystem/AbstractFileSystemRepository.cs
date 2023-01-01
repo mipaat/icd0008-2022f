@@ -175,4 +175,6 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
         entity.Refresh(fetchedEntity);
     }
+
+    public Type EntityType => typeof(T);
 }

@@ -2,7 +2,12 @@ using Domain;
 
 namespace DAL;
 
-public interface IRepository<T>
+public interface IRepository
+{
+    Type EntityType { get; }
+}
+
+public interface IRepository<T> : IRepository
     where T : class, IDatabaseEntity, new()
 {
     ICollection<T> GetAll();

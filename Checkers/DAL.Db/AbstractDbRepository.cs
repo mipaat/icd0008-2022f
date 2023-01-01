@@ -125,4 +125,6 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
         entity.Refresh(fetchedEntity);
     }
+
+    public Type EntityType => typeof(T);
 }
