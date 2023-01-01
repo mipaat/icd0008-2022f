@@ -44,7 +44,10 @@ EPlayerColor? GetPlayMode(Menu parentMenu, CheckersGame checkersGame)
         })
     };
 
-    var selectPlayModeMenuFactory = new MenuFactory($"Select playing mode", _ => menuItems, false);
+    var selectPlayModeMenuFactory = new MenuFactory($"Select playing mode", _ => menuItems, false)
+    {
+        IsExitable = false
+    };
     var selectPlayModeMenu = selectPlayModeMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
     selectPlayModeMenu.Run();
     return result;
@@ -64,7 +67,10 @@ EAiType? GetPlayerType(string playerIdentifier, Menu parentMenu)
     }
 
     var selectAiMenuFactory = new MenuFactory(
-        $"Select {playerIdentifier} type", _ => menuItems, false);
+        $"Select {playerIdentifier} type", _ => menuItems, false)
+    {
+        IsExitable = false
+    };
     var selectAiMenu = selectAiMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
     selectAiMenu.Run();
     return result;
@@ -101,7 +107,7 @@ EMenuFunction RunConsoleGame(Menu menu)
 
         consoleGame.Run();
     }
-    catch (ArgumentOutOfRangeException e)
+    catch (Exception e)
     {
         menu.ConsoleWindow.PopUpMessageBox("An error occurred when attempting to run Checkers game!", e.Message);
     }

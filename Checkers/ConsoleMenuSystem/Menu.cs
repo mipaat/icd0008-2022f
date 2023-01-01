@@ -20,6 +20,8 @@ public class Menu
     private readonly Func<Menu, List<MenuItem>> _menuItemsFunc;
     private List<MenuItem>? _menuItemsCache;
 
+    public bool IsExitable = true;
+
     public List<MenuItem> MenuItems
     {
         get
@@ -168,8 +170,12 @@ public class Menu
                     break;
                 case ConsoleKey.Escape:
                 case ConsoleKey.Backspace:
-                    ClearMenuItemsCache();
-                    return EMenuFunction.Continue;
+                    if (IsExitable)
+                    {
+                        ClearMenuItemsCache();
+                        return EMenuFunction.Continue;
+                    }
+                    break;
                 case ConsoleKey.RightArrow:
                     IncrementCursorPosition(menuItemsHeight);
                     break;

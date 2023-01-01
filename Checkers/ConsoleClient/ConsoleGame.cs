@@ -342,6 +342,10 @@ public class ConsoleGame
             {
                 _consoleWindow.PopUpMessageBox($"Error: {e.GetType()} - {e.Message}");
             }
+            finally
+            {
+                _consoleWindow.ClearRenderQueue();
+            }
         }
     }
 

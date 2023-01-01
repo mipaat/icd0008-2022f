@@ -6,6 +6,7 @@ public class MenuFactory
 {
     private Func<Menu, List<MenuItem>> MenuItemsFunc { get; }
     public bool AppendDefaultMenuItems;
+    public bool IsExitable = true;
 
     private Func<Menu, string> TitleFunc { get; }
 
@@ -34,6 +35,9 @@ public class MenuFactory
 
     public Menu Create(ConsoleWindow consoleWindow, Menu? parentMenu = null)
     {
-        return new Menu(consoleWindow, TitleFunc, MenuItemsFunc, parentMenu, AppendDefaultMenuItems);
+        return new Menu(consoleWindow, TitleFunc, MenuItemsFunc, parentMenu, AppendDefaultMenuItems)
+        {
+            IsExitable = IsExitable
+        };
     }
 }
