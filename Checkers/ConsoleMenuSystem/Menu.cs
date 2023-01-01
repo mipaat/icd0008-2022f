@@ -15,12 +15,15 @@ public class Menu
     private readonly Func<Menu, string> _titleFunc;
     public string Title => _titleFunc(this);
 
-    private readonly bool _appendDefaultMenuItems;
+    public bool AppendDefaultMenuItems = true;
 
     private readonly Func<Menu, List<MenuItem>> _menuItemsFunc;
     private List<MenuItem>? _menuItemsCache;
 
     public bool IsExitable = true;
+
+    public string? CustomHeader = null;
+    public CustomMenuItemsCacheModifier? CustomBehaviour;
 
     public List<MenuItem> MenuItems
     {
@@ -32,11 +35,15 @@ public class Menu
             }
             var result = _menuItemsCache.ToList();
 
-            if (_appendDefaultMenuItems) result.AddRange(BuiltInMenuItems);
+            if (AppendDefaultMenuItems) result.AddRange(BuiltInMenuItems);
+
+            if (result.Count == 0) throw new Exception("Menu must contain at least one item!");
 
             return result;
         }
     }
+
+    public MenuItem SelectedMenuItem => MenuItems[CursorPosition];
 
     public List<MenuItem> BuiltInMenuItems
     {
@@ -89,14 +96,12 @@ public class Menu
     public Menu(ConsoleWindow consoleWindow,
         Func<Menu, string> titleFunc,
         Func<Menu, List<MenuItem>> menuItemsFunc,
-        Menu? parentMenu = null,
-        bool appendDefaultMenuItems = true)
+        Menu? parentMenu = null)
     {
         ConsoleWindow = consoleWindow;
         _titleFunc = titleFunc;
         _menuItemsFunc = menuItemsFunc;
         ParentMenu = parentMenu;
-        _appendDefaultMenuItems = appendDefaultMenuItems;
     }
 
     public int IncrementCursorPosition(int amount = 1)
@@ -130,7 +135,7 @@ public class Menu
         }
     }
 
-    private void ClearMenuItemsCache()
+    public void ClearMenuItemsCache()
     {
         _menuItemsCache = null;
     }
@@ -147,6 +152,11 @@ public class Menu
             ConsoleWindow.AddLine(Title);
 
             var menuItemsHeight = Height - 2; // -2 for the surrounding separator lines
+            if (CustomHeader != null)
+            {
+                ConsoleWindow.AddLine(CustomHeader.ReplaceLineEndings("").Replace('\r', '<'));
+                menuItemsHeight--;
+            }
 
             var page = CursorPosition / menuItemsHeight;
             var menuItemsStart = page * menuItemsHeight;
@@ -183,8 +193,7 @@ public class Menu
                     DecrementCursorPosition(menuItemsHeight);
                     break;
                 case ConsoleKey.Enter:
-                    var menuItem = MenuItems[CursorPosition];
-                    var menuFunction = menuItem.Run(this);
+                    var menuFunction = SelectedMenuItem!.Run(this);
                     ClearMenuItemsCache();
                     switch (menuFunction)
                     {
@@ -199,6 +208,10 @@ public class Menu
                             return menuFunction;
                     }
 
+                    break;
+                default:
+                    SelectedMenuItem?.InvokeCustomCallback(input, this);
+                    CustomBehaviour?.Invoke(input, ref _menuItemsCache);
                     break;
             }
         } while (true);

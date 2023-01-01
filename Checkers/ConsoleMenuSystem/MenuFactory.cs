@@ -5,21 +5,21 @@ namespace ConsoleMenuSystem;
 public class MenuFactory
 {
     private Func<Menu, List<MenuItem>> MenuItemsFunc { get; }
-    public bool AppendDefaultMenuItems;
+    public bool AppendDefaultMenuItems = true;
     public bool IsExitable = true;
+    public string? CustomHeader = null;
+    public CustomMenuItemsCacheModifier? CustomBehaviour;
 
     private Func<Menu, string> TitleFunc { get; }
 
-    public MenuFactory(Func<Menu, string> titleFunc, Func<Menu, List<MenuItem>> menuItemsFunc,
-        bool appendDefaultMenuItems = true)
+    public MenuFactory(Func<Menu, string> titleFunc, Func<Menu, List<MenuItem>> menuItemsFunc)
     {
         TitleFunc = titleFunc;
         MenuItemsFunc = menuItemsFunc;
-        AppendDefaultMenuItems = appendDefaultMenuItems;
     }
 
-    public MenuFactory(string title, Func<Menu, List<MenuItem>> menuItemsFunc, bool appendDefaultMenuItems = true) :
-        this(_ => title, menuItemsFunc, appendDefaultMenuItems)
+    public MenuFactory(string title, Func<Menu, List<MenuItem>> menuItemsFunc) :
+        this(_ => title, menuItemsFunc)
     {
     }
 
@@ -35,9 +35,12 @@ public class MenuFactory
 
     public Menu Create(ConsoleWindow consoleWindow, Menu? parentMenu = null)
     {
-        return new Menu(consoleWindow, TitleFunc, MenuItemsFunc, parentMenu, AppendDefaultMenuItems)
+        return new Menu(consoleWindow, TitleFunc, MenuItemsFunc, parentMenu)
         {
-            IsExitable = IsExitable
+            IsExitable = IsExitable,
+            AppendDefaultMenuItems = AppendDefaultMenuItems,
+            CustomHeader = CustomHeader,
+            CustomBehaviour = CustomBehaviour
         };
     }
 }

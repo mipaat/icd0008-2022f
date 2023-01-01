@@ -1,46 +1,56 @@
-﻿namespace ConsoleMenuSystem;
+﻿using ConsoleUI;
+
+namespace ConsoleMenuSystem;
 
 public class MenuItem
 {
     public string Text;
-    public readonly string? Id;
     private readonly Func<Menu, MenuItem, EMenuFunction> _action;
+    public CustomMenuItemCallback? CustomCallBack = null;
 
-    public MenuItem(string text, Func<Menu, MenuItem, EMenuFunction> action, string? id = null)
+    public MenuItem(string text, Func<Menu, MenuItem, EMenuFunction> action)
     {
         Text = text;
         _action = action;
-        Id = id;
     }
 
-    public MenuItem(string text, Func<Menu, EMenuFunction> action, string? id = null)
-        : this(text, (m, _) => action(m), id)
+    public MenuItem(string text, Func<Menu, EMenuFunction> action)
+        : this(text, (m, _) => action(m))
     {
     }
 
-    public MenuItem(string text, EMenuFunction type, string? id = null) : this(text, _ => type, id)
+    public MenuItem(string text, EMenuFunction type) : this(text, _ => type)
     {
     }
 
-    public MenuItem(string text, Action action, string? id = null) : this(text, _ =>
+    public MenuItem(string text, Action action) : this(text, _ =>
     {
         action();
         return EMenuFunction.Continue;
-    }, id)
+    })
     {
     }
 
-    public MenuItem(string text, MenuFactory menuFactory, string? id = null) : this(text, parentMenu =>
+    public MenuItem(string text, Func<EMenuFunction> action) : this(text, _ => action())
+    {
+    }
+
+    public MenuItem(string text, MenuFactory menuFactory) : this(text, parentMenu =>
     {
         var newMenu = menuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
         return newMenu.Run();
-    }, id)
+    })
     {
     }
 
     public EMenuFunction Run(Menu menu)
     {
         return _action(menu, this);
+    }
+
+    public void InvokeCustomCallback(ConsoleInput input, Menu menu)
+    {
+        CustomCallBack?.Invoke(input, menu, this);
     }
 
     public override string ToString()
