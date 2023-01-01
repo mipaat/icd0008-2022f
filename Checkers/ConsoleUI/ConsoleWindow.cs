@@ -326,7 +326,17 @@ public class ConsoleWindow
         return Console.KeyAvailable ? Console.ReadKey(true) : null;
     }
 
-    public ConsoleInput AwaitInput(int? waitForMs = null, bool outputText = false, params ConsoleKeyInfoBasic[] customExitConditions)
+    public ConsoleInput AwaitTextInput(params ConsoleKeyInfoBasic[] customExitConditions)
+    {
+        return AwaitInput(waitForMs: null, outputText: true, customExitConditions: customExitConditions);
+    }
+
+    public ConsoleInput AwaitKeyInput(int? waitForMs = null)
+    {
+        return AwaitInput(waitForMs: waitForMs, keyPress: true);
+    }
+
+    public ConsoleInput AwaitInput(int? waitForMs = null, bool outputText = false, bool keyPress = false, params ConsoleKeyInfoBasic[] customExitConditions)
     {
         var result = new ConsoleInput();
         var shouldBreak = false;
@@ -349,7 +359,7 @@ public class ConsoleWindow
             }
 
             var keyInfo = nullableKeyInfo.Value;
-            if (exitConditions.Exists(cki => cki.Equals(keyInfo)))
+            if (exitConditions.Exists(cki => cki.Equals(keyInfo)) || keyPress)
             {
                 result.Clear();
                 result.Add(keyInfo);
@@ -417,7 +427,7 @@ public class ConsoleWindow
 
         var previousCursorVisible = CursorVisible;
         CursorVisible = true;
-        var result = AwaitInput(null, true, customExitConditions);
+        var result = AwaitTextInput(customExitConditions);
         CursorVisible = previousCursorVisible;
         ResetCursorPosition();
 

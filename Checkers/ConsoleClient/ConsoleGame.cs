@@ -271,7 +271,7 @@ public class ConsoleGame
             AddBoardToRenderQueue();
             _consoleWindow.Render();
 
-            var input = _consoleWindow.AwaitInput(100);
+            var input = _consoleWindow.AwaitKeyInput(waitForMs: 100);
 
             if (IsQuitInput(input))
             {
@@ -302,7 +302,7 @@ public class ConsoleGame
             _consoleWindow.AddLine();
             AddBoardToRenderQueue();
             _consoleWindow.Render();
-            var input = _consoleWindow.AwaitInput(null, false, QuitButton);
+            var input = _consoleWindow.AwaitKeyInput();
             if (IsQuitInput(input)) return true;
         }
     }

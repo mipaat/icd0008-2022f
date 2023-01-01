@@ -157,14 +157,24 @@ public class Menu
 
             ConsoleWindow.Render();
 
-            var pressedKey = Console.ReadKey(true).Key;
-            switch (pressedKey)
+            var input = ConsoleWindow.AwaitKeyInput();
+            switch (input.KeyInfo?.Key)
             {
                 case ConsoleKey.DownArrow:
                     IncrementCursorPosition();
                     break;
                 case ConsoleKey.UpArrow:
                     DecrementCursorPosition();
+                    break;
+                case ConsoleKey.Escape:
+                case ConsoleKey.Backspace:
+                    ClearMenuItemsCache();
+                    return EMenuFunction.Continue;
+                case ConsoleKey.RightArrow:
+                    IncrementCursorPosition(menuItemsHeight);
+                    break;
+                case ConsoleKey.LeftArrow:
+                    DecrementCursorPosition(menuItemsHeight);
                     break;
                 case ConsoleKey.Enter:
                     var menuItem = MenuItems[CursorPosition];
