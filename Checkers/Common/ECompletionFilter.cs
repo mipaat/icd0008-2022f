@@ -1,7 +1,8 @@
-﻿namespace WebApp.Pages.CheckersGames;
+﻿namespace Common;
 
 public enum ECompletionFilter
 {
+    All,
     Ongoing,
     Finished,
     Tied

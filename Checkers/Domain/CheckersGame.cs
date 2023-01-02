@@ -13,7 +13,10 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
     [ExpectedNotNull] [JsonIgnore] public CheckersRuleset? CheckersRuleset { get; set; }
 
     [ExpectedNotNull] [JsonIgnore] public ICollection<CheckersState>? CheckersStates { get; set; }
-    [ExpectedNotNull] [JsonIgnore] public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);
+
+    [ExpectedNotNull]
+    [JsonIgnore]
+    public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);
 
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
@@ -26,8 +29,52 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
         return CheckersStates!;
     }
 
+    public DateTime LastPlayed => CurrentCheckersState?.CreatedAt ?? EndedAt ?? StartedAt;
+
     public bool Tied => Ended && Winner == null;
     public bool Ended => EndedAt != null;
+
+    private Player? _whitePlayer;
+
+    public Player WhitePlayer
+    {
+        get
+        {
+            if (_whitePlayer == null || _whitePlayer.CheckersGame != this)
+                _whitePlayer = new Player(this, EPlayerColor.White);
+            return _whitePlayer;
+        }
+    }
+
+    private Player? _blackPlayer;
+
+    public Player BlackPlayer
+    {
+        get
+        {
+            if (_blackPlayer == null || _blackPlayer.CheckersGame != this)
+                _blackPlayer = new Player(this, EPlayerColor.Black);
+            return _blackPlayer;
+        }
+    }
+
+    public Player Player(EPlayerColor playerColor) => playerColor switch
+    {
+        EPlayerColor.Black => BlackPlayer,
+        EPlayerColor.White => WhitePlayer,
+        _ => throw new UnknownPlayerColorException(playerColor)
+    };
+
+    public Player? WinnerPlayer => Winner != null ? Player(Winner.Value) : null;
+
+    public Player OtherPlayer(Player player) => player.Color switch
+    {
+        EPlayerColor.Black => Player(EPlayerColor.White),
+        EPlayerColor.White => Player(EPlayerColor.Black),
+        _ => throw new UnknownPlayerColorException(player.Color)
+    };
+
+    public EPlayerColor OtherPlayer(EPlayerColor playerColor) => OtherPlayer(Player(playerColor)).Color;
 
     public override string ToString()
     {
@@ -50,7 +97,9 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
             CheckersStates = CheckersStates?.ToList(),
             StartedAt = StartedAt,
             EndedAt = EndedAt,
-            Winner = Winner
+            Winner = Winner,
+            _blackPlayer = null,
+            _whitePlayer = null
         };
     }
 

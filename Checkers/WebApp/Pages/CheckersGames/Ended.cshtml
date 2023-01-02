@@ -11,15 +11,15 @@
     {
         @if (Model.PlayerId == null)
         {
-            <span>Winner: @Model.Brain.Winner (@Model.Brain.PlayerName(Model.Brain.Winner!.Value))</span>
+            <span>Winner: @Model.Brain.Winner</span>
         }
         @if (Model.PlayerId != null)
         {
-            @if (Model.Brain.Winner == Model.PlayerColor)
+            @if (Model.Brain.Winner.Color == Model.PlayerColor)
             {
                 <span>YOU WON!</span>
             }
-            @if (Model.Brain.Winner != Model.PlayerColor)
+            @if (Model.Brain.Winner.Color != Model.PlayerColor)
             {
                 <span>YOU LOST!</span>
             }

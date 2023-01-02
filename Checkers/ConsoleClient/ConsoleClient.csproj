@@ -13,6 +13,7 @@
       <ProjectReference Include="..\DAL.FileSystem\DAL.FileSystem.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
       <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
+      <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Domain;
 
 public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
@@ -39,7 +41,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
         }
     }
 
-    public string TitleText => Title ?? $"No title! ({Width}x{Height}, Modified: {LastModified.ToLocalTime()})";
+    public string TitleText => Title ?? $"No title! ({Width}x{Height})";
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
     public DateTime LastModified { get; set; } = DateTime.Now.ToUniversalTime();
@@ -76,6 +78,32 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
                other.CanCaptureBackwardsDuringMultiCapture == CanCaptureBackwardsDuringMultiCapture &&
                other.BuiltIn == BuiltIn && other.Saved == Saved && other.Title == Title
                && other.FlyingKings == FlyingKings;
+    }
+
+    public override string ToString()
+    {
+        var result = new StringBuilder();
+        var outerContents = new List<string>();
+        var contents = new List<string>();
+
+        if (Title != null) outerContents.Add(Title);
+
+        var dimensionsString = $"{Width}x{Height}";
+        if (!(Title?.Replace(" ", "").ToLower().Contains(dimensionsString) ?? false))
+            contents.Add(dimensionsString);
+        if (!MustCapture) contents.Add("Captures not required");
+        if (CanCaptureBackwards)
+        {
+            contents.Add("Backwards captures");
+        } else if (CanCaptureBackwardsDuringMultiCapture)
+        {
+            contents.Add("Backwards during multi-capture");
+        }
+        if (FlyingKings) contents.Add("Flying Kings");
+        
+        if (contents.Count > 0) outerContents.Add(string.Join(", ", contents));
+        result.AppendJoin(" - ", outerContents);
+        return result.ToString();
     }
 
     public CheckersRuleset GetClone(bool? saved = null)

@@ -20,3 +20,12 @@ public class InsufficientCheckersStatesException : ArgumentException
         }
     }
 }
+
+
+public class UnknownPlayerColorException : ArgumentException
+{
+    public UnknownPlayerColorException(EPlayerColor? playerColor) : base(
+        $"Unknown player color '{playerColor.ToString() ?? "NULL"}'")
+    {
+    }
+}

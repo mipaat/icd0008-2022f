@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+using Common;
 using ConsoleUI;
 using DAL;
 using Domain;
@@ -79,7 +80,6 @@ public class ConsoleGame
 
     private void AddBoardToRenderQueue()
     {
-        _consoleWindow.AddLine($"{_checkersBrain.CurrentTurnPlayerColor} player's turn");
         _consoleWindow.AddLine(LettersLine(_checkersBrain.Width));
         for (var y = 0; y < _checkersBrain.Height; y++)
         {
@@ -108,7 +108,8 @@ public class ConsoleGame
 
     private static bool IsQuitInput(ConsoleInput input)
     {
-        return input.KeyInfo is { Key: ConsoleKey.Q, Modifiers: ConsoleModifiers.Control } || QuitButton.Equals(input.KeyInfo);
+        return input.KeyInfo is { Key: ConsoleKey.Q, Modifiers: ConsoleModifiers.Control } ||
+               QuitButton.Equals(input.KeyInfo);
     }
 
     private void MakePlayerMove(ConsoleInput input)
@@ -144,8 +145,35 @@ public class ConsoleGame
         }
     }
 
+    private void AddCommonInfoHeaderToRenderQueue()
+    {
+        _consoleWindow.AddLine($"{_checkersBrain.WhitePlayer} VS {_checkersBrain.BlackPlayer}");
+        var thisPlayer = _playMode != null ? _checkersBrain.Player(_playMode.Value) : null;
+        thisPlayer ??= _checkersBrain.BlackPlayer.IsAi ^ _checkersBrain.WhitePlayer.IsAi
+            ? _checkersBrain.BlackPlayer.IsAi ? _checkersBrain.WhitePlayer : _checkersBrain.BlackPlayer
+            : null;
+        if (thisPlayer != null)
+        {
+            _consoleWindow.AddLine($"You are: {thisPlayer}");
+            if (_checkersBrain.CurrentTurnPlayer == thisPlayer)
+            {
+                _consoleWindow.AddLine("Your turn!");
+            }
+            else
+            {
+                _consoleWindow.AddLine("Opponent's turn, waiting...");
+                _consoleWindow.AddLine("Press Q if you want to quit");
+            }
+        }
+        else
+        {
+            _consoleWindow.AddLine($"Current turn: {_checkersBrain.CurrentTurnPlayer}");
+        }
+    }
+
     private void RunAiTurn()
     {
+        AddCommonInfoHeaderToRenderQueue();
         AddBoardToRenderQueue();
         _consoleWindow.Render();
         var timer = new System.Timers.Timer(1000);
@@ -165,8 +193,7 @@ public class ConsoleGame
         _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
     }
 
-    private bool DrawResolutionRequired => _checkersBrain.CheckersGame.DrawProposedBy ==
-                                           _checkersBrain.OtherPlayer(_checkersBrain.CurrentTurnPlayerColor);
+    private bool DrawResolutionRequired => _checkersBrain.DrawResolutionExpected;
 
     private bool HandlePlayerTurn()
     {
@@ -177,6 +204,7 @@ public class ConsoleGame
             controls += ", Propose Draw: D";
         }
 
+        AddCommonInfoHeaderToRenderQueue();
         _consoleWindow.AddLine(controls);
 
         if (DrawResolutionRequired)
@@ -210,8 +238,7 @@ public class ConsoleGame
 
         if (normalizedInputText == "d")
         {
-            if (_checkersBrain.CheckersGame.DrawProposedBy ==
-                _checkersBrain.OtherPlayer(_checkersBrain.CurrentTurnPlayerColor))
+            if (_checkersBrain.DrawResolutionExpected)
             {
                 _checkersBrain.AcceptDraw();
             }
@@ -266,8 +293,7 @@ public class ConsoleGame
         timer.Start();
         while (!timerElapsed)
         {
-            _consoleWindow.AddLine("Waiting for opponent to move");
-            _consoleWindow.AddLine("Press Q if you want to quit");
+            AddCommonInfoHeaderToRenderQueue();
             AddBoardToRenderQueue();
             _consoleWindow.Render();
 
@@ -296,8 +322,10 @@ public class ConsoleGame
     {
         while (true)
         {
-            _consoleWindow.AddLine("Game ended!");
-            _consoleWindow.AddLine(_checkersBrain.Tied ? "TIED" : $"Winner: {_checkersBrain.Winner}");
+            _consoleWindow.AddLine($"Game ended after {_checkersBrain.WhiteMoves + _checkersBrain.BlackMoves} moves!");
+            _consoleWindow.AddLine(_checkersBrain.Tied
+                ? $"{_checkersBrain.BlackPlayer} TIED with {_checkersBrain.WhitePlayer}"
+                : $"WINNER: {_checkersBrain.Winner}, LOSER: {_checkersBrain.OtherPlayer(_checkersBrain.Winner!)}");
             _consoleWindow.AddLine("Press Q to quit!");
             _consoleWindow.AddLine();
             AddBoardToRenderQueue();

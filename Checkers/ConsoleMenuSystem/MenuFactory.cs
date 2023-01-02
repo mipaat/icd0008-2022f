@@ -8,6 +8,7 @@ public class MenuFactory
     public bool AppendDefaultMenuItems = true;
     public bool IsExitable = true;
     public string? CustomHeader = null;
+    public Func<string?>? CustomHeaderFunc = null;
     public CustomMenuItemsCacheModifier? CustomBehaviour;
 
     private Func<Menu, string> TitleFunc { get; }
@@ -39,7 +40,7 @@ public class MenuFactory
         {
             IsExitable = IsExitable,
             AppendDefaultMenuItems = AppendDefaultMenuItems,
-            CustomHeader = CustomHeader,
+            GetCustomHeader = CustomHeaderFunc ?? (() => CustomHeader),
             CustomBehaviour = CustomBehaviour
         };
     }

@@ -22,7 +22,8 @@ public class Menu
 
     public bool IsExitable = true;
 
-    public string? CustomHeader = null;
+    public Func<string?>? GetCustomHeader = null;
+    public string? CustomHeader => GetCustomHeader?.Invoke();
     public CustomMenuItemsCacheModifier? CustomBehaviour;
 
     public List<MenuItem> MenuItems
@@ -225,7 +226,7 @@ public class Menu
                     break;
                 default:
                     SelectedMenuItem?.InvokeCustomCallback(input, this);
-                    CustomBehaviour?.Invoke(input, ref _menuItemsCache);
+                    CustomBehaviour?.Invoke(input, this, ref _menuItemsCache);
                     break;
             }
         } while (true);

@@ -13,6 +13,7 @@ public class Play : PageModelDb
     [BindProperty(SupportsGet = true)] public int? PlayerId { get; set; }
     public int GameId { get; set; }
 
+    public Player Player => Brain.Player(PlayerColor);
     public EPlayerColor PlayerColor
     {
         get
@@ -22,19 +23,6 @@ public class Play : PageModelDb
                 0 => EPlayerColor.Black,
                 1 => EPlayerColor.White,
                 _ => Brain.CurrentTurnPlayerColor
-            };
-        }
-    }
-
-    public string? PlayerName
-    {
-        get
-        {
-            return PlayerId switch
-            {
-                0 => Brain.PlayerName(PlayerColor),
-                1 => Brain.PlayerName(PlayerColor),
-                _ => null
             };
         }
     }
@@ -62,7 +50,7 @@ public class Play : PageModelDb
         return !Brain.IsAiTurn && FromSet && Brain.IsMoveValid(PlayerColor, FromX!.Value, FromY!.Value, x, y);
     }
 
-    public bool DrawResolutionExpected => Brain.CheckersGame.DrawProposedBy == Brain.OtherPlayer(PlayerColor) && !Brain.Ended;
+    public bool DrawResolutionExpected => Brain.DrawResolutionExpected;
 
     private void SaveGame()
     {
@@ -165,7 +153,7 @@ public class Play : PageModelDb
 
         if (forfeit)
         {
-            Brain.Forfeit(PlayerColor);
+            Brain.Forfeit(Player.Color);
             SaveGame();
         }
 

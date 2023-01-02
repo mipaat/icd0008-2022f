@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Common;
 using Domain;
 using GameBrain.AI;
 
@@ -24,10 +25,10 @@ public class CheckersBrain
 
     public GamePiece? this[int x, int y] => _pieces[x, y];
 
-    private string? WhitePlayerName => CheckersGame.WhitePlayerName;
-    private string? BlackPlayerName => CheckersGame.BlackPlayerName;
-
-    public EPlayerColor? Winner => CheckersGame.Winner;
+    public Player WhitePlayer => CheckersGame.WhitePlayer;
+    public Player BlackPlayer => CheckersGame.BlackPlayer;
+    public Player Player(EPlayerColor playerColor) => CheckersGame.Player(playerColor);
+    public Player? Winner => CheckersGame.WinnerPlayer;
     public bool Tied => CheckersGame.Tied;
     public bool Ended => CheckersGame.Ended;
 
@@ -82,7 +83,6 @@ public class CheckersBrain
         _checkersRuleset = checkersRuleset;
         _pieces = new GamePiece?[checkersRuleset.Width, checkersRuleset.Height];
         InitializePieces();
-        CheckGameEndConditions();
         SaveGameState();
     }
 
@@ -113,18 +113,8 @@ public class CheckersBrain
     private void InitializePieces()
     {
         var rowsPerPlayer = RowsPerPlayer();
-        InitializePlayerPieces(0, rowsPerPlayer, EPlayerColor.White);
-        InitializePlayerPieces(Height - rowsPerPlayer, Height, EPlayerColor.Black);
-    }
-
-    public string? PlayerName(EPlayerColor playerColor)
-    {
-        return playerColor switch
-        {
-            EPlayerColor.Black => BlackPlayerName,
-            EPlayerColor.White => WhitePlayerName,
-            _ => throw new ArgumentException($"Invalid player color {playerColor}")
-        };
+        InitializePlayerPieces(0, rowsPerPlayer, WhitePlayer.Color);
+        InitializePlayerPieces(Height - rowsPerPlayer, Height, BlackPlayer.Color);
     }
 
     public int WhiteMoves { get; private set; }
@@ -155,31 +145,26 @@ public class CheckersBrain
 
     public bool IsPlayerTurn(EPlayerColor playerColor) => playerColor == CurrentTurnPlayerColor;
 
-    public EPlayerColor CurrentTurnPlayerColor
+    public Player FirstPlayer => _checkersRuleset.BlackMovesFirst ? BlackPlayer : WhitePlayer;
+    public Player CurrentTurnPlayer
     {
         get
         {
-            var firstPlayer = _checkersRuleset.BlackMovesFirst ? EPlayerColor.Black : EPlayerColor.White;
-            var otherPlayer = _checkersRuleset.BlackMovesFirst ? EPlayerColor.White : EPlayerColor.Black;
-            var firstPlayerMoves = _checkersRuleset.BlackMovesFirst ? BlackMoves : WhiteMoves;
-            var otherPlayerMoves = _checkersRuleset.BlackMovesFirst ? WhiteMoves : BlackMoves;
-
+            var firstPlayer = FirstPlayer;
+            var otherPlayer = OtherPlayer(firstPlayer);
+            var firstPlayerMoves = firstPlayer.Color == EPlayerColor.Black ? BlackMoves : WhiteMoves;
+            var otherPlayerMoves = otherPlayer.Color == EPlayerColor.Black ? BlackMoves : WhiteMoves;
             if (firstPlayerMoves == otherPlayerMoves) return firstPlayer;
             if (firstPlayerMoves == otherPlayerMoves + 1) return otherPlayer;
-            throw new Exception(
+            throw new IllegalGameStateException(
                 $"Illegal difference between player move counts! BlackMoves: {BlackMoves}, WhiteMoves: {WhiteMoves}, BlackMovesFirst: {_checkersRuleset.BlackMovesFirst}");
         }
     }
 
-    public EPlayerColor OtherPlayer(EPlayerColor playerColor)
-    {
-        return playerColor switch
-        {
-            EPlayerColor.Black => EPlayerColor.White,
-            EPlayerColor.White => EPlayerColor.Black,
-            _ => throw new IllegalStateException("Unknown player color!")
-        };
-    }
+    public EPlayerColor CurrentTurnPlayerColor => CurrentTurnPlayer.Color;
+
+    public Player OtherPlayer(Player player) => CheckersGame.OtherPlayer(player);
+    public EPlayerColor OtherPlayer(EPlayerColor playerColor) => CheckersGame.OtherPlayer(playerColor);
 
     public bool IsAiTurn => CurrentTurnAiType != null;
 
@@ -198,6 +183,8 @@ public class CheckersBrain
             };
         }
     }
+
+    public bool DrawResolutionExpected => CheckersGame.DrawProposedBy == OtherPlayer(CurrentTurnPlayer.Color) && !Ended;
 
     private List<Move> CalculateCapturingMoves(int fromX, int fromY)
     {

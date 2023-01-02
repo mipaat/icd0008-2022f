@@ -2,6 +2,7 @@
 @using Domain
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using WebApp.MyLibraries
+@using Common
 @model WebApp.Pages.CheckersGames.IndexModel
 
 @{
@@ -28,7 +29,7 @@
     </form>
     <form method="GET">
         <label for="completionFilter">Filter by completion</label><br/>
-        <select id="completionFilter" asp-items="@CompletionFilterOptions(Model.CompletionFilter)" name="completionFilter"></select>
+        <select id="completionFilter" asp-items="@CompletionFilterOptions(Model.CompletionFilter ?? ECompletionFilter.Ongoing)" name="completionFilter"></select>
         <button type="submit">Search</button>
     </form>
 </div>
@@ -132,6 +133,6 @@
 
     IEnumerable<SelectListItem> CompletionFilterOptions(ECompletionFilter? selected = null)
     {
-        return Utils.EnumOptions(typeof(ECompletionFilter), new SelectListItem("All", ""), selected);
+        return Utils.EnumOptions(typeof(ECompletionFilter), selected: selected);
     }
 }

@@ -1,8 +1,11 @@
-﻿using ConsoleMenuSystem;
+﻿using System.Text;
+using Common;
+using ConsoleMenuSystem;
 using ConsoleUI;
 using DAL;
 using Domain;
 using GameBrain;
+using Microsoft.Extensions.Primitives;
 
 namespace ConsoleClient;
 
@@ -50,7 +53,7 @@ public class MainMenuCreator
             var checkersRulesetItems = new List<MenuItem>();
             foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
             {
-                checkersRulesetItems.Add(new MenuItem(checkersRuleset.TitleText, m =>
+                checkersRulesetItems.Add(new MenuItem(checkersRuleset.ToString(), m =>
                 {
                     SelectedCheckersRuleset = checkersRuleset;
                     return RunConsoleGame(m);
@@ -65,29 +68,114 @@ public class MainMenuCreator
 
     private MenuFactory CreateLoadGameMenuFactory()
     {
-        return new MenuFactory("Load game", _ =>
+        var completionFilter = ECompletionFilter.Ongoing;
+        return new MenuFactory("Load game", _ => GetCheckersGameMenuItems(completionFilter))
         {
-            var gamesToLoad = new List<MenuItem>();
-            foreach (var checkersGame in RepoCtx.CheckersGameRepository.GetAll())
+            CustomHeaderFunc = () => $"Press DELETE to delete. Filtering: {completionFilter} (Change with C)",
+            CustomBehaviour = (ConsoleInput input, Menu menu, ref List<MenuItem>? _) =>
             {
-                gamesToLoad.Add(new MenuItem(
-                        $"{checkersGame.Id} | {checkersGame.CheckersRuleset!.Title} - Started: {checkersGame.StartedAt.ToLocalTime()}, Last played: {checkersGame.CurrentCheckersState?.CreatedAt.ToLocalTime() ?? checkersGame.StartedAt.ToLocalTime()}",
-                        m =>
-                        {
-                            SelectedCheckersGame = checkersGame;
-                            return RunConsoleGame(m);
-                        })
-                    {
-                        CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersGame)
-                    }
-                );
+                if (input is { KeyInfo.Key: ConsoleKey.C })
+                {
+                    completionFilter = GetSelectedEnum<ECompletionFilter>(menu.ConsoleWindow, menu,
+                        "Select filtering mode:", completionFilter);
+                    menu.ClearMenuItemsCache();
+                }
             }
-
-            return gamesToLoad;
-        })
-        {
-            CustomHeader = "Press DELETE to delete"
         };
+    }
+
+    private List<MenuItem> GetCheckersGameMenuItems(ECompletionFilter completionFilter)
+    {
+        var checkersGames = RepoCtx.CheckersGameRepository.GetAll();
+        return completionFilter switch
+        {
+            ECompletionFilter.All => GetCheckersGameMenuItems(checkersGames),
+            ECompletionFilter.Ongoing => GetCheckersGameMenuItems(checkersGames.Where(cg => !cg.Ended)),
+            ECompletionFilter.Finished => GetCheckersGameMenuItems(checkersGames.Where(cg => cg.Ended)),
+            ECompletionFilter.Tied => GetCheckersGameMenuItems(checkersGames.Where(cg => cg.Tied)),
+            _ => GetCheckersGameMenuItems(checkersGames.Where(cg => !cg.Ended))
+        };
+    }
+
+    private List<MenuItem> GetCheckersGameMenuItems(IEnumerable<CheckersGame> checkersGames)
+    {
+        var result = new List<MenuItem>();
+        foreach (var checkersGame in checkersGames)
+        {
+            result.Add(new MenuItem(
+                    GetCheckersGameText(checkersGame),
+                    m =>
+                    {
+                        SelectedCheckersGame = checkersGame;
+                        return RunConsoleGame(m);
+                    }
+                )
+                { CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersGame) });
+        }
+
+        return result;
+    }
+
+    private static string GetPlayerText(Player player)
+    {
+        var result = player.ToString();
+        if (result.Any(char.IsWhiteSpace)) result = $"'{result.Replace('\'', '"')}'";
+        return result;
+    }
+
+    private static string GetCheckersGameText(CheckersGame checkersGame)
+    {
+        var rulesetText = "(" + checkersGame.CheckersRuleset! + ")";
+        var contents = new List<string>
+        {
+            checkersGame.Id.ToString(),
+            GetPlayerText(checkersGame.BlackPlayer) + " VS " + GetPlayerText(checkersGame.WhitePlayer),
+        };
+
+        if (checkersGame.Tied)
+        {
+            contents.Add($"Tied at {checkersGame.EndedAt!.Value.ToLocalTime()}");
+            contents.Add(rulesetText);
+        } else if (checkersGame.Ended)
+        {
+            contents.Add($"{checkersGame.Winner} won at {checkersGame.EndedAt!.Value.ToLocalTime()}");
+            contents.Add(rulesetText);
+        }
+        else
+        {
+            contents.Add(rulesetText);
+            contents.Add($"Last played at {checkersGame.LastPlayed.ToLocalTime()}");
+        }
+
+        return string.Join(" | ", contents);
+    }
+
+    private static T GetSelectedEnum<T>(ConsoleWindow window, Menu? parentMenu, string prompt, T? selectedValue = null)
+        where T : struct, Enum
+    {
+        var menuItems = new List<MenuItem>();
+        var enumValues = Enum.GetValues<T>();
+        var result = selectedValue ?? enumValues[0];
+        MenuItem? selected = null;
+        foreach (var enumValue in enumValues)
+        {
+            var menuItem = new MenuItem(enumValue.ToString(), () =>
+            {
+                result = enumValue;
+                return EMenuFunction.Back;
+            });
+            menuItems.Add(menuItem);
+            if (result.Equals(enumValue)) selected = menuItem;
+        }
+
+        var menuFactory = new MenuFactory(prompt, menuItems.ToArray())
+        {
+            AppendDefaultMenuItems = false
+        };
+        var menu = menuFactory.Create(window, parentMenu);
+        if (selected != null) menu.CursorPosition = menu.MenuItems.IndexOf(selected);
+        menu.Run();
+        return result;
     }
 
     private static bool ConfirmDelete(ConsoleWindow consoleWindow, Menu? parentMenu,
@@ -117,7 +205,7 @@ public class MainMenuCreator
         var checkersRulesetReal = checkersRuleset ?? new CheckersRuleset();
         return new MenuItem(
             menuItemText ??
-            (checkersRulesetReal.BuiltIn ? $"{checkersRulesetReal.TitleText} (Built-in)" : checkersRulesetReal.TitleText), m =>
+            checkersRulesetReal.ToString(), m =>
             {
                 var previousCursorPosition = 0;
                 var result = EMenuFunction.Refresh;
@@ -234,7 +322,7 @@ public class MainMenuCreator
 
             foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
             {
-                RepoCtx.CheckersRulesetRepository.Refresh(checkersRuleset);  // Re-fetch from DB to clear unsaved changes
+                RepoCtx.CheckersRulesetRepository.Refresh(checkersRuleset); // Re-fetch from DB to clear unsaved changes
                 checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(checkersRuleset));
             }
 
@@ -321,12 +409,13 @@ public class MainMenuCreator
         return result;
     }
 
-    private CustomMenuItemCallback GetDeleteDbEntityMenuItemCallback<T>(T entity) where T : class, IDatabaseEntity, new()
+    private CustomMenuItemCallback GetDeleteDbEntityMenuItemCallback<T>(T entity)
+        where T : class, IDatabaseEntity, new()
     {
         return (input, menu, _) =>
         {
             if (input is not { KeyInfo.Key: ConsoleKey.Delete }) return;
-            var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, $"{typeof(T)} with ID {entity.Id}");
+            var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, $"{typeof(T).Name} with ID {entity.Id}");
             if (!confirmDelete) return;
             var repo = RepoCtx.GetRepo(entity);
             if (repo == null)
@@ -343,7 +432,7 @@ public class MainMenuCreator
             {
                 menu.ConsoleWindow.PopUpMessageBox($"Failed to delete item! ({e.Message})");
             }
-            
+
             menu.ClearMenuItemsCache();
         };
     }
