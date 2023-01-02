@@ -1,20 +1,39 @@
-﻿using Domain;
+﻿using Common;
+using Domain;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace WebApp.MyLibraries;
 
 public static class Utils
 {
-    public static IEnumerable<SelectListItem> EnumOptions(Type enumType, SelectListItem? emptyOption = null, Enum? selected = null)
+    public static IEnumerable<SelectListItem> EnumOptions<T, TE>(int? selected)
+        where T : struct, Enum where TE : struct, Enum
     {
-        if (!enumType.IsEnum)
-            throw new ArgumentException($"Argument {nameof(enumType)} must be an Enum, but was {enumType}");
         var result = new List<SelectListItem>();
-        var enumValues = Enum.GetValues(enumType);
+        var enumValues = EnumUtils.GetValues<T, TE>();
+        foreach (var value in enumValues)
+        {
+            result.Add(new SelectListItem(EnumUtils.GetDisplayString<T, TE>(value), value.ToString(), value == selected));
+        }
+
+        return result;
+    }
+
+    public static IEnumerable<SelectListItem> EnumOptions<T>(T? selected) where T : struct, Enum
+    {
+        return EnumOptions(null, selected);
+    }
+
+    public static IEnumerable<SelectListItem> EnumOptions<T>(SelectListItem? emptyOption = null, T? selected = null)
+        where T : struct, Enum
+    {
+        var result = new List<SelectListItem>();
+        var enumValues = Enum.GetValues<T>();
         if (emptyOption != null) result.Add(emptyOption);
         foreach (var value in enumValues)
         {
-            result.Add(new SelectListItem(value.ToString(), ((int)value).ToString(), value.Equals(selected)));
+            result.Add(new SelectListItem(EnumUtils.GetDisplayString(value), EnumUtils.GetValue(value).ToString(),
+                !(emptyOption?.Selected ?? false) && value.Equals(selected)));
         }
 
         return result;
@@ -22,13 +41,17 @@ public static class Utils
 
     public static IEnumerable<SelectListItem> AiTypeOptionsSelected(EAiType? selected = null)
     {
-        return EnumOptions(typeof(EAiType), new SelectListItem("No AI", ""), selected);
+        return EnumOptionsOtherEmpty(EAiTypeNullable.None, selected);
     }
 
-    public static IEnumerable<SelectListItem> AiTypeOptions => AiTypeOptionsSelected();
+    public static IEnumerable<SelectListItem> EnumOptionsOtherEmpty<T, TEmpty>(TEmpty empty, T? selected = null) where T : struct, Enum where TEmpty : struct, Enum
+    {
+        var emptyText = EnumUtils.GetDisplayString(empty);
+        return EnumOptions(new SelectListItem(emptyText, ""), selected);
+    }
 
-    public static IEnumerable<SelectListItem> PlayerColorOptions =>
-        EnumOptions(typeof(EPlayerColor), new SelectListItem("", ""));
+    public static IEnumerable<SelectListItem> PlayerColorOptions(EPlayerColor? selected) =>
+        EnumOptionsOtherEmpty(EPlayerColorNullable.None, selected);
 
     public static string ShortenSerializedGamePieces(CheckersState checkersState)
     {

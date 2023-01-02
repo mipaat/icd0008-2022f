@@ -11,28 +11,28 @@
 
 <h1>Index</h1>
 
-<div class="d-flex gap-4">
-    <form method="GET">
+<form method="GET" class="d-flex gap-4">
+    <div>
         <label for="playerNameQuery">Search by player name</label><br/>
         <input id="playerNameQuery" type="search" name="playerNameQuery" value="@Model.PlayerNameQuery"/>
         <button type="submit">Search</button>
-    </form>
-    <form method="GET">
+    </div>
+    <div>
         <label for="rulesetNameQuery">Search by ruleset name</label><br/>
         <input id="rulesetNameQuery" type="search" name="rulesetNameQuery" value="@Model.RulesetNameQuery"/>
         <button type="submit">Search</button>
-    </form>
-    <form method="GET">
+    </div>
+    <div>
         <label for="aiQuery">Search by AI</label><br/>
-        <select id="aiQuery" asp-items="@Utils.AiTypeOptionsSelected(Model.AiQuery)" name="aiQuery"></select>
-        <button type="submit" name="aiQuerySubmit" value="@true.ToString()">Search</button>
-    </form>
-    <form method="GET">
+        <select id="aiQuery" asp-items="@Utils.EnumOptions<EAiTypeExtended, EAiType>(Model.AiQuery)" name="aiQuery"></select>
+        <button type="submit">Filter</button>
+    </div>
+    <div>
         <label for="completionFilter">Filter by completion</label><br/>
-        <select id="completionFilter" asp-items="@CompletionFilterOptions(Model.CompletionFilter ?? ECompletionFilter.Ongoing)" name="completionFilter"></select>
-        <button type="submit">Search</button>
-    </form>
-</div>
+        <select id="completionFilter" asp-items="@Utils.EnumOptions(Model.CompletionFilter)" name="completionFilter"></select>
+        <button type="submit">Filter</button>
+    </div>
+</form>
 
 <p>
     <a asp-page="Create">Create New</a>
@@ -129,10 +129,5 @@
     static string GameLaunchButtonText(CheckersGame checkersGame)
     {
         return checkersGame.Ended ? "Results" : "Play";
-    }
-
-    IEnumerable<SelectListItem> CompletionFilterOptions(ECompletionFilter? selected = null)
-    {
-        return Utils.EnumOptions(typeof(ECompletionFilter), selected: selected);
     }
 }

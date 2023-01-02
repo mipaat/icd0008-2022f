@@ -1,4 +1,5 @@
-﻿using Domain;
+﻿using Common;
+using Domain;
 
 namespace GameBrain.AI;
 

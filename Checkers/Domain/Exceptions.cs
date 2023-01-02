@@ -1,3 +1,5 @@
+using Common;
+
 namespace Domain;
 
 public class InsufficientCheckersStatesException : ArgumentException

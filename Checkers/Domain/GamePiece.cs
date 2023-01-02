@@ -1,4 +1,6 @@
-﻿namespace Domain;
+﻿using Common;
+
+namespace Domain;
 
 public struct GamePiece
 {

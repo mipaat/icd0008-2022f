@@ -1,7 +1,7 @@
+using Common;
 using DAL;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Domain;
 using GameBrain;
 using WebApp.MyLibraries.PageModels;
 

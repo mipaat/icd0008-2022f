@@ -26,12 +26,12 @@
             </div>
             <div class="form-group">
                 <label asp-for="@Model.WhiteAiType" class="control-label"></label>
-                <select asp-for="@Model.WhiteAiType" class ="form-control" asp-items="@Utils.AiTypeOptions"></select>
+                <select asp-for="@Model.WhiteAiType" class ="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.WhiteAiType)"></select>
                 <span asp-validation-for="@Model.WhiteAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="@Model.BlackAiType" class="control-label"></label>
-                <select asp-for="@Model.BlackAiType" class ="form-control" asp-items="@Utils.AiTypeOptions"></select>
+                <select asp-for="@Model.BlackAiType" class ="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.BlackAiType)"></select>
                 <span asp-validation-for="@Model.BlackAiType" class="text-danger"></span>
             </div>
             <div class="form-group">

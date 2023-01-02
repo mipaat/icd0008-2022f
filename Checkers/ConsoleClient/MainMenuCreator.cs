@@ -1,11 +1,9 @@
-﻿using System.Text;
-using Common;
+﻿using Common;
 using ConsoleMenuSystem;
 using ConsoleUI;
 using DAL;
 using Domain;
 using GameBrain;
-using Microsoft.Extensions.Primitives;
 
 namespace ConsoleClient;
 
@@ -68,23 +66,26 @@ public class MainMenuCreator
 
     private MenuFactory CreateLoadGameMenuFactory()
     {
-        var completionFilter = ECompletionFilter.Ongoing;
-        return new MenuFactory("Load game", _ => GetCheckersGameMenuItems(completionFilter))
+        var completionFilter = EnumUtils.GetValue(EnumUtils.GetDefaultValue<ECompletionFilter>());
+        return new MenuFactory("Load game",
+            _ => GetCheckersGameMenuItems(EnumUtils.GetEnum<ECompletionFilter>(completionFilter)))
         {
-            CustomHeaderFunc = () => $"Press DELETE to delete. Filtering: {completionFilter} (Change with C)",
+            CustomHeaderFunc = () =>
+                $"Press DELETE to delete. Filtering: {EnumUtils.GetDisplayString<ECompletionFilter>(completionFilter)} (Change with C)",
             CustomBehaviour = (ConsoleInput input, Menu menu, ref List<MenuItem>? _) =>
             {
                 if (input is { KeyInfo.Key: ConsoleKey.C })
                 {
                     completionFilter = GetSelectedEnum<ECompletionFilter>(menu.ConsoleWindow, menu,
-                        "Select filtering mode:", completionFilter);
+                        "Select filtering mode:",
+                        completionFilter);
                     menu.ClearMenuItemsCache();
                 }
             }
         };
     }
 
-    private List<MenuItem> GetCheckersGameMenuItems(ECompletionFilter completionFilter)
+    private List<MenuItem> GetCheckersGameMenuItems(ECompletionFilter? completionFilter)
     {
         var checkersGames = RepoCtx.CheckersGameRepository.GetAll();
         return completionFilter switch
@@ -136,7 +137,8 @@ public class MainMenuCreator
         {
             contents.Add($"Tied at {checkersGame.EndedAt!.Value.ToLocalTime()}");
             contents.Add(rulesetText);
-        } else if (checkersGame.Ended)
+        }
+        else if (checkersGame.Ended)
         {
             contents.Add($"{checkersGame.Winner} won at {checkersGame.EndedAt!.Value.ToLocalTime()}");
             contents.Add(rulesetText);
@@ -150,22 +152,41 @@ public class MainMenuCreator
         return string.Join(" | ", contents);
     }
 
-    private static T GetSelectedEnum<T>(ConsoleWindow window, Menu? parentMenu, string prompt, T? selectedValue = null)
-        where T : struct, Enum
+    private static int GetSelectedEnum<T>(ConsoleWindow window, Menu? parentMenu, string prompt,
+        int selectedValue) where T : struct, Enum
+    {
+        return GetSelectedEnum<T, T>(window, parentMenu, prompt, selectedValue);
+    }
+
+    private static int GetSelectedEnum<T, TE>(ConsoleWindow window, Menu? parentMenu, string prompt, int selectedValue)
+        where T : struct, Enum where TE : struct, Enum
     {
         var menuItems = new List<MenuItem>();
-        var enumValues = Enum.GetValues<T>();
-        var result = selectedValue ?? enumValues[0];
+
+        var result = selectedValue;
         MenuItem? selected = null;
-        foreach (var enumValue in enumValues)
+        foreach (var value in EnumUtils.GetValues<T, TE>())
         {
-            var menuItem = new MenuItem(enumValue.ToString(), () =>
+            string displayString;
+            if (EnumUtils.TryGetEnum(value, out T? oEnum))
             {
-                result = enumValue;
+                displayString = EnumUtils.GetDisplayString(oEnum!.Value);
+            }
+            else if (EnumUtils.TryGetEnum(value, out TE? eEnum))
+            {
+                displayString = EnumUtils.GetDisplayString(eEnum!.Value);
+            }
+            else
+                throw new IllegalStateException(
+                    $"Failed to get Enums of type {typeof(T)} or {typeof(TE)} from {value}!");
+
+            var menuItem = new MenuItem(displayString, () =>
+            {
+                result = value;
                 return EMenuFunction.Back;
             });
             menuItems.Add(menuItem);
-            if (result.Equals(enumValue)) selected = menuItem;
+            if (result == value) selected = menuItem;
         }
 
         var menuFactory = new MenuFactory(prompt, menuItems.ToArray())

@@ -2,8 +2,9 @@
 
 public enum ECompletionFilter
 {
-    All,
+    [EnumDefaultValue]
     Ongoing,
+    All,
     Finished,
     Tied
 }
