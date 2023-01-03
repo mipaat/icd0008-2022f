@@ -4,116 +4,110 @@
 @using Microsoft.AspNetCore.Html
 @model Play
 
-@if (Model.DrawResolutionExpected)
-{
-    <div class="text-center">
-        <p class="display-6">Your opponent offered to end this game with a draw</p>
-        <form method="GET" action="" class="mb-1">
-            <input value="@Model.GameId" name="id" type="hidden">
-            @if (Model.PlayerId != null)
-            {
-                <input value="@Model.PlayerId" name="playerId" type="hidden">
-            }
-            <input value="@(true.ToString())" name="acceptDraw" type="hidden">
-            <button type="submit" class="btn btn-success">Accept Draw</button>
-        </form>
-        <form method="GET" action="">
-            <input value="@Model.GameId" name="id" type="hidden">
-            @if (Model.PlayerId != null)
-            {
-                <input value="@Model.PlayerId" name="playerId" type="hidden">
-            }
-            <input value="@(false.ToString())" name="acceptDraw" type="hidden">
-            <button type="submit" class="btn btn-danger">Reject Draw</button>
-        </form>
-    </div>
-}
+<form method="GET" action="">
+    <input value="@Model.GameId" name="id" type="hidden">
+    @if (Model.PlayerId != null)
+    {
+        <input value="@Model.PlayerId" name="playerId" type="hidden">
+    }
+    
+    @if (Model.DrawResolutionExpected)
+    {
+        <div class="text-center">
+            <p class="display-6">Your opponent offered to end this game with a draw</p>
+            <div class="mb-1">
+                <button type="submit" class="btn btn-success" value="@True" name="acceptDraw">Accept Draw</button>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-danger" value="@False" name="acceptDraw">Reject Draw</button>
+            </div>
+        </div>
+    }
 
-@if (!Model.DrawResolutionExpected)
-{
-    <div class="d-flex flex-row flex-wrap gap-2 justify-content-center gameplay-info-bar">
-        <div class="btn btn-light btn-outline-dark fake-button">Current turn: @Model.Brain.CurrentTurnPlayerColor</div>
-        @if (Model.PlayerId != null)
-        {
-            <div class="btn btn-light btn-outline-dark fake-button">@PlayerNameDisplay()</div>
-        }
-        @if (Model.Brain.EndTurnAllowed)
-        {
-            <form method="GET" action="">
-                <input value="@Model.GameId" name="id" type="hidden">
-                @if (Model.PlayerId != null)
-                {
-                    <input value="@Model.PlayerId" name="playerId" type="hidden">
-                }
-                <input value="@(true.ToString())" name="endTurn" type="hidden">
-                <button type="submit" class="btn btn-primary">End turn</button>
-            </form>
-        }
-        <form method="GET" action="">
-            <input value="@Model.GameId" name="id" type="hidden">
-            @if (Model.PlayerId != null)
+    @if (!Model.DrawResolutionExpected)
+    {
+        <div class="d-flex flex-row flex-wrap gap-2 justify-content-center gameplay-info-bar">
+            @if (ShouldDistinguishPlayer)
             {
-                <input value="@Model.PlayerId" name="playerId" type="hidden">
-            }
-            <input value="@(true.ToString())" name="forfeit" type="hidden">
-            <button type="submit" class="btn btn-primary">Forfeit</button>
-        </form>
-        @if (Model.Brain.CheckersGame.DrawProposedBy == null)
-        {
-            <form method="GET" action="">
-                <input value="@Model.GameId" name="id" type="hidden">
-                <input value="@Model.PlayerId" name="playerId" type="hidden"/>
-                <input value="@Model.GetPlayerId" name="drawProposerPlayerId" type="hidden">
-                <input value="@(true.ToString())" name="proposeDraw" type="hidden">
-                <button type="submit" class="btn btn-primary">Propose Draw</button>
-            </form>
-        }
-    </div>
-
-    <div class="overflow-auto">
-        <table class="table table-bordered game-board-table">
-            <tbody>
-            @for (var y = 0; y < Model.Brain.Height; y++)
-            {
-                <tr>
-                    @for (var x = 0; x < Model.Brain.Width; x++)
+                <div class="btn btn-light btn-outline-dark fake-button">YOU: @Model.Player</div>
+                <div class="btn btn-light btn-outline-dark fake-button">OPPONENT: @Model.Brain.OtherPlayer(Model.Player)</div>
+                <div class="btn btn-light btn-outline-dark fake-button">
+                    @if (Model.Brain.CurrentTurnPlayer == Model.Player)
                     {
-                        var gamePiece = Model.Brain[x, y];
-                        <td @GetSelectOnClickText(x, y)
-                            class="text-center @GetBoardCellClasses(x, y)">
-                            @switch (gamePiece?.Player)
-                            {
-                                case EPlayerColor.Black:
-                                    @switch (gamePiece.Value.IsCrowned)
-                                    {
-                                        case false:
-                                            <img src="/images/CheckersPieceBlack.png" alt="Black"/>
-                                            break;
-                                        case true:
-                                            <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
-                                            break;
-                                    }
-                                    break;
-                                case EPlayerColor.White:
-                                    @switch (gamePiece.Value.IsCrowned)
-                                    {
-                                        case false:
-                                            <img src="/images/CheckersPieceWhite.png" alt="White"/>
-                                            break;
-                                        case true:
-                                            <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
-                                            break;
-                                    }
-                                    break;
-                            }
-                        </td>
+                        @:YOUR TURN
                     }
-                </tr>
+                    @if (Model.Brain.CurrentTurnPlayer != Model.Player)
+                    {
+                        @:OPPONENT'S TURN
+                    }
+                </div>
+                @if (CanProposeDraw && !CanForceDraw)
+                {
+                    <button type="submit" class="btn btn-primary" value="@True" name="proposeDraw">Propose Draw</button>
+                }
             }
-            </tbody>
-        </table>
-    </div>
-}
+            @if (!ShouldDistinguishPlayer)
+            {
+                <div class="btn btn-light btn-outline-dark fake-button">
+                    @Model.Player VS @Model.Brain.OtherPlayer(Model.Player)
+                </div>
+            }
+            @if (CanForceDraw)
+            {
+                <button type="submit" class="btn btn-primary" value="@True" name="forceDraw">Force Draw</button>
+            }
+            @if (Model.Brain.EndTurnAllowed)
+            {
+                <button type="submit" class="btn btn-primary" value="@True" name="endTurn">End turn</button>
+            }
+            <button type="submit" class="btn btn-primary" value="@True" name="forfeit">Forfeit</button>
+        </div>
+
+        <div class="overflow-auto">
+            <table class="table table-bordered game-board-table">
+                <tbody>
+                @for (var y = 0; y < Model.Brain.Height; y++)
+                {
+                    <tr>
+                        @for (var x = 0; x < Model.Brain.Width; x++)
+                        {
+                            var gamePiece = Model.Brain[x, y];
+                            <td @GetSelectOnClickText(x, y)
+                                class="text-center @GetBoardCellClasses(x, y)">
+                                @switch (gamePiece?.Player)
+                                {
+                                    case EPlayerColor.Black:
+                                        @switch (gamePiece.Value.IsCrowned)
+                                        {
+                                            case false:
+                                                <img src="/images/CheckersPieceBlack.png" alt="Black"/>
+                                                break;
+                                            case true:
+                                                <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
+                                                break;
+                                        }
+                                        break;
+                                    case EPlayerColor.White:
+                                        @switch (gamePiece.Value.IsCrowned)
+                                        {
+                                            case false:
+                                                <img src="/images/CheckersPieceWhite.png" alt="White"/>
+                                                break;
+                                            case true:
+                                                <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
+                                                break;
+                                        }
+                                        break;
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</form>
 
 @section Scripts
 {
@@ -170,8 +164,13 @@
         return Model.FromSet && Model.FromX == x && Model.FromY == y;
     }
 
-    string PlayerNameDisplay()
-    {
-        return $"You are: {Model.PlayerColor}" + (Model.Player.Name is {Length: > 0 } ? $" ({Model.Player.Name})" : "");
-    }
+    bool ShouldDistinguishPlayer => Model.PlayerId != null || !IsOnlyAiGame;
+    bool IsAiGame => Model.Player.IsAi || Model.Brain.OtherPlayer(Model.Player).IsAi;
+    bool IsOnlyAiGame => Model.Player.IsAi && Model.Brain.OtherPlayer(Model.Player).IsAi;
+    bool DrawProposed => Model.Brain.CheckersGame.DrawProposedBy != null;
+    bool CanProposeDraw => !DrawProposed;
+    bool CanForceDraw => !ShouldDistinguishPlayer || IsAiGame;
+
+    static string True => true.ToString();
+    static string False => false.ToString();
 }

@@ -27,14 +27,20 @@ public class Play : PageModelDb
     {
         get
         {
-            if (PlayerId == null) return Brain.CurrentTurnPlayerColor;
+            var defaultColor = (Brain.WhitePlayer.IsAi, Brain.BlackPlayer.IsAi) switch
+            {
+                (true, false) => Brain.BlackPlayer.Color,
+                (false, true) => Brain.WhitePlayer.Color,
+                _ => Brain.CurrentTurnPlayerColor
+            };
+            if (PlayerId == null) return defaultColor;
             try
             {
                 return Player.GetPlayerColor(PlayerId.Value);
             }
             catch (ArgumentOutOfRangeException)
             {
-                return Brain.CurrentTurnPlayerColor;
+                return defaultColor;
             }
         }
     }
@@ -139,7 +145,7 @@ public class Play : PageModelDb
     }
 
     public IActionResult OnGet(int? id, bool endTurn = false, bool aiMoveAllowed = false,
-        bool forfeit = false, bool proposeDraw = false, bool? acceptDraw = null, int? drawProposerPlayerId = null)
+        bool forfeit = false, bool proposeDraw = false, bool? acceptDraw = null, bool forceDraw = false)
     {
         try
         {
@@ -152,16 +158,25 @@ public class Play : PageModelDb
 
         if (DrawResolutionExpected && acceptDraw == null && !Brain.IsAiTurn) return Page();
 
+        if (forceDraw)
+        {
+            Brain.Draw();
+            SaveGame();
+            return Reset;
+        }
+        
         if (forfeit)
         {
             Brain.Forfeit(Player.Color);
             SaveGame();
+            return Reset;
         }
 
         if (proposeDraw)
         {
             Brain.ProposeDraw(PlayerColor);
             SaveGame();
+            return Reset;
         }
 
         if (acceptDraw != null && DrawResolutionExpected)
@@ -171,6 +186,7 @@ public class Play : PageModelDb
             else
                 Brain.RejectDraw(PlayerColor);
             SaveGame();
+            return Reset;
         }
 
         if (Brain.Ended) return RedirectToPage("./Ended", new { Id = GameId, PlayerId });
