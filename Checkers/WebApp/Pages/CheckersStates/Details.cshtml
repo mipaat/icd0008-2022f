@@ -1,5 +1,5 @@
 @page
-@model WebApp.Pages.CheckersStates.DetailsModel
+@model DetailsModel
 
 @{
     ViewData["Title"] = "Details";
@@ -9,7 +9,7 @@
 
 <div>
     <h4>CheckersState</h4>
-    <hr />
+    <hr/>
     <dl class="row">
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)
@@ -56,6 +56,6 @@
     </dl>
 </div>
 <div>
-    <a asp-page="./Edit" asp-route-id="@Model.Entity?.Id">Edit</a> |
+    <a asp-page="./Edit" asp-route-id="@Model.Entity.Id">Edit</a> |
     <a asp-page="./Index">Back to List</a>
 </div>

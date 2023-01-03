@@ -1,4 +1,4 @@
-using Domain;
+using Domain.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Db;
@@ -14,18 +14,14 @@ public sealed class CheckersRulesetRepository : AbstractDbRepository<CheckersRul
 
         var checkersRulesets = GetAllSaved();
         foreach (var checkersRuleset in DefaultCheckersRulesets.DefaultRulesets)
-        {
             if (!checkersRulesets.Any(other => other.IsEquivalent(checkersRuleset)))
-            {
                 Add(checkersRuleset);
-            }
-        }
     }
 
     protected override DbSet<CheckersRuleset> ThisDbSet => DbContext.CheckersRulesets;
 
     public ICollection<CheckersRuleset> GetAllSaved()
     {
-        return RunPreFetchActions(ThisDbSet.Where(cr => cr.Saved)).ToList();
+        return RunPreFetchActions(Queryable.Where(cr => cr.Saved)).ToList();
     }
 }

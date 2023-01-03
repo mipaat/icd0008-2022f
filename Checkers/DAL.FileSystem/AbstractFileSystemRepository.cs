@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Common;
+using DAL.Filters;
 using Domain;
 
 namespace DAL.FileSystem;
@@ -7,6 +9,15 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     where T : class, IDatabaseEntity, new()
 {
     private const string FileExtension = ".json";
+
+    protected readonly IRepositoryContext RepositoryContext;
+
+    protected AbstractFileSystemRepository(IRepositoryContext repositoryContext)
+    {
+        RepositoryContext = repositoryContext;
+        PreSaveActions = new List<Action<T>>();
+    }
+
     protected abstract string RepositoryName { get; }
     private static char DirectorySeparator => Path.DirectorySeparatorChar;
 
@@ -20,68 +31,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
     protected ICollection<Action<T>> PreSaveActions { get; }
 
-    protected AbstractFileSystemRepository(IRepositoryContext repositoryContext)
-    {
-        RepositoryContext = repositoryContext;
-        PreSaveActions = new List<Action<T>>();
-    }
-
-    private void EnsureDirectoryExists()
-    {
-        Directory.CreateDirectory(RepositoryPath);
-    }
-
-    private string GetFilePath(int id)
-    {
-        return RepositoryPath + DirectorySeparator + id + FileExtension;
-    }
-
-    protected virtual T Deserialize(string serializedData)
-    {
-        var result = System.Text.Json.JsonSerializer.Deserialize<T>(serializedData);
-        if (result == null)
-            throw new NullReferenceException($"Could not deserialize {typeof(T).Name} from '{serializedData}'!");
-        return result;
-    }
-
-    protected virtual string Serialize(T entity)
-    {
-        return System.Text.Json.JsonSerializer.Serialize(entity);
-    }
-
-    private int GetNextId()
-    {
-        const int attemptLimit = 5;
-        for (var i = 0; i < attemptLimit; i++)
-        {
-            if (File.Exists(IdFilePath) && int.TryParse(File.ReadAllText(IdFilePath), out var id)) return id;
-
-            File.WriteAllText(IdFilePath, "1");
-        }
-
-        throw new IOException($"Failed to get next Id in {attemptLimit} attempts!");
-    }
-
-    private int IncrementNextId()
-    {
-        var id = GetNextId();
-
-        File.WriteAllText(IdFilePath, (id + 1).ToString());
-
-        return id;
-    }
-
-    private void RunPreSaveActions(T entity)
-    {
-        foreach (var action in PreSaveActions)
-        {
-            action(entity);
-        }
-    }
-
-    protected readonly IRepositoryContext RepositoryContext;
-
-    public virtual ICollection<T> GetAll()
+    public virtual ICollection<T> GetAll(params FilterFunc<T>[] filters)
     {
         EnsureDirectoryExists();
 
@@ -95,7 +45,9 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         }
 
         result.Sort((o1, o2) => o1.Id - o2.Id);
-        return result;
+        var queryable = result.AsQueryable();
+        foreach (var filter in filters) queryable = filter(queryable);
+        return queryable.ToList();
     }
 
     public virtual T? GetById(int id)
@@ -142,13 +94,9 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
         EnsureDirectoryExists();
 
         if (Exists(entity.Id))
-        {
             Update(entity);
-        }
         else
-        {
             Add(entity);
-        }
     }
 
     public T? Remove(int id)
@@ -172,9 +120,60 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     public void Refresh(T entity)
     {
         var fetchedEntity = GetById(entity.Id);
-        if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
+        if (fetchedEntity == null)
+            throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
         entity.Refresh(fetchedEntity);
     }
 
     public Type EntityType => typeof(T);
+
+    private void EnsureDirectoryExists()
+    {
+        Directory.CreateDirectory(RepositoryPath);
+    }
+
+    private string GetFilePath(int id)
+    {
+        return RepositoryPath + DirectorySeparator + id + FileExtension;
+    }
+
+    protected virtual T Deserialize(string serializedData)
+    {
+        var result = JsonSerializer.Deserialize<T>(serializedData);
+        if (result == null)
+            throw new NullReferenceException($"Could not deserialize {typeof(T).Name} from '{serializedData}'!");
+        return result;
+    }
+
+    protected virtual string Serialize(T entity)
+    {
+        return JsonSerializer.Serialize(entity);
+    }
+
+    private int GetNextId()
+    {
+        const int attemptLimit = 5;
+        for (var i = 0; i < attemptLimit; i++)
+        {
+            if (File.Exists(IdFilePath) && int.TryParse(File.ReadAllText(IdFilePath), out var id)) return id;
+
+            File.WriteAllText(IdFilePath, "1");
+        }
+
+        throw new IOException($"Failed to get next Id in {attemptLimit} attempts!");
+    }
+
+    private int IncrementNextId()
+    {
+        var id = GetNextId();
+
+        File.WriteAllText(IdFilePath, (id + 1).ToString());
+
+        return id;
+    }
+
+    private void RunPreSaveActions(T entity)
+    {
+        foreach (var action in PreSaveActions) action(entity);
+    }
 }

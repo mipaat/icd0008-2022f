@@ -9,7 +9,7 @@
 }
 
 .game-board-table td:after {
-    content:'';
+    content: '';
     display: block;
     margin-top: 100%;
 }

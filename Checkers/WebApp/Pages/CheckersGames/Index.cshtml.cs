@@ -1,75 +1,49 @@
-using Common;
 using DAL;
-using Domain;
+using DAL.Filters;
+using Domain.Model;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersGames
+namespace WebApp.Pages.CheckersGames;
+
+public class IndexModel : RepositoryModel<CheckersGame>
 {
-    public class IndexModel : RepositoryModel<CheckersGame>
+    public IndexModel(IRepositoryContext ctx) : base(ctx)
     {
-        public IndexModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+    }
 
-        public IList<CheckersGame> Entities { get; set; } = default!;
+    public IList<CheckersGame> Entities { get; set; } = default!;
 
-        private static bool StringContains(string? query, string? compare)
-        {
-            var normalizedQuery = query?.ToLower().Trim() ?? "";
-            var normalizedCompare = compare?.ToLower().Trim() ?? "";
-            return normalizedCompare.Contains(normalizedQuery);
-        }
+    [BindProperty(SupportsGet = true)] public AiTypeFilter AiTypeFilter { get; set; } = default!;
+    [BindProperty(SupportsGet = true)] public string? RulesetNameQuery { get; set; }
+    [BindProperty(SupportsGet = true)] public string? PlayerNameQuery { get; set; }
 
-        [BindProperty(SupportsGet = true)] public int? AiQuery { get; set; }
-        [BindProperty(SupportsGet = true)] public string? RulesetNameQuery { get; set; }
-        [BindProperty(SupportsGet = true)] public string? PlayerNameQuery { get; set; }
-        [BindProperty(SupportsGet = true)] public ECompletionFilter? CompletionFilter { get; set; }
+    [BindProperty(SupportsGet = true)] public CompletionFilter CompletionFilter { get; set; } = default!;
 
-        public IActionResult OnGet()
-        {
-            IEnumerable<CheckersGame> result = Repository.GetAll();
-            if (PlayerNameQuery != null)
-            {
-                result = result.Where(cg => StringContains(PlayerNameQuery, cg.WhitePlayerName)
-                                            || StringContains(PlayerNameQuery, cg.BlackPlayerName));
-            }
+    protected override IRepository<CheckersGame> Repository => Ctx.CheckersGameRepository;
 
-            if (RulesetNameQuery != null)
-            {
-                result = result.Where(cg => StringContains(RulesetNameQuery, cg.CheckersRuleset?.TitleText));
-            }
+    private static bool StringContains(string? query, string? compare)
+    {
+        var normalizedQuery = query?.ToLower().Trim() ?? "";
+        var normalizedCompare = compare?.ToLower().Trim() ?? "";
+        return normalizedCompare.Contains(normalizedQuery);
+    }
 
-            if (AiQuery != null)
-            {
-                if (EnumUtils.TryGetEnum(AiQuery, out EAiType? aiType))
-                {
-                    result = result.Where(cg => cg.BlackAiType == aiType || cg.WhiteAiType == aiType);
-                } else if (EnumUtils.TryGetEnum(AiQuery, out EAiTypeExtended? aiTypeExtended))
-                {
-                    result = aiTypeExtended switch
-                    {
-                        EAiTypeExtended.All => result,
-                        EAiTypeExtended.NoAi => result.Where(cg => cg.BlackAiType == null && cg.WhiteAiType == null),
-                        _ => result
-                    };
-                }
-            }
+    public IActionResult OnGet()
+    {
+        var result = Repository.GetAll(
+            CompletionFilter.FilterFunc,
+            AiTypeFilter.FilterFunc).AsEnumerable();
 
-            result = CompletionFilter switch
-            {
-                ECompletionFilter.Ongoing => result.Where(cg => !cg.Ended),
-                ECompletionFilter.Finished => result.Where(cg => cg.Ended),
-                ECompletionFilter.Tied => result.Where(cg => cg.Tied),
-                ECompletionFilter.All => result,
-                _ => result.Where(cg => !cg.Ended)
-            };
+        if (PlayerNameQuery != null)
+            result = result.Where(cg => StringContains(PlayerNameQuery, cg.WhitePlayerName)
+                                        || StringContains(PlayerNameQuery, cg.BlackPlayerName));
 
-            Entities = result.ToList();
+        if (RulesetNameQuery != null)
+            result = result.Where(cg => StringContains(RulesetNameQuery, cg.CheckersRuleset?.TitleText));
 
-            return Page();
-        }
+        Entities = result.ToList();
 
-        protected override IRepository<CheckersGame> Repository => Ctx.CheckersGameRepository;
+        return Page();
     }
 }

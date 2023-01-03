@@ -5,12 +5,10 @@ namespace ConsoleUI;
 public class ConsoleLine
 {
     private readonly string _content;
+    private readonly int? _patternRepetitionAmount;
+    private readonly bool _truncationPreferRight;
     public readonly EAlignment Align;
     public readonly ConsoleColor? BackgroundColor;
-    private readonly bool _truncationPreferRight;
-    private readonly int? _patternRepetitionAmount;
-
-    private int PatternRepetitionAmount => _patternRepetitionAmount ?? Console.WindowWidth / _content.Length + 1;
 
     public ConsoleLine(string content = "", ConsoleColor? backgroundColor = null, EAlignment align = EAlignment.Left,
         bool truncationPreferRight = false, int? patternRepetitionAmount = 1)
@@ -21,6 +19,8 @@ public class ConsoleLine
         _truncationPreferRight = truncationPreferRight;
         _patternRepetitionAmount = patternRepetitionAmount;
     }
+
+    private int PatternRepetitionAmount => _patternRepetitionAmount ?? Console.WindowWidth / _content.Length + 1;
 
     public string Content()
     {

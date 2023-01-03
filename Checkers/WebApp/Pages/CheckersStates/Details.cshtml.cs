@@ -1,15 +1,14 @@
 using DAL;
-using Domain;
+using Domain.Model;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersStates
-{
-    public class DetailsModel : EntityModel<CheckersState>
-    {
-        public DetailsModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+namespace WebApp.Pages.CheckersStates;
 
-        protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
+public class DetailsModel : EntityModel<CheckersState>
+{
+    public DetailsModel(IRepositoryContext ctx) : base(ctx)
+    {
     }
+
+    protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
 }

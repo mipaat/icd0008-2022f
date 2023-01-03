@@ -1,4 +1,4 @@
-using Domain;
+using Domain.Model;
 
 namespace DAL.FileSystem;
 
@@ -9,6 +9,11 @@ public sealed class CheckersStateRepository : AbstractFileSystemRepository<Check
     }
 
     protected override string RepositoryName => "CheckersState";
+
+    public ICollection<CheckersState> GetByCheckersGameId(int checkersGameId)
+    {
+        return GetAll().Where(cs => cs.CheckersGameId.Equals(checkersGameId)).ToList();
+    }
 
     protected override CheckersState Deserialize(string serializedData)
     {
@@ -24,10 +29,5 @@ public sealed class CheckersStateRepository : AbstractFileSystemRepository<Check
         entity.SerializeGamePieces();
 
         return base.Serialize(entity);
-    }
-
-    public ICollection<CheckersState> GetByCheckersGameId(int checkersGameId)
-    {
-        return GetAll().Where(cs => cs.CheckersGameId.Equals(checkersGameId)).ToList();
     }
 }

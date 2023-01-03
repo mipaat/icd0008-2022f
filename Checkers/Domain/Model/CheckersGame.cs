@@ -1,10 +1,13 @@
 using System.Text.Json.Serialization;
-using Common;
+using Domain.Model.Helpers;
 
-namespace Domain;
+namespace Domain.Model;
 
 public class CheckersGame : AbstractDatabaseEntity, ICloneable
 {
+    private Player? _blackPlayer;
+
+    private Player? _whitePlayer;
     public string? WhitePlayerName { get; set; }
     public string? BlackPlayerName { get; set; }
     public EAiType? WhiteAiType { get; set; }
@@ -24,18 +27,10 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
     public EPlayerColor? Winner { get; set; }
     public EPlayerColor? DrawProposedBy { get; set; }
 
-    public ICollection<CheckersState> AssertSufficientCheckersStates()
-    {
-        if (CheckersStates == null || CheckersStates.Count < 1) throw new InsufficientCheckersStatesException(this);
-        return CheckersStates!;
-    }
-
     public DateTime LastPlayed => CurrentCheckersState?.CreatedAt ?? EndedAt ?? StartedAt;
 
     public bool Tied => Ended && Winner == null;
     public bool Ended => EndedAt != null;
-
-    private Player? _whitePlayer;
 
     public Player WhitePlayer
     {
@@ -47,8 +42,6 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
         }
     }
 
-    private Player? _blackPlayer;
-
     public Player BlackPlayer
     {
         get
@@ -59,23 +52,43 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
         }
     }
 
-    public Player Player(EPlayerColor playerColor) => playerColor switch
-    {
-        EPlayerColor.Black => BlackPlayer,
-        EPlayerColor.White => WhitePlayer,
-        _ => throw new UnknownPlayerColorException(playerColor)
-    };
-
     public Player? WinnerPlayer => Winner != null ? Player(Winner.Value) : null;
 
-    public Player OtherPlayer(Player player) => player.Color switch
+    public object Clone()
     {
-        EPlayerColor.Black => Player(EPlayerColor.White),
-        EPlayerColor.White => Player(EPlayerColor.Black),
-        _ => throw new UnknownPlayerColorException(player.Color)
-    };
+        return GetClone();
+    }
 
-    public EPlayerColor OtherPlayer(EPlayerColor playerColor) => OtherPlayer(Player(playerColor)).Color;
+    public ICollection<CheckersState> AssertSufficientCheckersStates()
+    {
+        if (CheckersStates == null || CheckersStates.Count < 1) throw new InsufficientCheckersStatesException(this);
+        return CheckersStates!;
+    }
+
+    public Player Player(EPlayerColor playerColor)
+    {
+        return playerColor switch
+        {
+            EPlayerColor.Black => BlackPlayer,
+            EPlayerColor.White => WhitePlayer,
+            _ => throw new UnknownPlayerColorException(playerColor)
+        };
+    }
+
+    public Player OtherPlayer(Player player)
+    {
+        return player.Color switch
+        {
+            EPlayerColor.Black => Player(EPlayerColor.White),
+            EPlayerColor.White => Player(EPlayerColor.Black),
+            _ => throw new UnknownPlayerColorException(player.Color)
+        };
+    }
+
+    public EPlayerColor OtherPlayer(EPlayerColor playerColor)
+    {
+        return OtherPlayer(Player(playerColor)).Color;
+    }
 
     public override string ToString()
     {
@@ -102,10 +115,5 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
             _blackPlayer = null,
             _whitePlayer = null
         };
-    }
-
-    public object Clone()
-    {
-        return GetClone();
     }
 }

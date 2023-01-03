@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DAL\DAL.csproj" />
-      <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
+        <ProjectReference Include="..\DAL\DAL.csproj"/>
+        <ProjectReference Include="..\GameBrain\GameBrain.csproj"/>
     </ItemGroup>
 
 </Project>

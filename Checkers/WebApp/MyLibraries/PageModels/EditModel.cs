@@ -14,10 +14,7 @@ public abstract class EditModel<T> : EntityModel<T> where T : class, IDatabaseEn
     // For more details, see https://aka.ms/RazorPagesCRUD.
     public IActionResult OnPost()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
+        if (!ModelState.IsValid) return Page();
 
         Repository.Update(Entity);
 

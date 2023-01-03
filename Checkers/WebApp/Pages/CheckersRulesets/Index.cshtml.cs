@@ -1,26 +1,25 @@
 using DAL;
+using Domain.Model;
 using Microsoft.AspNetCore.Mvc;
-using Domain;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersRulesets
+namespace WebApp.Pages.CheckersRulesets;
+
+public class IndexModel : IndexModel<CheckersRuleset>
 {
-    public class IndexModel : IndexModel<CheckersRuleset>
+    public IndexModel(IRepositoryContext ctx) : base(ctx)
     {
-        [BindProperty(SupportsGet = true)] public bool ShowNonSaved { get; set; }
+    }
 
-        public override IActionResult OnGet()
-        {
-            Entities =
-                (ShowNonSaved ? Ctx.CheckersRulesetRepository.GetAll() : Ctx.CheckersRulesetRepository.GetAllSaved())
-                .ToList();
-            return Page();
-        }
+    [BindProperty(SupportsGet = true)] public bool ShowNonSaved { get; set; }
 
-        protected override IRepository<CheckersRuleset> Repository => Ctx.CheckersRulesetRepository;
+    protected override IRepository<CheckersRuleset> Repository => Ctx.CheckersRulesetRepository;
 
-        public IndexModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+    public override IActionResult OnGet()
+    {
+        Entities =
+            (ShowNonSaved ? Ctx.CheckersRulesetRepository.GetAll() : Ctx.CheckersRulesetRepository.GetAllSaved())
+            .ToList();
+        return Page();
     }
 }

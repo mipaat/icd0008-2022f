@@ -1,5 +1,5 @@
 @page
-@model WebApp.Pages.CheckersGames.DetailsModel
+@model DetailsModel
 
 @{
     ViewData["Title"] = "Details";
@@ -9,7 +9,7 @@
 
 <div>
     <h4>CheckersGame</h4>
-    <hr />
+    <hr/>
     <dl class="row">
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Entity.WhitePlayerName)
@@ -21,7 +21,7 @@
             @Html.DisplayNameFor(model => model.Entity.BlackPlayerName)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Entity.BlackPlayerName)
+        @Html.DisplayFor(model => model.Entity.BlackPlayerName)
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Entity.WhiteAiType)
         </dt>

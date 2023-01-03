@@ -10,9 +10,7 @@ public abstract class AbstractCheckersAiHeuristic : AbstractCheckersAi
         var availableMoves = checkersBrain.AvailableMoves();
         var movesWithHeuristic = new List<MoveWithHeuristic>();
         foreach (var move in availableMoves)
-        {
             movesWithHeuristic.Add(new MoveWithHeuristic(move, GetMoveHeuristic(checkersBrain, move)));
-        }
 
         return movesWithHeuristic.OrderBy(_ => Random.Next()).Max()?.Move;
     }

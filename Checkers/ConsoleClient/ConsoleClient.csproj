@@ -8,20 +8,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ConsoleMenuSystem\ConsoleMenuSystem.csproj" />
-      <ProjectReference Include="..\DAL.Db\DAL.Db.csproj" />
-      <ProjectReference Include="..\DAL.FileSystem\DAL.FileSystem.csproj" />
-      <ProjectReference Include="..\Domain\Domain.csproj" />
-      <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
-      <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\ConsoleMenuSystem\ConsoleMenuSystem.csproj"/>
+        <ProjectReference Include="..\DAL.Db\DAL.Db.csproj"/>
+        <ProjectReference Include="..\DAL.FileSystem\DAL.FileSystem.csproj"/>
+        <ProjectReference Include="..\Domain\Domain.csproj"/>
+        <ProjectReference Include="..\GameBrain\GameBrain.csproj"/>
+        <ProjectReference Include="..\Common\Common.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0"/>
     </ItemGroup>
 
 </Project>

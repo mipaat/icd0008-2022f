@@ -9,37 +9,37 @@
 <h1>Create</h1>
 
 <h4>CheckersGame</h4>
-<hr />
+<hr/>
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="@Model.WhitePlayerName" class="control-label"></label>
-                <input asp-for="@Model.WhitePlayerName" class="form-control" />
+                <input asp-for="@Model.WhitePlayerName" class="form-control"/>
                 <span asp-validation-for="@Model.WhitePlayerName" class="text-danger"></span>
             </div>
-            <div class="form-group"> 
+            <div class="form-group">
                 <label asp-for="@Model.BlackPlayerName" class="control-label"></label>
-                <input asp-for="@Model.BlackPlayerName" class="form-control" />
+                <input asp-for="@Model.BlackPlayerName" class="form-control"/>
                 <span asp-validation-for="@Model.BlackPlayerName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="@Model.WhiteAiType" class="control-label"></label>
-                <select asp-for="@Model.WhiteAiType" class ="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.WhiteAiType)"></select>
+                <select asp-for="@Model.WhiteAiType" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.WhiteAiType)"></select>
                 <span asp-validation-for="@Model.WhiteAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="@Model.BlackAiType" class="control-label"></label>
-                <select asp-for="@Model.BlackAiType" class ="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.BlackAiType)"></select>
+                <select asp-for="@Model.BlackAiType" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.WhiteAiType)"></select>
                 <span asp-validation-for="@Model.BlackAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="@Model.CheckersRulesetId" class="control-label">Ruleset</label>
-                <select asp-for="@Model.CheckersRulesetId" class ="form-control" asp-items="@Model.CheckersRulesets"></select>
+                <select asp-for="@Model.CheckersRulesetId" class="form-control" asp-items="@Model.CheckersRulesets"></select>
             </div>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary"/>
             </div>
         </form>
     </div>
@@ -50,5 +50,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

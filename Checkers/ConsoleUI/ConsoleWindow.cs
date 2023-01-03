@@ -1,15 +1,27 @@
 ﻿using System.Text;
+using Timer = System.Timers.Timer;
 
 namespace ConsoleUI;
 
 public class ConsoleWindow
 {
-    public string Title;
+    public delegate bool ValidityFunc<in T>(T input, out string? rePrompt);
+
     public readonly Encoding OutputEncoding = Encoding.UTF8;
 
-    private List<ConsoleLine> _renderQueue;
+    private int _cursorPosition;
 
     private bool _cursorVisible;
+
+    private readonly List<ConsoleLine> _renderQueue;
+    public string Title;
+
+    public ConsoleWindow(string title = "ConsoleWindow")
+    {
+        Title = CheckStringValid(title);
+        CursorVisible = false;
+        _renderQueue = new List<ConsoleLine>();
+    }
 
     public bool CursorVisible
     {
@@ -21,8 +33,6 @@ public class ConsoleWindow
         }
     }
 
-    private int _cursorPosition;
-
     public int CursorPosition
     {
         get => _cursorPosition;
@@ -33,11 +43,18 @@ public class ConsoleWindow
         }
     }
 
-    public ConsoleWindow(string title = "ConsoleWindow")
+    public List<ConsoleLine> RenderQueue
     {
-        Title = CheckStringValid(title);
-        CursorVisible = false;
-        _renderQueue = new List<ConsoleLine>();
+        get
+        {
+            var result = new List<ConsoleLine>(_renderQueue);
+            var titleHorizontalBorder = new ConsoleLine(new string('-', Title.Length + 4));
+            result.Insert(0, titleHorizontalBorder);
+            result.Insert(1, new ConsoleLine("| " + Title + " |"));
+            result.Insert(2, titleHorizontalBorder);
+            result.Insert(0, new ConsoleLine());
+            return result;
+        }
     }
 
     private void SyncCursorPosition()
@@ -60,20 +77,6 @@ public class ConsoleWindow
         _renderQueue.Clear();
     }
 
-    public List<ConsoleLine> RenderQueue
-    {
-        get
-        {
-            var result = new List<ConsoleLine>(_renderQueue);
-            var titleHorizontalBorder = new ConsoleLine(new string('-', Title.Length + 4));
-            result.Insert(0, titleHorizontalBorder);
-            result.Insert(1, new ConsoleLine("| " + Title + " |"));
-            result.Insert(2, titleHorizontalBorder);
-            result.Insert(0, new ConsoleLine());
-            return result;
-        }
-    }
-
     public void Render(bool resetCursorPosition = true)
     {
         var previousOutputEncoding = Console.OutputEncoding;
@@ -86,10 +89,7 @@ public class ConsoleWindow
 
         var maxRenderedLines = windowIsCutOff ? Console.WindowHeight - 1 : RenderQueue.Count;
 
-        for (var i = 0; i < maxRenderedLines; i++)
-        {
-            WriteLine(RenderQueue[i]);
-        }
+        for (var i = 0; i < maxRenderedLines; i++) WriteLine(RenderQueue[i]);
 
         if (windowIsCutOff) WriteLine(new ConsoleLine("▲▼", patternRepetitionAmount: null));
 
@@ -107,24 +107,20 @@ public class ConsoleWindow
 
     private void FillRemainingSpace()
     {
-        for (var i = Console.CursorTop; i < Console.WindowHeight - Console.WindowTop - 1; i++)
-        {
-            WriteLine();
-        }
+        for (var i = Console.CursorTop; i < Console.WindowHeight - Console.WindowTop - 1; i++) WriteLine();
     }
 
     private static string CheckStringValid(string content)
     {
         if (content.Contains('\n') || content.Contains('\r'))
-        {
-            throw new ArgumentException($"Content can't contain characters that affect line structure!",
+            throw new ArgumentException("Content can't contain characters that affect line structure!",
                 nameof(content));
-        }
 
         return content;
     }
 
-    public void AddLine(string content = "", int? index = null, ConsoleColor? backgroundColor = null, bool truncationPreferRight = false)
+    public void AddLine(string content = "", int? index = null, ConsoleColor? backgroundColor = null,
+        bool truncationPreferRight = false)
     {
         CheckStringValid(content);
 
@@ -132,13 +128,9 @@ public class ConsoleWindow
             truncationPreferRight: truncationPreferRight);
 
         if (index == null)
-        {
             _renderQueue.Add(consoleLine);
-        }
         else
-        {
             _renderQueue.Insert(index.Value, consoleLine);
-        }
     }
 
     public void AddLinePattern(string pattern, int? amount = null)
@@ -217,7 +209,7 @@ public class ConsoleWindow
         Console.BackgroundColor = previousBackgroundColor;
 
         Console.Write(resultString[(leftAddedSpace + content.Length)..]);
-        
+
         // For some reason Console.Write() adds a newline SOMETIMES
         // The following lines undo that by forcing the console cursor to the expected position
         Console.CursorLeft = Math.Min(initialCursorLeft + leftAddedSpace + content.Length, Console.WindowWidth - 1);
@@ -285,8 +277,6 @@ public class ConsoleWindow
         }
     }
 
-    public delegate bool ValidityFunc<in T>(T input, out string? rePrompt);
-
     public int PopupPromptIntInput(string prompt, ValidityFunc<int>? validityFunc = null)
     {
         string? rePrompt = null;
@@ -296,10 +286,7 @@ public class ConsoleWindow
             string? customRePrompt = null;
             if (int.TryParse(textInput, out var input))
             {
-                if (validityFunc != null && !validityFunc(input, out customRePrompt))
-                {
-                    continue;
-                }
+                if (validityFunc != null && !validityFunc(input, out customRePrompt)) continue;
 
                 return input;
             }
@@ -311,32 +298,34 @@ public class ConsoleWindow
     private static ConsoleKeyInfo? ReadKey(int? waitForMs)
     {
         var timerElapsed = false;
-        System.Timers.Timer? timer = null;
+        Timer? timer = null;
         if (waitForMs != null)
         {
-            timer = new System.Timers.Timer(waitForMs.Value);
+            timer = new Timer(waitForMs.Value);
             timer.Elapsed += (_, _) => timerElapsed = true;
         }
-        
+
         timer?.Start();
         while (!timerElapsed && !Console.KeyAvailable)
         {
         }
+
         timer?.Stop();
         return Console.KeyAvailable ? Console.ReadKey(true) : null;
     }
 
     public ConsoleInput AwaitTextInput(params ConsoleKeyInfoBasic[] customExitConditions)
     {
-        return AwaitInput(waitForMs: null, outputText: true, customExitConditions: customExitConditions);
+        return AwaitInput(null, true, customExitConditions: customExitConditions);
     }
 
     public ConsoleInput AwaitKeyInput(int? waitForMs = null)
     {
-        return AwaitInput(waitForMs: waitForMs, keyPress: true);
+        return AwaitInput(waitForMs, keyPress: true);
     }
 
-    public ConsoleInput AwaitInput(int? waitForMs = null, bool outputText = false, bool keyPress = false, params ConsoleKeyInfoBasic[] customExitConditions)
+    public ConsoleInput AwaitInput(int? waitForMs = null, bool outputText = false, bool keyPress = false,
+        params ConsoleKeyInfoBasic[] customExitConditions)
     {
         var result = new ConsoleInput();
         var shouldBreak = false;
@@ -418,7 +407,8 @@ public class ConsoleWindow
         return result;
     }
 
-    public ConsoleInput RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false, params ConsoleKeyInfoBasic[] customExitConditions)
+    public ConsoleInput RenderAndAwaitTextInput(string prompt, bool keepRenderQueue = false,
+        params ConsoleKeyInfoBasic[] customExitConditions)
     {
         var previousRenderQueue = new List<ConsoleLine>(_renderQueue);
 
@@ -442,15 +432,9 @@ public class ConsoleWindow
 
         var processedMessageLines = new List<string>();
 
-        foreach (var line in messageLines)
-        {
-            processedMessageLines.AddRange(line.Split("\n"));
-        }
+        foreach (var line in messageLines) processedMessageLines.AddRange(line.Split("\n"));
 
-        foreach (var line in processedMessageLines)
-        {
-            AddLine(line);
-        }
+        foreach (var line in processedMessageLines) AddLine(line);
 
         AddLine("Press any key to continue");
         Render();

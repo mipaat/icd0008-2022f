@@ -1,15 +1,14 @@
 using DAL;
-using Domain;
+using Domain.Model;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersStates
-{
-    public class DeleteModel : DeleteModel<CheckersState>
-    {
-        protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
+namespace WebApp.Pages.CheckersStates;
 
-        public DeleteModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+public class DeleteModel : DeleteModel<CheckersState>
+{
+    public DeleteModel(IRepositoryContext ctx) : base(ctx)
+    {
     }
+
+    protected override IRepository<CheckersState> Repository => Ctx.CheckersStateRepository;
 }

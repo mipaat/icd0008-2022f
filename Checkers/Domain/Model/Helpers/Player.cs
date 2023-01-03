@@ -1,7 +1,6 @@
 ﻿using System.Text;
-using Common;
 
-namespace Domain;
+namespace Domain.Model.Helpers;
 
 public class Player
 {
@@ -21,6 +20,8 @@ public class Player
         _ => throw new UnknownPlayerColorException(Color)
     };
 
+    public int Id => GetId(Color);
+
     public bool IsAi => AiType != null;
 
     public string? Name => Color switch
@@ -29,6 +30,26 @@ public class Player
         EPlayerColor.White => CheckersGame.WhitePlayerName,
         _ => throw new UnknownPlayerColorException(Color)
     };
+
+    public static int GetId(EPlayerColor playerColor)
+    {
+        return playerColor switch
+        {
+            EPlayerColor.Black => 0,
+            EPlayerColor.White => 1,
+            _ => throw new UnknownPlayerColorException(playerColor)
+        };
+    }
+
+    public static EPlayerColor GetPlayerColor(int id)
+    {
+        return id switch
+        {
+            0 => EPlayerColor.Black,
+            1 => EPlayerColor.White,
+            _ => throw new ArgumentOutOfRangeException($"Argument {nameof(id)}: {id} out of range (0-1)!")
+        };
+    }
 
     public override string ToString()
     {

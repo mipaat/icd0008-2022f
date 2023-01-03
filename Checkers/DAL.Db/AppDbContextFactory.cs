@@ -5,10 +5,15 @@ namespace DAL.Db;
 
 public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
+    public AppDbContext CreateDbContext(string[] args)
+    {
+        return CreateDbContext();
+    }
+
     public static AppDbContext CreateDbContext()
     {
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        
+
         ConfigureOptions(optionsBuilder);
 
         return new AppDbContext(optionsBuilder.Options);
@@ -25,10 +30,5 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 
         Directory.CreateDirectory(sqliteRepoDirectory);
         optionsBuilder.UseSqlite("Data source=" + sqliteRepoDirectory + "Checkers.db");
-    }
-
-    public AppDbContext CreateDbContext(string[] args)
-    {
-        return CreateDbContext();
     }
 }

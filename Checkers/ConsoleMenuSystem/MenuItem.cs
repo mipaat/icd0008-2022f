@@ -4,9 +4,9 @@ namespace ConsoleMenuSystem;
 
 public class MenuItem
 {
-    public string Text;
     private readonly Func<Menu, MenuItem, EMenuFunction> _action;
     public CustomMenuItemCallback? CustomCallBack = null;
+    public string Text;
 
     public MenuItem(string text, Func<Menu, MenuItem, EMenuFunction> action)
     {

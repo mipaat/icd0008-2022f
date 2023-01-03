@@ -1,11 +1,11 @@
-using Common;
-using Domain;
+using Domain.Model.Helpers;
 
 namespace GameBrain.AI;
 
 public class CheckersAiMinMaxSimple : AbstractCheckersAiMinMax
 {
     public override EAiType AiType => EAiType.SimpleMinMax;
+
     protected override float GetGameStateHeuristic(CheckersBrain checkersBrain, EPlayerColor playerColor)
     {
         var pieceCounts = checkersBrain.PieceCounts;

@@ -1,6 +1,8 @@
 using DAL;
 using DAL.Db;
+using DAL.Filters;
 using Microsoft.EntityFrameworkCore;
+using WebApp.MyLibraries.ModelBinders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,11 +12,16 @@ using (var ctx = AppDbContextFactory.CreateDbContext())
 }
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddMvcOptions(options =>
+    {
+        options.ModelBinderProviders.Insert(0, new CustomModelBinderProvider<CompletionFilter>());
+        options.ModelBinderProviders.Insert(0, new CustomModelBinderProvider<AiTypeFilter>());
+    });
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddDbContext<AppDbContext>(AppDbContextFactory.ConfigureOptions);
-builder.Services.AddScoped<IRepositoryContext, DAL.Db.RepositoryContext>();
+builder.Services.AddScoped<IRepositoryContext, RepositoryContext>();
 
 var app = builder.Build();
 

@@ -1,30 +1,41 @@
-using Common;
 using DAL;
 using Domain;
+using Domain.Model;
+using Domain.Model.Helpers;
 using GameBrain;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.MyLibraries;
 using WebApp.MyLibraries.PageModels;
+using Timer = System.Timers.Timer;
 
 namespace WebApp.Pages.CheckersGames;
 
 public class Play : PageModelDb
 {
+    public Play(IRepositoryContext ctx) : base(ctx)
+    {
+    }
+
     public CheckersBrain Brain { get; set; } = default!;
     [BindProperty(SupportsGet = true)] public int? PlayerId { get; set; }
+    public int GetPlayerId => PlayerId ?? Brain.CurrentTurnPlayer.Id;
     public int GameId { get; set; }
 
     public Player Player => Brain.Player(PlayerColor);
+
     public EPlayerColor PlayerColor
     {
         get
         {
-            return PlayerId switch
+            if (PlayerId == null) return Brain.CurrentTurnPlayerColor;
+            try
             {
-                0 => EPlayerColor.Black,
-                1 => EPlayerColor.White,
-                _ => Brain.CurrentTurnPlayerColor
-            };
+                return Player.GetPlayerColor(PlayerId.Value);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return Brain.CurrentTurnPlayerColor;
+            }
         }
     }
 
@@ -41,6 +52,8 @@ public class Play : PageModelDb
     private RedirectToPageResult Reset =>
         RedirectToPage("", new { id = GameId, playerId = PlayerId });
 
+    public bool DrawResolutionExpected => Brain.DrawResolutionExpectedFrom(PlayerColor);
+
     public bool IsPieceMovable(int x, int y) // TODO: Check if piece actually has available moves
     {
         return !Brain.IsAiTurn && Brain.IsPieceMovable(PlayerColor, x, y);
@@ -51,8 +64,6 @@ public class Play : PageModelDb
         return !Brain.IsAiTurn && FromSet && Brain.IsMoveValid(PlayerColor, FromX!.Value, FromY!.Value, x, y);
     }
 
-    public bool DrawResolutionExpected => Brain.DrawResolutionExpected;
-
     private void SaveGame()
     {
         Ctx.CheckersGameRepository.Upsert(Brain.CheckersGame);
@@ -60,10 +71,7 @@ public class Play : PageModelDb
 
     private CheckersGame GetCheckersGameById(int? id)
     {
-        if (id == null)
-        {
-            throw new PageException("NULL is not a valid game ID!");
-        }
+        if (id == null) throw new PageException("NULL is not a valid game ID!");
 
         CheckersGame? game;
         try
@@ -75,15 +83,10 @@ public class Play : PageModelDb
             throw new PageException($"Game with ID {id.Value} appears to be corrupted!");
         }
 
-        if (game == null)
-        {
-            throw new PageException($"No game with ID {id.Value} found!");
-        }
+        if (game == null) throw new PageException($"No game with ID {id.Value} found!");
 
         if (game.CheckersRuleset == null || game.CurrentCheckersState == null)
-        {
             throw new PageException($"Failed to load game with ID {id.Value}!");
-        }
 
         return game;
     }
@@ -91,7 +94,7 @@ public class Play : PageModelDb
     private void InitializeProperties(int? id)
     {
         var game = GetCheckersGameById(id);
-        
+
         game.CurrentCheckersState!.DeserializeGamePieces();
 
         GameId = id!.Value;
@@ -101,14 +104,11 @@ public class Play : PageModelDb
     private IActionResult MakeAiMove()
     {
         var aiColor = Brain.CurrentTurnPlayerColor;
-        var timer = new System.Timers.Timer(1000);
+        var timer = new Timer(1000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
         timer.Start();
-        while (Brain.CurrentTurnPlayerColor == aiColor)
-        {
-            Brain.MoveAi();
-        }
+        while (Brain.CurrentTurnPlayerColor == aiColor) Brain.MoveAi();
 
         while (!timerElapsed)
         {
@@ -139,7 +139,7 @@ public class Play : PageModelDb
     }
 
     public IActionResult OnGet(int? id, bool endTurn = false, bool aiMoveAllowed = false,
-        bool forfeit = false, bool proposeDraw = false, bool? acceptDraw = null)
+        bool forfeit = false, bool proposeDraw = false, bool? acceptDraw = null, int? drawProposerPlayerId = null)
     {
         try
         {
@@ -167,25 +167,15 @@ public class Play : PageModelDb
         if (acceptDraw != null && DrawResolutionExpected)
         {
             if (acceptDraw.Value)
-            {
                 Brain.AcceptDraw(PlayerColor);
-            }
             else
-            {
                 Brain.RejectDraw(PlayerColor);
-            }
             SaveGame();
         }
 
-        if (Brain.Ended)
-        {
-            return RedirectToPage("./Ended", new { Id = GameId, PlayerId });
-        }
+        if (Brain.Ended) return RedirectToPage("./Ended", new { Id = GameId, PlayerId });
 
-        if (Brain.IsAiTurn)
-        {
-            return aiMoveAllowed ? MakeAiMove() : Page();
-        }
+        if (Brain.IsAiTurn) return aiMoveAllowed ? MakeAiMove() : Page();
 
         if (endTurn && Brain.EndTurnAllowed && PlayerColor ==
             Brain[Brain.LastMovedToX!.Value, Brain.LastMovedToY!.Value]?.Player)
@@ -195,20 +185,10 @@ public class Play : PageModelDb
             return Reset;
         }
 
-        if (FromSet && !IsPieceMovable(FromX!.Value, FromY!.Value))
-        {
-            return Reset;
-        }
+        if (FromSet && !IsPieceMovable(FromX!.Value, FromY!.Value)) return Reset;
 
-        if (FromSet && ToSet)
-        {
-            return MakeMove();
-        }
+        if (FromSet && ToSet) return MakeMove();
 
         return Page();
-    }
-
-    public Play(IRepositoryContext ctx) : base(ctx)
-    {
     }
 }

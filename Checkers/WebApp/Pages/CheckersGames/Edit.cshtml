@@ -1,6 +1,5 @@
 @page
 @using WebApp.MyLibraries
-@using Common
 @model WebApp.Pages.CheckersGames.EditModel
 
 @{
@@ -27,17 +26,17 @@
             </div>
             <div class="form-group">
                 <label asp-for="Entity.WhiteAiType" class="control-label"></label>
-                <select asp-for="Entity.WhiteAiType" class="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.Entity.WhiteAiType)"></select>
+                <select asp-for="Entity.WhiteAiType" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.Entity.WhiteAiType)"></select>
                 <span asp-validation-for="Entity.WhiteAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.BlackAiType" class="control-label"></label>
-                <select asp-for="Entity.BlackAiType" class="form-control" asp-items="@Utils.AiTypeOptionsSelected(Model.Entity.BlackAiType)"></select>
+                <select asp-for="Entity.BlackAiType" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.Entity.BlackAiType)"></select>
                 <span asp-validation-for="Entity.BlackAiType" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.CheckersRuleset" class="control-label"></label>
-                <input asp-for="Entity.CheckersRuleset" class="form-control" readonly value="@(Model.Entity.CheckersRuleset!.Id + " - " + @Model.Entity.CheckersRuleset?.TitleText)"/>
+                <input asp-for="Entity.CheckersRuleset" class="form-control" readonly value="@(Model.Entity.CheckersRuleset!.Id + " - " + Model.Entity.CheckersRuleset?.TitleText)"/>
                 <span asp-validation-for="Entity.CheckersRuleset" class="text-danger"></span>
             </div>
             <div class="form-group d-none">
@@ -57,12 +56,12 @@
             </div>
             <div class="form-group">
                 <label asp-for="Entity.Winner" class="control-label"></label>
-                <select asp-for="Entity.Winner" class="form-control" asp-items="@Utils.PlayerColorOptions(Model.Entity.DrawProposedBy)"></select>
+                <select asp-for="Entity.Winner" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.Entity.Winner)"></select>
                 <span asp-validation-for="Entity.Winner" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.DrawProposedBy" class="control-label"></label>
-                <select asp-for="Entity.DrawProposedBy" class="form-control" asp-items="@Utils.PlayerColorOptions(Model.Entity.DrawProposedBy)"></select>
+                <select asp-for="Entity.DrawProposedBy" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.Entity.DrawProposedBy)"></select>
                 <span asp-validation-for="Entity.DrawProposedBy" class="text-danger"></span>
             </div>
             <input type="hidden" asp-for="Entity.Id"/>

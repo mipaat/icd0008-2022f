@@ -1,9 +1,8 @@
 @page
-@using Domain
-@using Microsoft.AspNetCore.Html
+@using Domain.Model.Helpers
 @using GameBrain
-@using Common
-@model WebApp.Pages.CheckersGames.Play
+@using Microsoft.AspNetCore.Html
+@model Play
 
 @if (Model.DrawResolutionExpected)
 {
@@ -63,10 +62,7 @@
         {
             <form method="GET" action="">
                 <input value="@Model.GameId" name="id" type="hidden">
-                @if (Model.PlayerId != null)
-                {
-                    <input value="@Model.PlayerId" name="playerId" type="hidden">
-                }
+                <input value="@Model.GetPlayerId" name="drawProposerPlayerId" type="hidden">
                 <input value="@(true.ToString())" name="proposeDraw" type="hidden">
                 <button type="submit" class="btn btn-primary">Propose Draw</button>
             </form>
@@ -173,7 +169,7 @@
         return Model.FromSet && Model.FromX == x && Model.FromY == y;
     }
 
-    String PlayerNameDisplay()
+    string PlayerNameDisplay()
     {
         return $"You are: {Model.PlayerColor}" + (Model.Player.Name is {Length: > 0 } ? $" ({Model.Player.Name})" : "");
     }

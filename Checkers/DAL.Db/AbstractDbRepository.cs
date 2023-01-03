@@ -1,4 +1,5 @@
 using Common;
+using DAL.Filters;
 using Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,7 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 {
     protected readonly AppDbContext DbContext;
     protected readonly IRepositoryContext RepositoryContext;
-    protected ICollection<Action<T>> PreSaveActions { get; }
-    protected ICollection<Action<T>> PreFetchActions { get; }
+    private bool _asNoTracking;
 
     protected AbstractDbRepository(AppDbContext dbContext, IRepositoryContext repoContext)
     {
@@ -19,22 +19,89 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         PreFetchActions = new List<Action<T>>();
     }
 
+    protected ICollection<Action<T>> PreSaveActions { get; }
+    protected ICollection<Action<T>> PreFetchActions { get; }
+
+    protected abstract DbSet<T> ThisDbSet { get; }
+    protected IQueryable<T> Queryable => _asNoTracking ? ThisDbSet.AsNoTracking() : ThisDbSet;
+
+    public virtual ICollection<T> GetAll(params FilterFunc<T>[] filters)
+    {
+        return RunPreFetchActions(RunFilters(Queryable, filters)).ToList();
+    }
+
+    public virtual T? GetById(int id)
+    {
+        var entity = Queryable.FirstOrDefault(t => id.Equals(t.Id));
+        return entity == null ? entity : RunPreFetchActions(entity);
+    }
+
+    public virtual void Add(T entity)
+    {
+        if (Exists(entity.Id))
+            throw new ArgumentException(
+                $"Can't add entity {typeof(T).Name} with ID {entity.Id} - ID already exists!");
+        ThisDbSet.Add(RunPreSaveActions(entity));
+        DbContext.SaveChanges();
+    }
+
+    public void Update(T entity)
+    {
+        if (!Exists(entity.Id))
+            throw new ArgumentException($"Can't update entity {typeof(T).Name} with ID {entity.Id} - ID not found!");
+        ThisDbSet.Update(RunPreSaveActions(entity));
+        DbContext.SaveChanges();
+    }
+
+    public virtual void Upsert(T entity)
+    {
+        if (Exists(entity.Id))
+            Update(entity);
+        else
+            Add(entity);
+    }
+
+    public T? Remove(int id)
+    {
+        var entity = GetById(id);
+        return entity == null ? entity : Remove(entity);
+    }
+
+    public virtual T Remove(T entity)
+    {
+        var removedEntity = ThisDbSet.Remove(RunPreSaveActions(entity)).Entity;
+        DbContext.SaveChanges();
+        return removedEntity;
+    }
+
+    public bool Exists(int id)
+    {
+        return Queryable.Any(t => id.Equals(t.Id));
+    }
+
+    public void Refresh(T entity)
+    {
+        var previousAsNoTracking = _asNoTracking;
+        _asNoTracking = true;
+        var fetchedEntity = GetById(entity.Id);
+        if (fetchedEntity == null)
+            throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
+        entity.Refresh(fetchedEntity);
+        _asNoTracking = previousAsNoTracking;
+    }
+
+    public Type EntityType => typeof(T);
+
     private static T RunActions(T entity, IEnumerable<Action<T>> actions)
     {
-        foreach (var action in actions)
-        {
-            action(entity);
-        }
+        foreach (var action in actions) action(entity);
 
         return entity;
     }
 
     private static void RunActions(IEnumerable<T> entities, ICollection<Action<T>> actions)
     {
-        foreach (var entity in entities)
-        {
-            RunActions(entity, actions);
-        }
+        foreach (var entity in entities) RunActions(entity, actions);
     }
 
     private T RunPreSaveActions(T entity)
@@ -59,72 +126,10 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return entities;
     }
 
-    protected abstract DbSet<T> ThisDbSet { get; }
-
-    public virtual ICollection<T> GetAll()
+    protected IQueryable<T> RunFilters(IQueryable<T> queryable, params FilterFunc<T>[] filters)
     {
-        return RunPreFetchActions(ThisDbSet).ToList();
-    }
+        foreach (var filter in filters) queryable = filter(queryable);
 
-    public virtual T? GetById(int id)
-    {
-        var entity = ThisDbSet.FirstOrDefault(t => id.Equals(t.Id));
-        return entity == null ? entity : RunPreFetchActions(entity);
+        return queryable;
     }
-
-    public virtual void Add(T entity)
-    {
-        if (Exists(entity.Id))
-            throw new ArgumentException(
-                $"Can't add entity {typeof(T).Name} with ID {entity.Id} - ID already exists!");
-        ThisDbSet.Add(RunPreSaveActions(entity));
-        DbContext.SaveChanges();
-    }
-
-    public void Update(T entity)
-    {
-        if (!Exists(entity.Id))
-            throw new ArgumentException($"Can't update entity {typeof(T).Name} with ID {entity.Id} - ID not found!");
-        ThisDbSet.Update(RunPreSaveActions(entity));
-        DbContext.SaveChanges();
-    }
-
-    public virtual void Upsert(T entity)
-    {
-        if (Exists(entity.Id))
-        {
-            Update(entity);
-        }
-        else
-        {
-            Add(entity);
-        }
-    }
-
-    public T? Remove(int id)
-    {
-        var entity = GetById(id);
-        return entity == null ? entity : Remove(entity);
-    }
-
-    public virtual T Remove(T entity)
-    {
-        var removedEntity = ThisDbSet.Remove(RunPreSaveActions(entity)).Entity;
-        DbContext.SaveChanges();
-        return removedEntity;
-    }
-
-    public bool Exists(int id)
-    {
-        return ThisDbSet.Any(t => id.Equals(t.Id));
-    }
-
-    public void Refresh(T entity)
-    {
-        var fetchedEntity = GetById(entity.Id);
-        if (fetchedEntity == null) throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
-        entity.Refresh(fetchedEntity);
-    }
-
-    public Type EntityType => typeof(T);
 }

@@ -1,13 +1,16 @@
 using System.Text;
 
-namespace Domain;
+namespace Domain.Model;
 
 public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
 {
+    private const int MinDimension = 4;
+    private int _height = 8;
+
+    private string? _title;
+    private int _width = 8;
     public bool BuiltIn { get; init; }
     public bool Saved { get; init; } = true;
-    private int _width = 8;
-    private int _height = 8;
 
     public int Width
     {
@@ -31,7 +34,6 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
         }
     }
 
-    private string? _title;
     public string? Title
     {
         get => _title;
@@ -52,7 +54,10 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
     public bool CanCaptureBackwardsDuringMultiCapture { get; set; }
     public bool FlyingKings { get; set; }
 
-    private const int MinDimension = 4;
+    public object Clone()
+    {
+        return GetClone();
+    }
 
     public static bool IsDimensionValid(int dimension)
     {
@@ -93,14 +98,10 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
             contents.Add(dimensionsString);
         if (!MustCapture) contents.Add("Captures not required");
         if (CanCaptureBackwards)
-        {
             contents.Add("Backwards captures");
-        } else if (CanCaptureBackwardsDuringMultiCapture)
-        {
-            contents.Add("Backwards during multi-capture");
-        }
+        else if (CanCaptureBackwardsDuringMultiCapture) contents.Add("Backwards during multi-capture");
         if (FlyingKings) contents.Add("Flying Kings");
-        
+
         if (contents.Count > 0) outerContents.Add(string.Join(", ", contents));
         result.AppendJoin(" - ", outerContents);
         return result.ToString();
@@ -122,11 +123,6 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
             Title = Title,
             Description = Description
         };
-    }
-
-    public object Clone()
-    {
-        return GetClone();
     }
 
     public void UpdateLastModified()

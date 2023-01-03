@@ -1,4 +1,5 @@
-using Domain;
+using DAL.Filters;
+using Domain.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Db;
@@ -10,36 +11,35 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
         PreSaveActions.Add(cg =>
         {
             if (cg.CheckersStates == null) return;
-            foreach (var checkersState in cg.CheckersStates)
-            {
-                checkersState.SerializeGamePieces();
-            }
+            foreach (var checkersState in cg.CheckersStates) checkersState.SerializeGamePieces();
         });
         PreFetchActions.Add(cg =>
         {
-            foreach (var checkersState in cg.AssertSufficientCheckersStates())
-            {
-                checkersState.DeserializeGamePieces();
-            }
+            foreach (var checkersState in cg.AssertSufficientCheckersStates()) checkersState.DeserializeGamePieces();
         });
     }
 
-    public override ICollection<CheckersGame> GetAll()
+    protected override DbSet<CheckersGame> ThisDbSet => DbContext.CheckersGames;
+
+    public override ICollection<CheckersGame> GetAll(
+        params FilterFunc<CheckersGame>[] filters)
     {
-        return GetAll(false);
+        return GetAll(false, filters);
     }
 
-    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates)
+    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates,
+        params FilterFunc<CheckersGame>[] filters)
     {
         var checkersStatesIncluded = includeAllCheckersStates
-            ? ThisDbSet.Include(cg => cg.CheckersStates)!
-            : ThisDbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
-        return RunPreFetchActions(checkersStatesIncluded
-                .Include(cg => cg.CheckersRuleset)
-                .ToList()
-            )
-            .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
-            .ToList();
+            ? Queryable.Include(cg => cg.CheckersStates)!
+            : Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
+        return
+            RunPreFetchActions(RunFilters(checkersStatesIncluded
+                        .Include(cg => cg.CheckersRuleset), filters)
+                    .ToList()
+                )
+                .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
+                .ToList();
     }
 
     public override CheckersGame? GetById(int id)
@@ -49,27 +49,22 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
 
     public CheckersGame? GetById(int id, bool includeAllCheckersStates)
     {
-        var dbSet = ThisDbSet;
         var checkersStatesIncluded = includeAllCheckersStates
-            ? dbSet.Include(cg => cg.CheckersStates)!
-            : dbSet.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
+            ? Queryable.Include(cg => cg.CheckersStates)!
+            : Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
         var entity = checkersStatesIncluded
             .Include(cg => cg.CheckersRuleset)
             .FirstOrDefault(cg => id.Equals(cg.Id));
         return entity == null ? entity : RunPreFetchActions(entity);
     }
 
-    protected override DbSet<CheckersGame> ThisDbSet => DbContext.CheckersGames;
-
     public override CheckersGame Remove(CheckersGame entity)
     {
         var removedEntity = base.Remove(entity);
 
         foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
-        {
             RepositoryContext.CheckersStateRepository.Remove(checkersState);
-        }
-        
+
         RepositoryContext.CheckersRulesetRepository.Remove(removedEntity.CheckersRulesetId);
         return removedEntity;
     }

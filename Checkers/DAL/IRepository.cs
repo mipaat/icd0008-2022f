@@ -1,3 +1,4 @@
+using DAL.Filters;
 using Domain;
 
 namespace DAL;
@@ -10,7 +11,7 @@ public interface IRepository
 public interface IRepository<T> : IRepository
     where T : class, IDatabaseEntity, new()
 {
-    ICollection<T> GetAll();
+    ICollection<T> GetAll(params FilterFunc<T>[] filters);
 
     T? GetById(int id);
 

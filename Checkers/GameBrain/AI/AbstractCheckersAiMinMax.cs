@@ -1,5 +1,4 @@
-using Common;
-using Domain;
+using Domain.Model.Helpers;
 using Timer = System.Timers.Timer;
 
 namespace GameBrain.AI;
@@ -8,6 +7,15 @@ internal delegate float GameStateHeuristicFunc(CheckersBrain checkersBrain, EPla
 
 internal class HeuristicMove : IComparable<HeuristicMove>
 {
+    private readonly GameStateHeuristicFunc _gameStateHeuristicFunc;
+    private readonly EPlayerColor _playerColor;
+    private readonly CheckersBrain _resultingCheckersBrain;
+
+    public readonly Move Move;
+    private List<HeuristicMove>? _children;
+    private float? _gameStateHeuristic;
+    private bool _nextLevelCalculated;
+
     private HeuristicMove(Move move, CheckersBrain resultingCheckersBrain,
         GameStateHeuristicFunc gameStateHeuristicFunc,
         EPlayerColor playerColor)
@@ -17,15 +25,6 @@ internal class HeuristicMove : IComparable<HeuristicMove>
         _gameStateHeuristicFunc = gameStateHeuristicFunc;
         _playerColor = playerColor;
     }
-
-    public readonly Move Move;
-    private readonly CheckersBrain _resultingCheckersBrain;
-    private List<HeuristicMove>? _children;
-    private bool _nextLevelCalculated;
-    private readonly EPlayerColor _playerColor;
-
-    private readonly GameStateHeuristicFunc _gameStateHeuristicFunc;
-    private float? _gameStateHeuristic;
 
     private float GameStateHeuristic
     {
@@ -43,9 +42,7 @@ internal class HeuristicMove : IComparable<HeuristicMove>
         get
         {
             if (IsEndState || _children == null || _children.Count == 0 || !_nextLevelCalculated)
-            {
                 return GameStateHeuristic;
-            }
 
             return _playerColor == _resultingCheckersBrain[Move.ToX, Move.ToY]!.Value.Player
                 ? _children!.Max(move => move.Heuristic)
@@ -80,7 +77,8 @@ internal class HeuristicMove : IComparable<HeuristicMove>
         }
 
         CheckTimeout(ref timeoutException);
-        _children = GetHeuristicMoves(_resultingCheckersBrain, _gameStateHeuristicFunc, _playerColor, ref timeoutException);
+        _children = GetHeuristicMoves(_resultingCheckersBrain, _gameStateHeuristicFunc, _playerColor,
+            ref timeoutException);
         finished = true;
         foreach (var heuristicMove in _children)
         {
@@ -154,9 +152,7 @@ public abstract class AbstractCheckersAiMinMax : AbstractCheckersAi
             {
                 var depthReached = true;
                 foreach (var heuristicMove in availableHeuristicMoves)
-                {
                     depthReached = depthReached && heuristicMove.CalculateNextLevel(ref timeoutException);
-                }
 
                 finished = depthReached;
             }

@@ -1,23 +1,17 @@
-﻿using Common;
-using ConsoleMenuSystem;
+﻿using ConsoleMenuSystem;
 using ConsoleUI;
 using DAL;
+using DAL.Filters;
 using Domain;
+using Domain.Model;
+using Domain.Model.Helpers;
 using GameBrain;
 
 namespace ConsoleClient;
 
 public class MainMenuCreator
 {
-    private MenuFactory MainMenuFactory { get; }
-    private List<IRepositoryContext> RepositoryContexts { get; }
     private int _repoCtxIndex;
-    private IRepositoryContext RepoCtx => RepositoryContexts[_repoCtxIndex];
-    private int NextRepoCtxIndex => (_repoCtxIndex + 1) % RepositoryContexts.Count;
-    private IRepositoryContext NextRepoCtx => RepositoryContexts[NextRepoCtxIndex];
-
-    private CheckersRuleset? SelectedCheckersRuleset { get; set; }
-    private CheckersGame? SelectedCheckersGame { get; set; }
 
     public MainMenuCreator(params IRepositoryContext[] repositoryContexts)
     {
@@ -29,6 +23,17 @@ public class MainMenuCreator
             new MenuItem("Load game", CreateLoadGameMenuFactory()),
             new MenuItem("Options", CreateOptionsMenuFactory()));
     }
+
+    private MenuFactory MainMenuFactory { get; }
+    private List<IRepositoryContext> RepositoryContexts { get; }
+    private IRepositoryContext RepoCtx => RepositoryContexts[_repoCtxIndex];
+    private int NextRepoCtxIndex => (_repoCtxIndex + 1) % RepositoryContexts.Count;
+    private IRepositoryContext NextRepoCtx => RepositoryContexts[NextRepoCtxIndex];
+
+    private CheckersRuleset? SelectedCheckersRuleset { get; set; }
+    private CheckersGame? SelectedCheckersGame { get; set; }
+
+    private string RepoChangeText => $"Change persistence engine? ({RepoCtx.Name} => {NextRepoCtx.Name})";
 
     private MenuFactory CreateNewGameMenuFactory()
     {
@@ -50,13 +55,11 @@ public class MainMenuCreator
             // When selected, a MenuItem from this list will create and run a new ConsoleGame using its CheckersRuleset
             var checkersRulesetItems = new List<MenuItem>();
             foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
-            {
                 checkersRulesetItems.Add(new MenuItem(checkersRuleset.ToString(), m =>
                 {
                     SelectedCheckersRuleset = checkersRuleset;
                     return RunConsoleGame(m);
                 }));
-            }
 
             checkersRulesetItems.Add(customBoardSize);
 
@@ -66,43 +69,41 @@ public class MainMenuCreator
 
     private MenuFactory CreateLoadGameMenuFactory()
     {
-        var completionFilter = EnumUtils.GetValue(EnumUtils.GetDefaultValue<ECompletionFilter>());
+        var completionFilter = CompletionFilter.Default;
+        var aiTypeFilter = AiTypeFilter.Default;
         return new MenuFactory("Load game",
-            _ => GetCheckersGameMenuItems(EnumUtils.GetEnum<ECompletionFilter>(completionFilter)))
+            _ => GetCheckersGameMenuItems(completionFilter, aiTypeFilter))
         {
             CustomHeaderFunc = () =>
-                $"Press DELETE to delete. Filtering: {EnumUtils.GetDisplayString<ECompletionFilter>(completionFilter)} (Change with C)",
+                $"Press DELETE to delete. Filters: [C] Completion: {completionFilter}, [A] Ai: {aiTypeFilter}",
             CustomBehaviour = (ConsoleInput input, Menu menu, ref List<MenuItem>? _) =>
             {
                 if (input is { KeyInfo.Key: ConsoleKey.C })
                 {
-                    completionFilter = GetSelectedEnum<ECompletionFilter>(menu.ConsoleWindow, menu,
-                        "Select filtering mode:",
+                    completionFilter = menu.GetSelectedItem(CompletionFilter.Values, "Select filtering mode:",
                         completionFilter);
+                    menu.ClearMenuItemsCache();
+                }
+                else if (input is { KeyInfo.Key: ConsoleKey.A })
+                {
+                    aiTypeFilter = menu.GetSelectedItem(AiTypeFilter.Values, "Select AI filtering mode:", aiTypeFilter);
                     menu.ClearMenuItemsCache();
                 }
             }
         };
     }
 
-    private List<MenuItem> GetCheckersGameMenuItems(ECompletionFilter? completionFilter)
+    private List<MenuItem> GetCheckersGameMenuItems(params IFilter<CheckersGame>[] filters)
     {
-        var checkersGames = RepoCtx.CheckersGameRepository.GetAll();
-        return completionFilter switch
-        {
-            ECompletionFilter.All => GetCheckersGameMenuItems(checkersGames),
-            ECompletionFilter.Ongoing => GetCheckersGameMenuItems(checkersGames.Where(cg => !cg.Ended)),
-            ECompletionFilter.Finished => GetCheckersGameMenuItems(checkersGames.Where(cg => cg.Ended)),
-            ECompletionFilter.Tied => GetCheckersGameMenuItems(checkersGames.Where(cg => cg.Tied)),
-            _ => GetCheckersGameMenuItems(checkersGames.Where(cg => !cg.Ended))
-        };
+        var checkersGames =
+            RepoCtx.CheckersGameRepository.GetAll(filters.Select(filter => filter.FilterFunc).ToArray());
+        return GetCheckersGameMenuItems(checkersGames);
     }
 
     private List<MenuItem> GetCheckersGameMenuItems(IEnumerable<CheckersGame> checkersGames)
     {
         var result = new List<MenuItem>();
         foreach (var checkersGame in checkersGames)
-        {
             result.Add(new MenuItem(
                     GetCheckersGameText(checkersGame),
                     m =>
@@ -112,7 +113,6 @@ public class MainMenuCreator
                     }
                 )
                 { CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersGame) });
-        }
 
         return result;
     }
@@ -130,7 +130,7 @@ public class MainMenuCreator
         var contents = new List<string>
         {
             checkersGame.Id.ToString(),
-            GetPlayerText(checkersGame.BlackPlayer) + " VS " + GetPlayerText(checkersGame.WhitePlayer),
+            GetPlayerText(checkersGame.BlackPlayer) + " VS " + GetPlayerText(checkersGame.WhitePlayer)
         };
 
         if (checkersGame.Tied)
@@ -150,53 +150,6 @@ public class MainMenuCreator
         }
 
         return string.Join(" | ", contents);
-    }
-
-    private static int GetSelectedEnum<T>(ConsoleWindow window, Menu? parentMenu, string prompt,
-        int selectedValue) where T : struct, Enum
-    {
-        return GetSelectedEnum<T, T>(window, parentMenu, prompt, selectedValue);
-    }
-
-    private static int GetSelectedEnum<T, TE>(ConsoleWindow window, Menu? parentMenu, string prompt, int selectedValue)
-        where T : struct, Enum where TE : struct, Enum
-    {
-        var menuItems = new List<MenuItem>();
-
-        var result = selectedValue;
-        MenuItem? selected = null;
-        foreach (var value in EnumUtils.GetValues<T, TE>())
-        {
-            string displayString;
-            if (EnumUtils.TryGetEnum(value, out T? oEnum))
-            {
-                displayString = EnumUtils.GetDisplayString(oEnum!.Value);
-            }
-            else if (EnumUtils.TryGetEnum(value, out TE? eEnum))
-            {
-                displayString = EnumUtils.GetDisplayString(eEnum!.Value);
-            }
-            else
-                throw new IllegalStateException(
-                    $"Failed to get Enums of type {typeof(T)} or {typeof(TE)} from {value}!");
-
-            var menuItem = new MenuItem(displayString, () =>
-            {
-                result = value;
-                return EMenuFunction.Back;
-            });
-            menuItems.Add(menuItem);
-            if (result == value) selected = menuItem;
-        }
-
-        var menuFactory = new MenuFactory(prompt, menuItems.ToArray())
-        {
-            AppendDefaultMenuItems = false
-        };
-        var menu = menuFactory.Create(window, parentMenu);
-        if (selected != null) menu.CursorPosition = menu.MenuItems.IndexOf(selected);
-        menu.Run();
-        return result;
     }
 
     private static bool ConfirmDelete(ConsoleWindow consoleWindow, Menu? parentMenu,
@@ -363,10 +316,7 @@ public class MainMenuCreator
         return new MenuFactory("Options", _ =>
         {
             var result = new List<MenuItem> { new("Manage Checkers rulesets", manageCheckersRulesetsMenuFactory) };
-            if (RepositoryContexts.Count > 1)
-            {
-                result.Add(swapPersistenceEngine);
-            }
+            if (RepositoryContexts.Count > 1) result.Add(swapPersistenceEngine);
 
             return result;
         });
@@ -396,7 +346,7 @@ public class MainMenuCreator
             })
         };
 
-        var selectPlayModeMenuFactory = new MenuFactory($"Select playing mode", _ => menuItems)
+        var selectPlayModeMenuFactory = new MenuFactory("Select playing mode", _ => menuItems)
         {
             IsExitable = false,
             AppendDefaultMenuItems = false
@@ -406,28 +356,9 @@ public class MainMenuCreator
         return result;
     }
 
-    private static EAiType? GetPlayerType(string playerIdentifier, Menu parentMenu)
+    private static EAiType? GetPlayerType(string playerIdentifier, Menu menu)
     {
-        EAiType? result = null;
-        var menuItems = new List<MenuItem> { new("Player", EMenuFunction.Exit) };
-        foreach (var enumValue in Enum.GetValues(typeof(EAiType)))
-        {
-            menuItems.Add(new MenuItem(enumValue.ToString() ?? "???", _ =>
-            {
-                result = (EAiType)enumValue;
-                return EMenuFunction.Exit;
-            }));
-        }
-
-        var selectAiMenuFactory = new MenuFactory(
-            $"Select {playerIdentifier} type", _ => menuItems)
-        {
-            IsExitable = false,
-            AppendDefaultMenuItems = false
-        };
-        var selectAiMenu = selectAiMenuFactory.Create(parentMenu.ConsoleWindow, parentMenu);
-        selectAiMenu.Run();
-        return result;
+        return menu.GetSelectedEnumNullable<EAiType>($"Select {playerIdentifier} type", null, "Player");
     }
 
     private CustomMenuItemCallback GetDeleteDbEntityMenuItemCallback<T>(T entity)
@@ -458,7 +389,7 @@ public class MainMenuCreator
         };
     }
 
-    EMenuFunction RunConsoleGame(Menu menu)
+    private EMenuFunction RunConsoleGame(Menu menu)
     {
         try
         {
@@ -509,8 +440,6 @@ public class MainMenuCreator
     {
         _repoCtxIndex = NextRepoCtxIndex;
     }
-
-    private string RepoChangeText => $"Change persistence engine? ({RepoCtx.Name} => {NextRepoCtx.Name})";
 
     public Menu CreateMainMenu(ConsoleWindow? window)
     {

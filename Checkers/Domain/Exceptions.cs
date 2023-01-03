@@ -1,11 +1,12 @@
-using Common;
+using Domain.Model;
+using Domain.Model.Helpers;
 
 namespace Domain;
 
 public class InsufficientCheckersStatesException : ArgumentException
 {
     private readonly CheckersGame _checkersGame;
-    
+
     public InsufficientCheckersStatesException(CheckersGame checkersGame)
     {
         _checkersGame = checkersGame;
@@ -22,7 +23,6 @@ public class InsufficientCheckersStatesException : ArgumentException
         }
     }
 }
-
 
 public class UnknownPlayerColorException : ArgumentException
 {

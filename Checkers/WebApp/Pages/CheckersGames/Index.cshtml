@@ -1,9 +1,9 @@
 @page
-@using Domain
+@using DAL.Filters
+@using Domain.Model
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using WebApp.MyLibraries
-@using Common
-@model WebApp.Pages.CheckersGames.IndexModel
+@model IndexModel
 
 @{
     ViewData["Title"] = "Index";
@@ -12,6 +12,10 @@
 <h1>Index</h1>
 
 <form method="GET" class="d-flex gap-4">
+    @{
+        const string completionFilter = nameof(Model.CompletionFilter);
+        const string aiTypeFilter = nameof(Model.AiTypeFilter);
+    }
     <div>
         <label for="playerNameQuery">Search by player name</label><br/>
         <input id="playerNameQuery" type="search" name="playerNameQuery" value="@Model.PlayerNameQuery"/>
@@ -23,13 +27,13 @@
         <button type="submit">Search</button>
     </div>
     <div>
-        <label for="aiQuery">Search by AI</label><br/>
-        <select id="aiQuery" asp-items="@Utils.EnumOptions<EAiTypeExtended, EAiType>(Model.AiQuery)" name="aiQuery"></select>
+        <label for="@aiTypeFilter">Search by AI</label><br/>
+        <select id="@aiTypeFilter" asp-items="@Utils.GetSelectOptions(AiTypeFilter.Values, Model.AiTypeFilter)" name="@aiTypeFilter"></select>
         <button type="submit">Filter</button>
     </div>
     <div>
-        <label for="completionFilter">Filter by completion</label><br/>
-        <select id="completionFilter" asp-items="@Utils.EnumOptions(Model.CompletionFilter)" name="completionFilter"></select>
+        <label for="@completionFilter">Filter by completion</label><br/>
+        <select id="@completionFilter" asp-items="@Utils.GetSelectOptions(CompletionFilter.Values, Model.CompletionFilter)" name="@completionFilter"></select>
         <button type="submit">Filter</button>
     </div>
 </form>
@@ -86,10 +90,10 @@
                 @Html.DisplayFor(modelItem => item.Id)
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayerName">@item.WhitePlayerName</a>
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayer.Id">@item.WhitePlayerName</a>
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayerName">@item.BlackPlayerName</a>
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayer.Id">@item.BlackPlayerName</a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WhiteAiType)

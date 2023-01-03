@@ -1,5 +1,4 @@
-﻿using Common;
-using Domain;
+﻿using Domain.Model.Helpers;
 
 namespace GameBrain.AI;
 

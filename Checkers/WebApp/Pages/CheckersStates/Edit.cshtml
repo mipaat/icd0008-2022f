@@ -8,7 +8,7 @@
 <h1>Edit</h1>
 
 <h4>CheckersState</h4>
-<hr />
+<hr/>
 <div class="row">
     <div class="col-md-4">
         <form method="post">
@@ -20,42 +20,42 @@
             </div>
             <div class="form-group">
                 <label asp-for="Entity.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)</label>
-                <input asp-for="Entity.CreatedAt" class="form-control" />
+                <input asp-for="Entity.CreatedAt" class="form-control"/>
                 <span asp-validation-for="Entity.CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.SerializedGamePieces" class="control-label"></label>
-                <input asp-for="Entity.SerializedGamePieces" class="form-control" />
+                <input asp-for="Entity.SerializedGamePieces" class="form-control"/>
                 <span asp-validation-for="Entity.SerializedGamePieces" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.WhiteMoves" class="control-label"></label>
-                <input asp-for="Entity.WhiteMoves" class="form-control" />
+                <input asp-for="Entity.WhiteMoves" class="form-control"/>
                 <span asp-validation-for="Entity.WhiteMoves" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.BlackMoves" class="control-label"></label>
-                <input asp-for="Entity.BlackMoves" class="form-control" />
+                <input asp-for="Entity.BlackMoves" class="form-control"/>
                 <span asp-validation-for="Entity.BlackMoves" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.LastMovedToX" class="control-label"></label>
-                <input asp-for="Entity.LastMovedToX" class="form-control" />
+                <input asp-for="Entity.LastMovedToX" class="form-control"/>
                 <span asp-validation-for="Entity.LastMovedToX" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.LastMovedToY" class="control-label"></label>
-                <input asp-for="Entity.LastMovedToY" class="form-control" />
+                <input asp-for="Entity.LastMovedToY" class="form-control"/>
                 <span asp-validation-for="Entity.LastMovedToY" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.LastMoveState" class="control-label"></label>
-                <input asp-for="Entity.LastMoveState" class="form-control" />
+                <input asp-for="Entity.LastMoveState" class="form-control"/>
                 <span asp-validation-for="Entity.LastMoveState" class="text-danger"></span>
             </div>
-            <input type="hidden" asp-for="Entity.Id" />
+            <input type="hidden" asp-for="Entity.Id"/>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn btn-primary"/>
             </div>
         </form>
     </div>
@@ -66,5 +66,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

@@ -8,79 +8,79 @@
 <h1>Edit</h1>
 
 <h4>CheckersRuleset</h4>
-<hr />
+<hr/>
 <div class="row">
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.BuiltIn" /> @Html.DisplayNameFor(model => model.Entity.BuiltIn)
+                    <input class="form-check-input" asp-for="Entity.BuiltIn"/> @Html.DisplayNameFor(model => model.Entity.BuiltIn)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.Saved" /> @Html.DisplayNameFor(model => model.Entity.Saved)
+                    <input class="form-check-input" asp-for="Entity.Saved"/> @Html.DisplayNameFor(model => model.Entity.Saved)
                 </label>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.Width" class="control-label"></label>
-                <input asp-for="Entity.Width" class="form-control" />
+                <input asp-for="Entity.Width" class="form-control"/>
                 <span asp-validation-for="Entity.Width" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.Height" class="control-label"></label>
-                <input asp-for="Entity.Height" class="form-control" />
+                <input asp-for="Entity.Height" class="form-control"/>
                 <span asp-validation-for="Entity.Height" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.Title" class="control-label"></label>
-                <input asp-for="Entity.Title" class="form-control" />
+                <input asp-for="Entity.Title" class="form-control"/>
                 <span asp-validation-for="Entity.Title" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.Description" class="control-label"></label>
-                <input asp-for="Entity.Description" class="form-control" />
+                <input asp-for="Entity.Description" class="form-control"/>
                 <span asp-validation-for="Entity.Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)</label>
-                <input asp-for="Entity.CreatedAt" class="form-control" />
+                <input asp-for="Entity.CreatedAt" class="form-control"/>
                 <span asp-validation-for="Entity.CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Entity.LastModified" class="control-label">@Html.DisplayNameFor(model => model.Entity.LastModified) (UTC)</label>
-                <input asp-for="Entity.LastModified" class="form-control" />
+                <input asp-for="Entity.LastModified" class="form-control"/>
                 <span asp-validation-for="Entity.LastModified" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.BlackMovesFirst" /> @Html.DisplayNameFor(model => model.Entity.BlackMovesFirst)
+                    <input class="form-check-input" asp-for="Entity.BlackMovesFirst"/> @Html.DisplayNameFor(model => model.Entity.BlackMovesFirst)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.MustCapture" /> @Html.DisplayNameFor(model => model.Entity.MustCapture)
+                    <input class="form-check-input" asp-for="Entity.MustCapture"/> @Html.DisplayNameFor(model => model.Entity.MustCapture)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwards" /> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwards)
+                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwards"/> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwards)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwardsDuringMultiCapture" /> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwardsDuringMultiCapture)
+                    <input class="form-check-input" asp-for="Entity.CanCaptureBackwardsDuringMultiCapture"/> @Html.DisplayNameFor(model => model.Entity.CanCaptureBackwardsDuringMultiCapture)
                 </label>
             </div>
             <div class="form-group form-check">
                 <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Entity.FlyingKings" /> @Html.DisplayNameFor(model => model.Entity.FlyingKings)
+                    <input class="form-check-input" asp-for="Entity.FlyingKings"/> @Html.DisplayNameFor(model => model.Entity.FlyingKings)
                 </label>
             </div>
-            <input type="hidden" asp-for="Entity.Id" />
+            <input type="hidden" asp-for="Entity.Id"/>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn btn-primary"/>
             </div>
         </form>
     </div>
@@ -91,5 +91,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

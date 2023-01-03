@@ -4,14 +4,11 @@ namespace ConsoleMenuSystem;
 
 public class MenuFactory
 {
-    private Func<Menu, List<MenuItem>> MenuItemsFunc { get; }
     public bool AppendDefaultMenuItems = true;
-    public bool IsExitable = true;
+    public CustomMenuItemsCacheModifier? CustomBehaviour;
     public string? CustomHeader = null;
     public Func<string?>? CustomHeaderFunc = null;
-    public CustomMenuItemsCacheModifier? CustomBehaviour;
-
-    private Func<Menu, string> TitleFunc { get; }
+    public bool IsExitable = true;
 
     public MenuFactory(Func<Menu, string> titleFunc, Func<Menu, List<MenuItem>> menuItemsFunc)
     {
@@ -33,6 +30,10 @@ public class MenuFactory
         this(titleFunc, _ => menuItems.ToList())
     {
     }
+
+    private Func<Menu, List<MenuItem>> MenuItemsFunc { get; }
+
+    private Func<Menu, string> TitleFunc { get; }
 
     public Menu Create(ConsoleWindow consoleWindow, Menu? parentMenu = null)
     {

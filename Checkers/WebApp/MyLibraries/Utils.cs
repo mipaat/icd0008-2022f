@@ -1,57 +1,50 @@
-﻿using Common;
-using Domain;
+﻿using DAL.Filters;
+using Domain.Model;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace WebApp.MyLibraries;
 
 public static class Utils
 {
-    public static IEnumerable<SelectListItem> EnumOptions<T, TE>(int? selected)
-        where T : struct, Enum where TE : struct, Enum
+    public static IEnumerable<SelectListItem> GetSelectOptions<T>(IEnumerable<T> items, T selectedItem)
+        where T : IFilter
+    {
+        return GetSelectOptions(items, selectedItem, filter => filter.Identifier,
+            filter => filter.DisplayString ?? filter.Identifier);
+    }
+
+    public static IEnumerable<SelectListItem> GetSelectOptions<T>(IEnumerable<T> items, T selectedItem,
+        Func<T, string> identifierFunc, Func<T, string>? customToString = null)
     {
         var result = new List<SelectListItem>();
-        var enumValues = EnumUtils.GetValues<T, TE>();
-        foreach (var value in enumValues)
-        {
-            result.Add(new SelectListItem(EnumUtils.GetDisplayString<T, TE>(value), value.ToString(), value == selected));
-        }
+        foreach (var item in items)
+            result.Add(new SelectListItem(customToString?.Invoke(item) ?? item?.ToString() ?? "",
+                identifierFunc.Invoke(item), item?.Equals(selectedItem) ?? false));
 
         return result;
     }
 
-    public static IEnumerable<SelectListItem> EnumOptions<T>(T? selected) where T : struct, Enum
+    public static IEnumerable<SelectListItem> GetSelectOptionsNullable<T>(T? selected) where T : struct, Enum
     {
-        return EnumOptions(null, selected);
+        return GetSelectOptions(selected, "");
     }
 
-    public static IEnumerable<SelectListItem> EnumOptions<T>(SelectListItem? emptyOption = null, T? selected = null)
+    public static IEnumerable<SelectListItem> GetSelectOptions<T>(T? selected, string nullOptionText)
+        where T : struct, Enum
+    {
+        return GetSelectOptions(selected, new SelectListItem(nullOptionText, "", selected == null));
+    }
+
+    public static IEnumerable<SelectListItem> GetSelectOptions<T>(T? selected, SelectListItem? nullOption = null)
         where T : struct, Enum
     {
         var result = new List<SelectListItem>();
-        var enumValues = Enum.GetValues<T>();
-        if (emptyOption != null) result.Add(emptyOption);
-        foreach (var value in enumValues)
-        {
-            result.Add(new SelectListItem(EnumUtils.GetDisplayString(value), EnumUtils.GetValue(value).ToString(),
-                !(emptyOption?.Selected ?? false) && value.Equals(selected)));
-        }
+        if (nullOption != null) result.Add(nullOption);
+        foreach (var value in Enum.GetValues<T>())
+            result.Add(new SelectListItem(value.ToString(), ((int)(object)value).ToString(), value.Equals(selected)));
 
         return result;
     }
-
-    public static IEnumerable<SelectListItem> AiTypeOptionsSelected(EAiType? selected = null)
-    {
-        return EnumOptionsOtherEmpty(EAiTypeNullable.None, selected);
-    }
-
-    public static IEnumerable<SelectListItem> EnumOptionsOtherEmpty<T, TEmpty>(TEmpty empty, T? selected = null) where T : struct, Enum where TEmpty : struct, Enum
-    {
-        var emptyText = EnumUtils.GetDisplayString(empty);
-        return EnumOptions(new SelectListItem(emptyText, ""), selected);
-    }
-
-    public static IEnumerable<SelectListItem> PlayerColorOptions(EPlayerColor? selected) =>
-        EnumOptionsOtherEmpty(EPlayerColorNullable.None, selected);
 
     public static string ShortenSerializedGamePieces(CheckersState checkersState)
     {

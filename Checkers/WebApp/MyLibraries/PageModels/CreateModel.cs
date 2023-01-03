@@ -20,10 +20,7 @@ public abstract class CreateModel<T> : RepositoryModel<T> where T : class, IData
     // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
     public IActionResult OnPost()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
+        if (!ModelState.IsValid) return Page();
 
         Repository.Add(Entity);
 

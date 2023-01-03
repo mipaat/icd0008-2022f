@@ -3,17 +3,18 @@ using System.Text.RegularExpressions;
 using Common;
 using ConsoleUI;
 using DAL;
-using Domain;
+using Domain.Model.Helpers;
 using GameBrain;
+using Timer = System.Timers.Timer;
 
 namespace ConsoleClient;
 
 public class ConsoleGame
 {
-    private CheckersBrain _checkersBrain;
     private readonly ConsoleWindow _consoleWindow;
-    private readonly IRepositoryContext _repositoryContext;
     private readonly EPlayerColor? _playMode;
+    private readonly IRepositoryContext _repositoryContext;
+    private CheckersBrain _checkersBrain;
 
     public ConsoleGame(ConsoleWindow consoleWindow, CheckersBrain checkersBrain,
         IRepositoryContext repositoryContext, EPlayerColor? playMode = null)
@@ -25,6 +26,8 @@ public class ConsoleGame
     }
 
     private static ConsoleKeyInfoBasic QuitButton { get; } = new(ConsoleKey.Q);
+
+    private bool DrawResolutionRequired => _checkersBrain.DrawResolutionExpected;
 
     private void Refresh()
     {
@@ -117,7 +120,6 @@ public class ConsoleGame
         var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
         var matches = rx.Matches(input.Text);
         if (matches.Count == 1)
-        {
             try
             {
                 var groups = matches[0].Groups;
@@ -142,7 +144,6 @@ public class ConsoleGame
                 _consoleWindow.PopUpMessageBox("Input caused the following error: " +
                                                e.ToString().ReplaceLineEndings("   ").Replace('\r', '<'));
             }
-        }
     }
 
     private void AddCommonInfoHeaderToRenderQueue()
@@ -176,15 +177,12 @@ public class ConsoleGame
         AddCommonInfoHeaderToRenderQueue();
         AddBoardToRenderQueue();
         _consoleWindow.Render();
-        var timer = new System.Timers.Timer(1000);
+        var timer = new Timer(1000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
         var aiColor = _checkersBrain.CurrentTurnPlayerColor;
         timer.Start();
-        while (_checkersBrain.CurrentTurnPlayerColor == aiColor && !_checkersBrain.Ended)
-        {
-            _checkersBrain.MoveAi();
-        }
+        while (_checkersBrain.CurrentTurnPlayerColor == aiColor && !_checkersBrain.Ended) _checkersBrain.MoveAi();
 
         while (!timerElapsed)
         {
@@ -193,24 +191,16 @@ public class ConsoleGame
         _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
     }
 
-    private bool DrawResolutionRequired => _checkersBrain.DrawResolutionExpected;
-
     private bool HandlePlayerTurn()
     {
         var controls = "Quit: Q, Forfeit: F";
         if (_checkersBrain.EndTurnAllowed) controls += ", End turn: E";
-        if (_checkersBrain.CheckersGame.DrawProposedBy == null)
-        {
-            controls += ", Propose Draw: D";
-        }
+        if (_checkersBrain.CheckersGame.DrawProposedBy == null) controls += ", Propose Draw: D";
 
         AddCommonInfoHeaderToRenderQueue();
         _consoleWindow.AddLine(controls);
 
-        if (DrawResolutionRequired)
-        {
-            _consoleWindow.AddLine("Accept opponent's proposal to end game with draw: D");
-        }
+        if (DrawResolutionRequired) _consoleWindow.AddLine("Accept opponent's proposal to end game with draw: D");
 
         AddBoardToRenderQueue();
         var prompt = "Type coordinate pairs (e.g A4D7) to move!";
@@ -218,13 +208,10 @@ public class ConsoleGame
         var input = _consoleWindow
             .RenderAndAwaitTextInput(
                 prompt,
-                keepRenderQueue: true);
+                true);
         var normalizedInputText = input.Text.Trim().ToLower();
 
-        if (normalizedInputText == "q")
-        {
-            return true;
-        }
+        if (normalizedInputText == "q") return true;
 
         var expectedCurrentTurnPlayerColor = _checkersBrain.CurrentTurnPlayerColor;
         var previousDrawProposer = _checkersBrain.CheckersGame.DrawProposedBy;
@@ -239,13 +226,9 @@ public class ConsoleGame
         if (normalizedInputText == "d")
         {
             if (_checkersBrain.DrawResolutionExpected)
-            {
                 _checkersBrain.AcceptDraw();
-            }
             else
-            {
                 _checkersBrain.ProposeDraw();
-            }
 
             _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
             return false;
@@ -287,7 +270,7 @@ public class ConsoleGame
     private bool AwaitOtherPlayerMove()
     {
         var forfeitInput = new ConsoleKeyInfoBasic(ConsoleKey.F);
-        var timer = new System.Timers.Timer(2000);
+        var timer = new Timer(2000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
         timer.Start();
@@ -297,7 +280,7 @@ public class ConsoleGame
             AddBoardToRenderQueue();
             _consoleWindow.Render();
 
-            var input = _consoleWindow.AwaitKeyInput(waitForMs: 100);
+            var input = _consoleWindow.AwaitKeyInput(100);
 
             if (IsQuitInput(input))
             {
@@ -339,7 +322,6 @@ public class ConsoleGame
     {
         var shouldQuit = false;
         while (!shouldQuit)
-        {
             try
             {
                 Refresh();
@@ -356,13 +338,9 @@ public class ConsoleGame
                     else
                     {
                         if (_playMode == _checkersBrain.CurrentTurnPlayerColor || _playMode == null)
-                        {
                             shouldQuit = HandlePlayerTurn();
-                        }
                         else
-                        {
                             shouldQuit = AwaitOtherPlayerMove();
-                        }
                     }
                 }
             }
@@ -374,16 +352,12 @@ public class ConsoleGame
             {
                 _consoleWindow.ClearRenderQueue();
             }
-        }
     }
 
     private static string BoundaryLine(int cells)
     {
         var result = new StringBuilder();
-        for (var i = 0; i < cells; i++)
-        {
-            result.Append("+---");
-        }
+        for (var i = 0; i < cells; i++) result.Append("+---");
 
         result.Append("+");
         return result.ToString();

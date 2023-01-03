@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Common;
-using Domain;
+using Domain.Model;
+using Domain.Model.Helpers;
 using GameBrain.AI;
 
 namespace GameBrain;
@@ -12,25 +13,8 @@ public record Move(int FromX, int FromY, int ToX, int ToY, List<GamePiecePositio
 public class CheckersBrain
 {
     private readonly CheckersRuleset _checkersRuleset;
-    public CheckersGame CheckersGame { get; }
-    public int Width => _checkersRuleset.Width;
-    public int Height => _checkersRuleset.Height;
 
     private readonly GamePiece?[,] _pieces;
-
-    public static bool IsSquareBlack(int x, int y)
-    {
-        return (x + y) % 2 != 0;
-    }
-
-    public GamePiece? this[int x, int y] => _pieces[x, y];
-
-    public Player WhitePlayer => CheckersGame.WhitePlayer;
-    public Player BlackPlayer => CheckersGame.BlackPlayer;
-    public Player Player(EPlayerColor playerColor) => CheckersGame.Player(playerColor);
-    public Player? Winner => CheckersGame.WinnerPlayer;
-    public bool Tied => CheckersGame.Tied;
-    public bool Ended => CheckersGame.Ended;
 
     public CheckersBrain(CheckersGame checkersGame)
     {
@@ -44,12 +28,8 @@ public class CheckersBrain
         {
             var currentCheckersState = CheckersGame.CurrentCheckersState;
             for (var x = 0; x < Width; x++)
-            {
-                for (var y = 0; y < Height; y++)
-                {
-                    _pieces[x, y] = currentCheckersState.GamePieces![x, y];
-                }
-            }
+            for (var y = 0; y < Height; y++)
+                _pieces[x, y] = currentCheckersState.GamePieces![x, y];
 
             WhiteMoves = currentCheckersState.WhiteMoves;
             BlackMoves = currentCheckersState.BlackMoves;
@@ -86,36 +66,17 @@ public class CheckersBrain
         SaveGameState();
     }
 
-    private int RowsPerPlayer()
-    {
-        return RowsPerPlayer(Height);
-    }
+    public CheckersGame CheckersGame { get; }
+    public int Width => _checkersRuleset.Width;
+    public int Height => _checkersRuleset.Height;
 
-    private static int RowsPerPlayer(int height)
-    {
-        return (height - 2) / 2;
-    }
+    public GamePiece? this[int x, int y] => _pieces[x, y];
 
-    private void InitializePlayerPieces(int rowsStart, int rowsEnd, EPlayerColor playerColor)
-    {
-        for (var x = 0; x < Width; x++)
-        {
-            for (var y = rowsStart; y < rowsEnd; y++)
-            {
-                if (IsSquareBlack(x, y))
-                {
-                    _pieces[x, y] = new GamePiece(playerColor);
-                }
-            }
-        }
-    }
-
-    private void InitializePieces()
-    {
-        var rowsPerPlayer = RowsPerPlayer();
-        InitializePlayerPieces(0, rowsPerPlayer, WhitePlayer.Color);
-        InitializePlayerPieces(Height - rowsPerPlayer, Height, BlackPlayer.Color);
-    }
+    public Player WhitePlayer => CheckersGame.WhitePlayer;
+    public Player BlackPlayer => CheckersGame.BlackPlayer;
+    public Player? Winner => CheckersGame.WinnerPlayer;
+    public bool Tied => CheckersGame.Tied;
+    public bool Ended => CheckersGame.Ended;
 
     public int WhiteMoves { get; private set; }
     public int BlackMoves { get; private set; }
@@ -128,24 +89,11 @@ public class CheckersBrain
     private List<Move>[,]? CalculatedCapturingMoves { get; set; }
     private int? CalculatedCapturingMovesCount { get; set; }
 
-    private void ClearCalculatedMoves()
-    {
-        CalculatedMoves = null;
-        CalculatedMovesCount = null;
-    }
-
-    private void ClearCalculatedCapturingMoves()
-    {
-        CalculatedCapturingMoves = null;
-        CalculatedCapturingMovesCount = null;
-    }
-
     private bool MovesCalculated => CalculatedMoves != null && CalculatedMovesCount != null;
     private bool CapturingMovesCalculated => CalculatedCapturingMoves != null && CalculatedCapturingMovesCount != null;
 
-    public bool IsPlayerTurn(EPlayerColor playerColor) => playerColor == CurrentTurnPlayerColor;
-
     public Player FirstPlayer => _checkersRuleset.BlackMovesFirst ? BlackPlayer : WhitePlayer;
+
     public Player CurrentTurnPlayer
     {
         get
@@ -162,9 +110,6 @@ public class CheckersBrain
     }
 
     public EPlayerColor CurrentTurnPlayerColor => CurrentTurnPlayer.Color;
-
-    public Player OtherPlayer(Player player) => CheckersGame.OtherPlayer(player);
-    public EPlayerColor OtherPlayer(EPlayerColor playerColor) => CheckersGame.OtherPlayer(playerColor);
 
     public bool IsAiTurn => CurrentTurnAiType != null;
 
@@ -184,7 +129,95 @@ public class CheckersBrain
         }
     }
 
-    public bool DrawResolutionExpected => CheckersGame.DrawProposedBy == OtherPlayer(CurrentTurnPlayer.Color) && !Ended;
+    public bool DrawResolutionExpected => DrawResolutionExpectedFrom(CurrentTurnPlayerColor);
+
+    public bool EndTurnAllowed => LastMoveState == EMoveState.CanContinue && !_checkersRuleset.MustCapture;
+
+    public (int BlackPieces, int WhitePieces) PieceCounts
+    {
+        get
+        {
+            var result = (0, 0);
+            for (var x = 0; x < Width; x++)
+            for (var y = 0; y < Height; y++)
+            {
+                var gamePiece = _pieces[x, y];
+                if (gamePiece?.Player == EPlayerColor.Black) result.Item1 += 1;
+                if (gamePiece?.Player == EPlayerColor.White) result.Item2 += 1;
+            }
+
+            return result;
+        }
+    }
+
+    public static bool IsSquareBlack(int x, int y)
+    {
+        return (x + y) % 2 != 0;
+    }
+
+    public Player Player(EPlayerColor playerColor)
+    {
+        return CheckersGame.Player(playerColor);
+    }
+
+    private int RowsPerPlayer()
+    {
+        return RowsPerPlayer(Height);
+    }
+
+    private static int RowsPerPlayer(int height)
+    {
+        return (height - 2) / 2;
+    }
+
+    private void InitializePlayerPieces(int rowsStart, int rowsEnd, EPlayerColor playerColor)
+    {
+        for (var x = 0; x < Width; x++)
+        for (var y = rowsStart; y < rowsEnd; y++)
+            if (IsSquareBlack(x, y))
+                _pieces[x, y] = new GamePiece(playerColor);
+    }
+
+    private void InitializePieces()
+    {
+        var rowsPerPlayer = RowsPerPlayer();
+        InitializePlayerPieces(0, rowsPerPlayer, WhitePlayer.Color);
+        InitializePlayerPieces(Height - rowsPerPlayer, Height, BlackPlayer.Color);
+    }
+
+    private void ClearCalculatedMoves()
+    {
+        CalculatedMoves = null;
+        CalculatedMovesCount = null;
+    }
+
+    private void ClearCalculatedCapturingMoves()
+    {
+        CalculatedCapturingMoves = null;
+        CalculatedCapturingMovesCount = null;
+    }
+
+    public bool IsPlayerTurn(EPlayerColor playerColor)
+    {
+        return playerColor == CurrentTurnPlayerColor;
+    }
+
+    public Player OtherPlayer(Player player)
+    {
+        return CheckersGame.OtherPlayer(player);
+    }
+
+    public EPlayerColor OtherPlayer(EPlayerColor playerColor)
+    {
+        return CheckersGame.OtherPlayer(playerColor);
+    }
+
+    public bool DrawResolutionExpectedFrom(EPlayerColor playerColor)
+    {
+        if (CheckersGame.DrawProposedBy == null) return false;
+        if (CheckersGame.Ended) return false;
+        return CheckersGame.DrawProposedBy == OtherPlayer(playerColor);
+    }
 
     private List<Move> CalculateCapturingMoves(int fromX, int fromY)
     {
@@ -216,33 +249,31 @@ public class CheckersBrain
 
         var increments = new List<int> { -1, 1 };
         foreach (var yIncrement in increments)
+        foreach (var xIncrement in increments)
         {
-            foreach (var xIncrement in increments)
+            var x = fromX + xIncrement;
+            var y = fromY + yIncrement;
+            var c = 1;
+            var gamePiecesOnPath = new List<GamePiecePosition>();
+            while (x >= 0 && x < Width && y >= 0 && y < Height &&
+                   (c <= 2 || (gamePiece.IsCrowned && _checkersRuleset.FlyingKings)) &&
+                   gamePiecesOnPath.Count < 2)
             {
-                var x = fromX + xIncrement;
-                var y = fromY + yIncrement;
-                var c = 1;
-                var gamePiecesOnPath = new List<GamePiecePosition>();
-                while (x >= 0 && x < Width && y >= 0 && y < Height &&
-                       (c <= 2 || (gamePiece.IsCrowned && _checkersRuleset.FlyingKings)) &&
-                       gamePiecesOnPath.Count < 2)
+                var gamePieceOnPath = _pieces[x, y];
+                if (gamePieceOnPath != null)
                 {
-                    var gamePieceOnPath = _pieces[x, y];
-                    if (gamePieceOnPath != null)
-                    {
-                        if (gamePieceOnPath.Value.Player == gamePiece.Player) break;
-                        gamePiecesOnPath.Add(new GamePiecePosition(x, y));
-                    }
-                    else
-                    {
-                        if (CheckValid(gamePiece, gamePiecesOnPath, c, yIncrement, isContinuingTurn))
-                            result.Add(new Move(fromX, fromY, x, y, gamePiecesOnPath.ToList()));
-                    }
-
-                    x += xIncrement;
-                    y += yIncrement;
-                    c++;
+                    if (gamePieceOnPath.Value.Player == gamePiece.Player) break;
+                    gamePiecesOnPath.Add(new GamePiecePosition(x, y));
                 }
+                else
+                {
+                    if (CheckValid(gamePiece, gamePiecesOnPath, c, yIncrement, isContinuingTurn))
+                        result.Add(new Move(fromX, fromY, x, y, gamePiecesOnPath.ToList()));
+                }
+
+                x += xIncrement;
+                y += yIncrement;
+                c++;
             }
         }
 
@@ -261,7 +292,7 @@ public class CheckersBrain
     private bool CheckDistanceValid(GamePiece gamePiece, int distance, bool isCapturing)
     {
         return (!gamePiece.IsCrowned && (distance == 1 || (distance == 2 && isCapturing))) ||
-               gamePiece.IsCrowned && (distance == 1 || (distance == 2 && isCapturing)) ||
+               (gamePiece.IsCrowned && (distance == 1 || (distance == 2 && isCapturing))) ||
                (_checkersRuleset.FlyingKings && gamePiece.IsCrowned && distance > 0);
     }
 
@@ -284,13 +315,11 @@ public class CheckersBrain
         CalculatedMoves = new List<Move>[Width, Height];
         CalculatedMovesCount = 0;
         for (var fromX = 0; fromX < Width; fromX++)
+        for (var fromY = 0; fromY < Height; fromY++)
         {
-            for (var fromY = 0; fromY < Height; fromY++)
-            {
-                var moves = CalculateAvailableMoves(fromX, fromY);
-                CalculatedMoves[fromX, fromY] = moves;
-                CalculatedMovesCount += moves.Count;
-            }
+            var moves = CalculateAvailableMoves(fromX, fromY);
+            CalculatedMoves[fromX, fromY] = moves;
+            CalculatedMovesCount += moves.Count;
         }
     }
 
@@ -301,14 +330,12 @@ public class CheckersBrain
         CalculatedCapturingMovesCount = 0;
         if (Ended) return;
         for (var fromX = 0; fromX < Width; fromX++)
+        for (var fromY = 0; fromY < Height; fromY++)
         {
-            for (var fromY = 0; fromY < Height; fromY++)
-            {
-                var moves = CalculatedMoves![fromX, fromY];
-                var capturingMoves = moves.FindAll(move => move.GamePieces.Count > 0);
-                CalculatedCapturingMoves[fromX, fromY] = capturingMoves;
-                CalculatedCapturingMovesCount += capturingMoves.Count;
-            }
+            var moves = CalculatedMoves![fromX, fromY];
+            var capturingMoves = moves.FindAll(move => move.GamePieces.Count > 0);
+            CalculatedCapturingMoves[fromX, fromY] = capturingMoves;
+            CalculatedCapturingMovesCount += capturingMoves.Count;
         }
     }
 
@@ -316,12 +343,8 @@ public class CheckersBrain
     {
         var result = new List<Move>();
         for (var x = 0; x < Width; x++)
-        {
-            for (var y = 0; y < Height; y++)
-            {
-                result.AddRange(AvailableMoves(x, y));
-            }
-        }
+        for (var y = 0; y < Height; y++)
+            result.AddRange(AvailableMoves(x, y));
 
         return result;
     }
@@ -387,10 +410,7 @@ public class CheckersBrain
             (gamePiece.Player == EPlayerColor.White && destinationY == Height - 1)) gamePiece.IsCrowned = true;
         _pieces[destinationX, destinationY] = gamePiece;
         _pieces[sourceX, sourceY] = null;
-        foreach (var capturedGamePiece in move.GamePieces)
-        {
-            _pieces[capturedGamePiece.X, capturedGamePiece.Y] = null;
-        }
+        foreach (var capturedGamePiece in move.GamePieces) _pieces[capturedGamePiece.X, capturedGamePiece.Y] = null;
 
         LastMovedToX = destinationX;
         LastMovedToY = destinationY;
@@ -430,27 +450,6 @@ public class CheckersBrain
         }
     }
 
-    public bool EndTurnAllowed => LastMoveState == EMoveState.CanContinue && !_checkersRuleset.MustCapture;
-
-    public (int BlackPieces, int WhitePieces) PieceCounts
-    {
-        get
-        {
-            var result = (0, 0);
-            for (var x = 0; x < Width; x++)
-            {
-                for (var y = 0; y < Height; y++)
-                {
-                    var gamePiece = _pieces[x, y];
-                    if (gamePiece?.Player == EPlayerColor.Black) result.Item1 += 1;
-                    if (gamePiece?.Player == EPlayerColor.White) result.Item2 += 1;
-                }
-            }
-
-            return result;
-        }
-    }
-
     public void EndTurn()
     {
         if (!EndTurnAllowed)
@@ -481,10 +480,7 @@ public class CheckersBrain
             CheckersGame.EndedAt = DateTime.Now.ToUniversalTime();
         }
 
-        if (AvailableMoves().Count == 0)
-        {
-            Forfeit();
-        }
+        if (AvailableMoves().Count == 0) Forfeit();
     }
 
     public void Forfeit(EPlayerColor? playerColor = null)
@@ -529,14 +525,12 @@ public class CheckersBrain
     {
         var gamePiecesCopy = new GamePiece?[_pieces.GetLength(0), _pieces.GetLength(1)];
         for (var y = 0; y < _pieces.GetLength(1); y++)
+        for (var x = 0; x < _pieces.GetLength(0); x++)
         {
-            for (var x = 0; x < _pieces.GetLength(0); x++)
-            {
-                var gamePiece = _pieces[x, y];
-                gamePiecesCopy[x, y] = gamePiece != null
-                    ? new GamePiece(gamePiece.Value.Player, gamePiece.Value.IsCrowned)
-                    : null;
-            }
+            var gamePiece = _pieces[x, y];
+            gamePiecesCopy[x, y] = gamePiece != null
+                ? new GamePiece(gamePiece.Value.Player, gamePiece.Value.IsCrowned)
+                : null;
         }
 
         return new CheckersState

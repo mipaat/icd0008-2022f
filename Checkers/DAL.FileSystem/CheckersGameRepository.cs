@@ -1,13 +1,43 @@
-using Domain;
+using DAL.Filters;
+using Domain.Model;
 
 namespace DAL.FileSystem;
 
 public sealed class CheckersGameRepository : AbstractFileSystemRepository<CheckersGame>, ICheckersGameRepository
 {
-    protected override string RepositoryName => "CheckersGame";
-
     public CheckersGameRepository(IRepositoryContext repositoryContext) : base(repositoryContext)
     {
+    }
+
+    protected override string RepositoryName => "CheckersGame";
+
+    public override CheckersGame Remove(CheckersGame entity)
+    {
+        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
+            RepositoryContext.CheckersStateRepository.Remove(checkersState);
+
+        var result = base.Remove(entity);
+
+        RepositoryContext.CheckersRulesetRepository.Remove(result.CheckersRulesetId);
+
+        return result;
+    }
+
+    public override ICollection<CheckersGame> GetAll(params FilterFunc<CheckersGame>[] filters)
+    {
+        return base.GetAll(filters).OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt).ToList();
+    }
+
+    public CheckersGame? GetById(int id, bool includeAllCheckersStates)
+    {
+        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
+        return GetById(id);
+    }
+
+    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates, params FilterFunc<CheckersGame>[] filters)
+    {
+        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
+        return GetAll(filters);
     }
 
     protected override CheckersGame Deserialize(string serializedData)
@@ -32,36 +62,5 @@ public sealed class CheckersGameRepository : AbstractFileSystemRepository<Checke
         }
 
         return base.Serialize(entity);
-    }
-
-    public override CheckersGame Remove(CheckersGame entity)
-    {
-        foreach (var checkersState in RepositoryContext.CheckersStateRepository.GetByCheckersGameId(entity.Id))
-        {
-            RepositoryContext.CheckersStateRepository.Remove(checkersState);
-        }
-
-        var result = base.Remove(entity);
-
-        RepositoryContext.CheckersRulesetRepository.Remove(result.CheckersRulesetId);
-
-        return result;
-    }
-
-    public override ICollection<CheckersGame> GetAll()
-    {
-        return base.GetAll().OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt).ToList();
-    }
-
-    public CheckersGame? GetById(int id, bool includeAllCheckersStates)
-    {
-        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
-        return GetById(id);
-    }
-
-    public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates)
-    {
-        // Ignoring includeAllCheckersStates because that option is meant for optimizing DB queries.
-        return GetAll();
     }
 }

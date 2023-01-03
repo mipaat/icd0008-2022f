@@ -1,36 +1,31 @@
 using DAL;
+using Domain.Model;
 using Microsoft.AspNetCore.Mvc;
-using Domain;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersRulesets
+namespace WebApp.Pages.CheckersRulesets;
+
+public class CreateModel : PageModelDb
 {
-    public class CreateModel : PageModelDb
+    public CreateModel(IRepositoryContext ctx) : base(ctx)
     {
-        public IActionResult OnGet()
-        {
-            return Page();
-        }
+    }
 
-        [BindProperty]
-        public CheckersRuleset CheckersRuleset { get; set; } = default!;
-        
+    [BindProperty] public CheckersRuleset CheckersRuleset { get; set; } = default!;
 
-        // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
-        public Task<IActionResult> OnPost()
-        {
-            if (!ModelState.IsValid)
-            {
-                return Task.FromResult<IActionResult>(Page());
-            }
+    public IActionResult OnGet()
+    {
+        return Page();
+    }
 
-            Ctx.CheckersRulesetRepository.Add(CheckersRuleset);
 
-            return Task.FromResult<IActionResult>(RedirectToPage("./Index"));
-        }
+    // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
+    public Task<IActionResult> OnPost()
+    {
+        if (!ModelState.IsValid) return Task.FromResult<IActionResult>(Page());
 
-        public CreateModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+        Ctx.CheckersRulesetRepository.Add(CheckersRuleset);
+
+        return Task.FromResult<IActionResult>(RedirectToPage("./Index"));
     }
 }

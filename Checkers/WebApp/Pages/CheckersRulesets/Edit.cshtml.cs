@@ -1,15 +1,14 @@
 using DAL;
-using Domain;
+using Domain.Model;
 using WebApp.MyLibraries.PageModels;
 
-namespace WebApp.Pages.CheckersRulesets
-{
-    public class EditModel : EditModel<CheckersRuleset>
-    {
-        protected override IRepository<CheckersRuleset> Repository => Ctx.CheckersRulesetRepository;
+namespace WebApp.Pages.CheckersRulesets;
 
-        public EditModel(IRepositoryContext ctx) : base(ctx)
-        {
-        }
+public class EditModel : EditModel<CheckersRuleset>
+{
+    public EditModel(IRepositoryContext ctx) : base(ctx)
+    {
     }
+
+    protected override IRepository<CheckersRuleset> Repository => Ctx.CheckersRulesetRepository;
 }

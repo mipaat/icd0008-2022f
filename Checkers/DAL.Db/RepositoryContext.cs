@@ -11,11 +11,14 @@ public class RepositoryContext : IRepositoryContext
         CheckersStateRepository = new CheckersStateRepository(dbContext, this);
     }
 
+    private List<IRepository> Repositories => new()
+        { CheckersGameRepository, CheckersStateRepository, CheckersRulesetRepository };
+
     public ICheckersGameRepository CheckersGameRepository { get; }
     public ICheckersRulesetRepository CheckersRulesetRepository { get; }
     public ICheckersStateRepository CheckersStateRepository { get; }
-    private List<IRepository> Repositories => new(){CheckersGameRepository, CheckersStateRepository, CheckersRulesetRepository};
     public string Name => "Sqlite DB";
+
     public IRepository<T>? GetRepo<T>(Type type) where T : class, IDatabaseEntity, new()
     {
         return Repositories.Find(repo => repo.EntityType == type) as IRepository<T>;
