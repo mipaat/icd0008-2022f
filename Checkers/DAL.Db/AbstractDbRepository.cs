@@ -1,4 +1,3 @@
-using Common;
 using DAL.Filters;
 using Domain;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,6 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 {
     protected readonly AppDbContext DbContext;
     protected readonly IRepositoryContext RepositoryContext;
-    private bool _asNoTracking;
 
     protected AbstractDbRepository(AppDbContext dbContext, IRepositoryContext repoContext)
     {
@@ -23,11 +21,14 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
     protected ICollection<Action<T>> PreFetchActions { get; }
 
     protected abstract DbSet<T> ThisDbSet { get; }
-    protected IQueryable<T> Queryable => _asNoTracking ? ThisDbSet.AsNoTracking() : ThisDbSet;
+    protected IQueryable<T> Queryable => ThisDbSet;
 
     public virtual ICollection<T> GetAll(params FilterFunc<T>[] filters)
     {
-        return RunPreFetchActions(RunFilters(Queryable, filters)).ToList();
+        return RunFilters(
+            RunPreFetchActions(RunFilters(Queryable, FilterFunc.GetQueryConvertible(filters))),
+            FilterFunc.GetNonQueryConvertible(filters))
+            .ToList();
     }
 
     public virtual T? GetById(int id)
@@ -79,17 +80,6 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return Queryable.Any(t => id.Equals(t.Id));
     }
 
-    public void Refresh(T entity)
-    {
-        var previousAsNoTracking = _asNoTracking;
-        _asNoTracking = true;
-        var fetchedEntity = GetById(entity.Id);
-        if (fetchedEntity == null)
-            throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
-        entity.Refresh(fetchedEntity);
-        _asNoTracking = previousAsNoTracking;
-    }
-
     public Type EntityType => typeof(T);
 
     private static T RunActions(T entity, IEnumerable<Action<T>> actions)
@@ -114,21 +104,35 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
         return RunActions(entity, PreFetchActions);
     }
 
-    protected IList<T> RunPreFetchActions(IList<T> entities)
+    protected IEnumerable<T> RunPreFetchActions(IQueryable<T> entities)
     {
-        RunActions(entities, PreFetchActions);
-        return entities;
+        return RunPreFetchActions(entities.AsEnumerable());
     }
 
-    protected IQueryable<T> RunPreFetchActions(IQueryable<T> entities)
+    protected IEnumerable<T> RunPreFetchActions(IEnumerable<T> entities)
     {
-        RunActions(entities, PreFetchActions);
-        return entities;
+        var result = entities.ToList();
+        RunActions(result, PreFetchActions);
+        return result;
     }
 
-    protected IQueryable<T> RunFilters(IQueryable<T> queryable, params FilterFunc<T>[] filters)
+    protected IEnumerable<T> RunFilters(IEnumerable<T> enumerable, IEnumerable<FilterFunc<T>> filters)
     {
-        foreach (var filter in filters) queryable = filter(queryable);
+        return RunFilters(enumerable.AsQueryable(), filters);
+    }
+
+    protected IQueryable<T> RunFilters(IQueryable<T> queryable, IEnumerable<FilterFunc<T>> filters)
+    {
+        var fetched = false;
+        foreach (var filter in filters)
+        {
+            if (!filter.IsConvertibleToDbQuery && !fetched)
+            {
+                fetched = true;
+                queryable = queryable.AsEnumerable().AsQueryable();
+            }
+            queryable = filter.Filter(queryable);
+        }
 
         return queryable;
     }

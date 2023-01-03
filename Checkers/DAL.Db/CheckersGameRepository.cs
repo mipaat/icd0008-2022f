@@ -33,10 +33,13 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
         var checkersStatesIncluded = includeAllCheckersStates
             ? Queryable.Include(cg => cg.CheckersStates)!
             : Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
+        var checkersRulesetIncluded = checkersStatesIncluded.Include(cg => cg.CheckersRuleset);
         return
-            RunPreFetchActions(RunFilters(checkersStatesIncluded
-                        .Include(cg => cg.CheckersRuleset), filters)
-                    .ToList()
+            RunFilters(
+                    RunPreFetchActions(
+                        RunFilters(checkersRulesetIncluded, FilterFunc.GetQueryConvertible(filters))
+                    ),
+                    FilterFunc.GetNonQueryConvertible(filters)
                 )
                 .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
                 .ToList();

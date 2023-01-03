@@ -26,6 +26,4 @@ public interface IRepository<T> : IRepository
     T Remove(T entity);
 
     bool Exists(int id);
-
-    void Refresh(T entity);
 }

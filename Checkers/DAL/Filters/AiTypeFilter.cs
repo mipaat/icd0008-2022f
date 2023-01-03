@@ -3,7 +3,7 @@ using Domain.Model.Helpers;
 
 namespace DAL.Filters;
 
-public class AiTypeFilter : Filter<CheckersGame>
+public class AiTypeFilter : SimpleFilter<CheckersGame>
 {
     public static readonly AiTypeFilter Random = new(nameof(Random),
         games => games.Where(game => game.BlackAiType == EAiType.Random || game.WhiteAiType == EAiType.Random));
@@ -22,8 +22,8 @@ public class AiTypeFilter : Filter<CheckersGame>
         games => games.Where(game => game.BlackAiType == null && game.WhiteAiType == null),
         "No AI");
 
-    public AiTypeFilter(string identifier, FilterFunc<CheckersGame> filterFunc, string? displayString = null) : base(
-        identifier, filterFunc, displayString)
+    private AiTypeFilter(string identifier, FilterFuncInner<CheckersGame> filterFunc, string? displayString = null) :
+        base(identifier, filterFunc, true, displayString)
     {
     }
 

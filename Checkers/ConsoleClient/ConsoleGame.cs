@@ -13,15 +13,16 @@ public class ConsoleGame
 {
     private readonly ConsoleWindow _consoleWindow;
     private readonly EPlayerColor? _playMode;
-    private readonly IRepositoryContext _repositoryContext;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
+    private IRepositoryContext GetRepoCtx() => _repositoryContextFactory.CreateRepositoryContext();
     private CheckersBrain _checkersBrain;
 
     public ConsoleGame(ConsoleWindow consoleWindow, CheckersBrain checkersBrain,
-        IRepositoryContext repositoryContext, EPlayerColor? playMode = null)
+        IRepositoryContextFactory repositoryContextFactory, EPlayerColor? playMode = null)
     {
         _checkersBrain = checkersBrain;
         _consoleWindow = consoleWindow;
-        _repositoryContext = repositoryContext;
+        _repositoryContextFactory = repositoryContextFactory;
         _playMode = playMode;
     }
 
@@ -31,10 +32,11 @@ public class ConsoleGame
 
     private void Refresh()
     {
+        using var repoCtx = GetRepoCtx();
         var checkersGame = _checkersBrain.CheckersGame;
-        _repositoryContext.CheckersGameRepository.Refresh(checkersGame);
-        if (checkersGame == null) throw new IllegalStateException("CheckersGame was null after refresh!");
-        _checkersBrain = new CheckersBrain(checkersGame);
+        var fetchedCheckersGame = repoCtx.CheckersGameRepository.GetById(checkersGame.Id);
+        if (fetchedCheckersGame == null) throw new IllegalStateException("CheckersGame was null after refresh!");
+        _checkersBrain = new CheckersBrain(fetchedCheckersGame);
     }
 
     private static string GetPieceDisplay(GamePiece? gamePiece)
@@ -115,7 +117,7 @@ public class ConsoleGame
                QuitButton.Equals(input.KeyInfo);
     }
 
-    private void MakePlayerMove(ConsoleInput input)
+    private void MakePlayerMove(ConsoleInput input, IRepositoryContext repoCtx)
     {
         var rx = new Regex(@"([A-Za-z]+)(\d+)([A-Za-z]+)(\d+)");
         var matches = rx.Matches(input.Text);
@@ -132,7 +134,7 @@ public class ConsoleGame
                 {
                     _checkersBrain.Move(x1, y1, x2, y2);
                     ReRenderBoard();
-                    _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                    repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
                 }
                 else
                 {
@@ -188,7 +190,8 @@ public class ConsoleGame
         {
         }
 
-        _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+        using var repoCtx = GetRepoCtx();
+        repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
     }
 
     private bool HandlePlayerTurn()
@@ -223,6 +226,8 @@ public class ConsoleGame
         if (_checkersBrain.Ended) return false;
         if (previousDrawProposer != _checkersBrain.CheckersGame.DrawProposedBy) return HandlePlayerTurn();
 
+        using var repoCtx = GetRepoCtx();
+
         if (normalizedInputText == "d")
         {
             if (_checkersBrain.DrawResolutionExpected)
@@ -230,14 +235,14 @@ public class ConsoleGame
             else
                 _checkersBrain.ProposeDraw();
 
-            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
             return false;
         }
 
         if (DrawResolutionRequired)
         {
             _checkersBrain.RejectDraw();
-            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
         }
 
         if (normalizedInputText == "e")
@@ -246,7 +251,7 @@ public class ConsoleGame
             {
                 _checkersBrain.EndTurn();
                 ReRenderBoard();
-                _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
             }
             else
             {
@@ -259,11 +264,11 @@ public class ConsoleGame
         if (normalizedInputText == "f")
         {
             _checkersBrain.Forfeit();
-            _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
             return false;
         }
 
-        MakePlayerMove(input);
+        MakePlayerMove(input, repoCtx);
         return false;
     }
 
@@ -292,7 +297,8 @@ public class ConsoleGame
             {
                 timer.Stop();
                 _checkersBrain.Forfeit(_playMode);
-                _repositoryContext.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                using var repoCtx = GetRepoCtx();
+                repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
                 return false;
             }
         }

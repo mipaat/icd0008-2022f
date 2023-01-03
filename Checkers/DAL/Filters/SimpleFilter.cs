@@ -2,23 +2,18 @@
 
 namespace DAL.Filters;
 
-public abstract class Filter<T> : IFilter<T> where T : IDatabaseEntity
+public abstract class SimpleFilter<T> : IFilter<T> where T : IDatabaseEntity
 {
-    protected Filter(string identifier, FilterFunc<T> filterFunc, string? displayString = null)
+    protected SimpleFilter(string identifier, FilterFuncInner<T> filterFunc, bool isConvertibleToDbQuery = true, string? displayString = null)
     {
         Identifier = identifier;
-        FilterFunc = filterFunc;
+        FilterFunc = new FilterFunc<T>(filterFunc, isConvertibleToDbQuery);
         DisplayString = displayString;
     }
 
     public string Identifier { get; }
     public string? DisplayString { get; }
     public FilterFunc<T> FilterFunc { get; }
-
-    public IQueryable<T> Invoke(IQueryable<T> arg)
-    {
-        return FilterFunc(arg);
-    }
 
     public static TFilter? Construct<TFilter>(string? identifier, List<TFilter> values) where TFilter : IFilter<T>
     {

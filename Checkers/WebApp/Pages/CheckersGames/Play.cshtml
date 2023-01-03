@@ -62,6 +62,7 @@
         {
             <form method="GET" action="">
                 <input value="@Model.GameId" name="id" type="hidden">
+                <input value="@Model.PlayerId" name="playerId" type="hidden"/>
                 <input value="@Model.GetPlayerId" name="drawProposerPlayerId" type="hidden">
                 <input value="@(true.ToString())" name="proposeDraw" type="hidden">
                 <button type="submit" class="btn btn-primary">Propose Draw</button>

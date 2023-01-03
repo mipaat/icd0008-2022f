@@ -54,7 +54,7 @@ public class Play : PageModelDb
 
     public bool DrawResolutionExpected => Brain.DrawResolutionExpectedFrom(PlayerColor);
 
-    public bool IsPieceMovable(int x, int y) // TODO: Check if piece actually has available moves
+    public bool IsPieceMovable(int x, int y)
     {
         return !Brain.IsAiTurn && Brain.IsPieceMovable(PlayerColor, x, y);
     }

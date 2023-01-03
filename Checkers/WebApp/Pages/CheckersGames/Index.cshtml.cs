@@ -1,3 +1,4 @@
+using Common;
 using DAL;
 using DAL.Filters;
 using Domain.Model;
@@ -15,19 +16,12 @@ public class IndexModel : RepositoryModel<CheckersGame>
     public IList<CheckersGame> Entities { get; set; } = default!;
 
     [BindProperty(SupportsGet = true)] public AiTypeFilter AiTypeFilter { get; set; } = default!;
-    [BindProperty(SupportsGet = true)] public string? RulesetNameQuery { get; set; }
+    [BindProperty(SupportsGet = true)] public string? RulesetQuery { get; set; }
     [BindProperty(SupportsGet = true)] public string? PlayerNameQuery { get; set; }
 
     [BindProperty(SupportsGet = true)] public CompletionFilter CompletionFilter { get; set; } = default!;
 
     protected override IRepository<CheckersGame> Repository => Ctx.CheckersGameRepository;
-
-    private static bool StringContains(string? query, string? compare)
-    {
-        var normalizedQuery = query?.ToLower().Trim() ?? "";
-        var normalizedCompare = compare?.ToLower().Trim() ?? "";
-        return normalizedCompare.Contains(normalizedQuery);
-    }
 
     public IActionResult OnGet()
     {
@@ -36,11 +30,11 @@ public class IndexModel : RepositoryModel<CheckersGame>
             AiTypeFilter.FilterFunc).AsEnumerable();
 
         if (PlayerNameQuery != null)
-            result = result.Where(cg => StringContains(PlayerNameQuery, cg.WhitePlayerName)
-                                        || StringContains(PlayerNameQuery, cg.BlackPlayerName));
+            result = result.Where(cg =>
+                Utils.StringAnyContain(PlayerNameQuery, cg.WhitePlayerName, cg.BlackPlayerName));
 
-        if (RulesetNameQuery != null)
-            result = result.Where(cg => StringContains(RulesetNameQuery, cg.CheckersRuleset?.TitleText));
+        if (RulesetQuery != null)
+            result = result.Where(cg => Utils.StringAnyContain(RulesetQuery, cg.CheckersRuleset?.ToString()));
 
         Entities = result.ToList();
 

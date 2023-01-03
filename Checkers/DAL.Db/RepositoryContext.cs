@@ -1,14 +1,18 @@
 using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Db;
 
 public class RepositoryContext : IRepositoryContext
 {
-    public RepositoryContext(AppDbContext dbContext)
+    private readonly AppDbContext _dbContext;
+    
+    public RepositoryContext()
     {
-        CheckersGameRepository = new CheckersGameRepository(dbContext, this);
-        CheckersRulesetRepository = new CheckersRulesetRepository(dbContext, this);
-        CheckersStateRepository = new CheckersStateRepository(dbContext, this);
+        _dbContext = AppDbContextFactory.CreateDbContext();
+        CheckersGameRepository = new CheckersGameRepository(_dbContext, this);
+        CheckersRulesetRepository = new CheckersRulesetRepository(_dbContext, this);
+        CheckersStateRepository = new CheckersStateRepository(_dbContext, this);
     }
 
     private List<IRepository> Repositories => new()
@@ -17,7 +21,6 @@ public class RepositoryContext : IRepositoryContext
     public ICheckersGameRepository CheckersGameRepository { get; }
     public ICheckersRulesetRepository CheckersRulesetRepository { get; }
     public ICheckersStateRepository CheckersStateRepository { get; }
-    public string Name => "Sqlite DB";
 
     public IRepository<T>? GetRepo<T>(Type type) where T : class, IDatabaseEntity, new()
     {
@@ -27,5 +30,10 @@ public class RepositoryContext : IRepositoryContext
     public IRepository<T>? GetRepo<T>(T entity) where T : class, IDatabaseEntity, new()
     {
         return GetRepo<T>(entity.GetType());
+    }
+
+    public void Dispose()
+    {
+        _dbContext.Dispose();
     }
 }

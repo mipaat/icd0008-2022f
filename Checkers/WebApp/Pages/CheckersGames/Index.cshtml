@@ -15,15 +15,17 @@
     @{
         const string completionFilter = nameof(Model.CompletionFilter);
         const string aiTypeFilter = nameof(Model.AiTypeFilter);
+        const string rulesetQuery = nameof(Model.RulesetQuery);
+        const string playerQuery = nameof(Model.PlayerNameQuery);
     }
     <div>
-        <label for="playerNameQuery">Search by player name</label><br/>
-        <input id="playerNameQuery" type="search" name="playerNameQuery" value="@Model.PlayerNameQuery"/>
+        <label for="@playerQuery">Search by player name</label><br/>
+        <input id="@playerQuery" type="search" name="@playerQuery" value="@Model.PlayerNameQuery"/>
         <button type="submit">Search</button>
     </div>
     <div>
-        <label for="rulesetNameQuery">Search by ruleset name</label><br/>
-        <input id="rulesetNameQuery" type="search" name="rulesetNameQuery" value="@Model.RulesetNameQuery"/>
+        <label for="@rulesetQuery">Search by ruleset</label><br/>
+        <input id="@rulesetQuery" type="search" name="@rulesetQuery" value="@Model.RulesetQuery"/>
         <button type="submit">Search</button>
     </div>
     <div>
@@ -103,7 +105,7 @@
             </td>
             <td>
                 <a asp-page="/CheckersRulesets/Details" asp-route-id="@item.CheckersRulesetId">
-                    @Html.DisplayFor(modelItem => item.CheckersRuleset!.TitleText)
+                    @(item.CheckersRuleset!.ToString())
                 </a>
             </td>
             <td>

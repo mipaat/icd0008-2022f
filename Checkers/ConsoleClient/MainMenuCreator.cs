@@ -1,4 +1,5 @@
-﻿using ConsoleMenuSystem;
+﻿using Common;
+using ConsoleMenuSystem;
 using ConsoleUI;
 using DAL;
 using DAL.Filters;
@@ -13,10 +14,10 @@ public class MainMenuCreator
 {
     private int _repoCtxIndex;
 
-    public MainMenuCreator(params IRepositoryContext[] repositoryContexts)
+    public MainMenuCreator(params IRepositoryContextFactory[] repositoryContexts)
     {
         if (repositoryContexts.Length == 0) throw new ArgumentException("At least one repository context is required!");
-        RepositoryContexts = repositoryContexts.ToList();
+        RepositoryContextFactories = repositoryContexts.ToList();
 
         MainMenuFactory = new MenuFactory("Main menu",
             new MenuItem("New game", CreateNewGameMenuFactory()),
@@ -25,15 +26,16 @@ public class MainMenuCreator
     }
 
     private MenuFactory MainMenuFactory { get; }
-    private List<IRepositoryContext> RepositoryContexts { get; }
-    private IRepositoryContext RepoCtx => RepositoryContexts[_repoCtxIndex];
-    private int NextRepoCtxIndex => (_repoCtxIndex + 1) % RepositoryContexts.Count;
-    private IRepositoryContext NextRepoCtx => RepositoryContexts[NextRepoCtxIndex];
+    private List<IRepositoryContextFactory> RepositoryContextFactories { get; }
+    private IRepositoryContextFactory RepoCtxFactory => RepositoryContextFactories[_repoCtxIndex];
+    private IRepositoryContext GetRepoCtx() => RepoCtxFactory.CreateRepositoryContext();
+    private int NextRepoCtxIndex => (_repoCtxIndex + 1) % RepositoryContextFactories.Count;
+    private IRepositoryContextFactory NextRepoCtxFactory => RepositoryContextFactories[NextRepoCtxIndex];
 
     private CheckersRuleset? SelectedCheckersRuleset { get; set; }
     private CheckersGame? SelectedCheckersGame { get; set; }
 
-    private string RepoChangeText => $"Change persistence engine? ({RepoCtx.Name} => {NextRepoCtx.Name})";
+    private string RepoChangeText => $"Change persistence engine? ({RepoCtxFactory.Name} => {NextRepoCtxFactory.Name})";
 
     private MenuFactory CreateNewGameMenuFactory()
     {
@@ -52,9 +54,11 @@ public class MainMenuCreator
 
         return new MenuFactory("Pick a Checkers ruleset", _ =>
         {
+            using var repoCtx = GetRepoCtx();
+
             // When selected, a MenuItem from this list will create and run a new ConsoleGame using its CheckersRuleset
             var checkersRulesetItems = new List<MenuItem>();
-            foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
+            foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAllSaved())
                 checkersRulesetItems.Add(new MenuItem(checkersRuleset.ToString(), m =>
                 {
                     SelectedCheckersRuleset = checkersRuleset;
@@ -71,11 +75,34 @@ public class MainMenuCreator
     {
         var completionFilter = CompletionFilter.Default;
         var aiTypeFilter = AiTypeFilter.Default;
+        var playerNameSearch = "";
+        var rulesetSearch = "";
         return new MenuFactory("Load game",
-            _ => GetCheckersGameMenuItems(completionFilter, aiTypeFilter))
+            _ => GetCheckersGameMenuItems(
+                completionFilter.FilterFunc,
+                aiTypeFilter.FilterFunc,
+                new FilterFunc<CheckersGame>(
+                    iq => iq.Where(cg =>
+                        Utils.StringAnyContain(playerNameSearch, cg.WhitePlayerName, cg.BlackPlayerName)),
+                    false),
+                new FilterFunc<CheckersGame>(
+                    iq => iq.Where(cg =>
+                        Utils.StringAnyContain(rulesetSearch, cg.CheckersRuleset!.ToString())),
+                    false)
+            ))
         {
             CustomHeaderFunc = () =>
-                $"Press DELETE to delete. Filters: [C] Completion: {completionFilter}, [A] Ai: {aiTypeFilter}",
+            {
+                var filterTexts = new List<string>
+                {
+                    $"[C] Completion: {completionFilter}",
+                    $"[A] AI: {aiTypeFilter}",
+                    "[P] " +
+                    (playerNameSearch.Length == 0 ? "Search player name" : $"Player name: '{playerNameSearch}'"),
+                    "[R] " + (rulesetSearch.Length == 0 ? "Search rulesets" : $"Ruleset search: '{rulesetSearch}'")
+                };
+                return "Press DELETE to delete. Filtering: " + string.Join(", ", filterTexts);
+            },
             CustomBehaviour = (ConsoleInput input, Menu menu, ref List<MenuItem>? _) =>
             {
                 if (input is { KeyInfo.Key: ConsoleKey.C })
@@ -88,15 +115,23 @@ public class MainMenuCreator
                 {
                     aiTypeFilter = menu.GetSelectedItem(AiTypeFilter.Values, "Select AI filtering mode:", aiTypeFilter);
                     menu.ClearMenuItemsCache();
+                } else if (input is { KeyInfo.Key: ConsoleKey.P })
+                {
+                    playerNameSearch = menu.ConsoleWindow.PopupPromptTextInput("Search by player name");
+                    menu.ClearMenuItemsCache();
+                } else if (input is { KeyInfo.Key: ConsoleKey.R })
+                {
+                    rulesetSearch = menu.ConsoleWindow.PopupPromptTextInput("Search by ruleset summary text");
+                    menu.ClearMenuItemsCache();
                 }
             }
         };
     }
 
-    private List<MenuItem> GetCheckersGameMenuItems(params IFilter<CheckersGame>[] filters)
+    private List<MenuItem> GetCheckersGameMenuItems(params FilterFunc<CheckersGame>[] filters)
     {
-        var checkersGames =
-            RepoCtx.CheckersGameRepository.GetAll(filters.Select(filter => filter.FilterFunc).ToArray());
+        using var repoCtx = GetRepoCtx();
+        var checkersGames = repoCtx.CheckersGameRepository.GetAll(filters);
         return GetCheckersGameMenuItems(checkersGames);
     }
 
@@ -256,12 +291,14 @@ public class MainMenuCreator
                             {
                                 rulesetMenuItems.Add(new MenuItem("Save", _ =>
                                 {
-                                    RepoCtx.CheckersRulesetRepository.Upsert(checkersRulesetReal);
+                                    using var repoCtx = GetRepoCtx();
+                                    repoCtx.CheckersRulesetRepository.Upsert(checkersRulesetReal);
                                     return EMenuFunction.Back;
                                 }));
                                 rulesetMenuItems.Add(new MenuItem("Delete", _ =>
                                 {
-                                    RepoCtx.CheckersRulesetRepository.Remove(checkersRulesetReal);
+                                    using var repoCtx = GetRepoCtx();
+                                    repoCtx.CheckersRulesetRepository.Remove(checkersRulesetReal);
                                     return EMenuFunction.Back;
                                 }));
                             }
@@ -294,9 +331,9 @@ public class MainMenuCreator
             var checkersRulesets = new List<MenuItem>
                 { GetEditableCheckersRulesetMenuItem(null, "CREATE NEW RULESET") };
 
-            foreach (var checkersRuleset in RepoCtx.CheckersRulesetRepository.GetAllSaved())
+            using var repoCtx = GetRepoCtx();
+            foreach (var checkersRuleset in repoCtx.CheckersRulesetRepository.GetAllSaved())
             {
-                RepoCtx.CheckersRulesetRepository.Refresh(checkersRuleset); // Re-fetch from DB to clear unsaved changes
                 checkersRulesets.Add(GetEditableCheckersRulesetMenuItem(checkersRuleset));
             }
 
@@ -316,7 +353,7 @@ public class MainMenuCreator
         return new MenuFactory("Options", _ =>
         {
             var result = new List<MenuItem> { new("Manage Checkers rulesets", manageCheckersRulesetsMenuFactory) };
-            if (RepositoryContexts.Count > 1) result.Add(swapPersistenceEngine);
+            if (RepositoryContextFactories.Count > 1) result.Add(swapPersistenceEngine);
 
             return result;
         });
@@ -369,20 +406,24 @@ public class MainMenuCreator
             if (input is not { KeyInfo.Key: ConsoleKey.Delete }) return;
             var confirmDelete = ConfirmDelete(menu.ConsoleWindow, menu, $"{typeof(T).Name} with ID {entity.Id}");
             if (!confirmDelete) return;
-            var repo = RepoCtx.GetRepo(entity);
-            if (repo == null)
-            {
-                menu.ConsoleWindow.PopUpMessageBox("Failed to delete item! (Failed to find repository)");
-                return;
-            }
 
-            try
+            using (var repoCtx = GetRepoCtx())
             {
-                repo.Remove(entity);
-            }
-            catch (Exception e)
-            {
-                menu.ConsoleWindow.PopUpMessageBox($"Failed to delete item! ({e.Message})");
+                var repo = repoCtx.GetRepo(entity);
+                if (repo == null)
+                {
+                    menu.ConsoleWindow.PopUpMessageBox("Failed to delete item! (Failed to find repository)");
+                    return;
+                }
+
+                try
+                {
+                    repo.Remove(entity);
+                }
+                catch (Exception e)
+                {
+                    menu.ConsoleWindow.PopUpMessageBox($"Failed to delete item! ({e.Message})");
+                }
             }
 
             menu.ClearMenuItemsCache();
@@ -396,7 +437,7 @@ public class MainMenuCreator
             ConsoleGame consoleGame;
             if (SelectedCheckersGame != null)
             {
-                consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(SelectedCheckersGame), RepoCtx,
+                consoleGame = new ConsoleGame(menu.ConsoleWindow, new CheckersBrain(SelectedCheckersGame), RepoCtxFactory,
                     GetPlayMode(menu, SelectedCheckersGame));
             }
             else
@@ -413,10 +454,13 @@ public class MainMenuCreator
                     blackPlayerName,
                     whitePlayerAiType,
                     blackPlayerAiType);
-                RepoCtx.CheckersGameRepository.Add(checkersBrain.CheckersGame);
+                using (var repoCtx = GetRepoCtx())
+                {
+                    repoCtx.CheckersGameRepository.Add(checkersBrain.CheckersGame);
+                }
                 consoleGame = new ConsoleGame(menu.ConsoleWindow,
                     checkersBrain,
-                    RepoCtx,
+                    RepoCtxFactory,
                     GetPlayMode(menu, checkersBrain.CheckersGame));
             }
 

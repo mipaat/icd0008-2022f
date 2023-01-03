@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Common;
 using DAL.Filters;
 using Domain;
 
@@ -46,7 +45,7 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
 
         result.Sort((o1, o2) => o1.Id - o2.Id);
         var queryable = result.AsQueryable();
-        foreach (var filter in filters) queryable = filter(queryable);
+        foreach (var filter in filters) queryable = filter.Filter(queryable);
         return queryable.ToList();
     }
 
@@ -115,14 +114,6 @@ public abstract class AbstractFileSystemRepository<T> : IRepository<T>
     public bool Exists(int id)
     {
         return File.Exists(GetFilePath(id));
-    }
-
-    public void Refresh(T entity)
-    {
-        var fetchedEntity = GetById(entity.Id);
-        if (fetchedEntity == null)
-            throw new IllegalStateException($"Failed to refresh entity {entity} - fetched data was null!");
-        entity.Refresh(fetchedEntity);
     }
 
     public Type EntityType => typeof(T);
