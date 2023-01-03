@@ -1,5 +1,6 @@
 ﻿using DAL.Filters;
 using Domain.Model;
+using GameBrain;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace WebApp.MyLibraries;
@@ -51,5 +52,10 @@ public static class Utils
         return checkersState.SerializedGamePieces.Length > 50
             ? checkersState.SerializedGamePieces[..47] + "..."
             : checkersState.SerializedGamePieces;
+    }
+    
+    public static string GetBoardCellBackgroundClass(int x, int y)
+    {
+        return CheckersBrain.IsSquareBlack(x, y) ? "checkers-cell-black" : "checkers-cell-white";
     }
 }

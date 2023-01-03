@@ -2,6 +2,7 @@
 @using Domain.Model.Helpers
 @using GameBrain
 @using Microsoft.AspNetCore.Html
+@using WebApp.MyLibraries
 @model Play
 
 <form method="GET" action="">
@@ -148,15 +149,10 @@
 
     string GetBoardCellClasses(int x, int y)
     {
-        return GetBackgroundClass(x, y)
+        return Utils.GetBoardCellBackgroundClass(x, y)
                + (IsSelectedPiece(x, y) ? " selected-piece" : "")
                + (Model.IsMovableTo(x, y) ? " movable-to" : "")
                + (Model.IsPieceMovable(x, y) ? " movable" : "");
-    }
-
-    static string GetBackgroundClass(int x, int y)
-    {
-        return CheckersBrain.IsSquareBlack(x, y) ? "checkers-cell-black" : "checkers-cell-white";
     }
 
     bool IsSelectedPiece(int x, int y)

@@ -1,28 +1,75 @@
 @page
+@using WebApp.MyLibraries
+@using Domain.Model.Helpers
 @model Ended
 
-<div class="align-middle">
-    Game Ended!
-    @if (Model.Brain.Tied)
-    {
-        <span>TIED</span>
-    }
-    @if (Model.Brain.Winner != null)
-    {
-        @if (Model.PlayerId == null)
+<div class="align-middle text-center">
+    <div class="h1">Game Ended!</div>
+    <div class="h2">
+        @if (Model.Brain.Tied)
         {
-            <span>Winner: @Model.Brain.Winner</span>
+            <span>TIED</span>
         }
-        @if (Model.PlayerId != null)
+        @if (Model.Brain.Winner != null)
         {
-            @if (Model.Brain.Winner.Color == Model.PlayerColor)
+            @if (Model.PlayerId == null)
             {
-                <span>YOU WON!</span>
+                <span>Winner: @Model.Brain.Winner</span>
             }
-            @if (Model.Brain.Winner.Color != Model.PlayerColor)
+            @if (Model.PlayerId != null)
             {
-                <span>YOU LOST!</span>
+                @if (Model.Brain.Winner.Color == Model.PlayerColor)
+                {
+                    <span class="text-success">YOU WON!</span>
+                }
+                @if (Model.Brain.Winner.Color != Model.PlayerColor)
+                {
+                    <span class="text-danger">YOU LOST!</span>
+                }
             }
         }
-    }
+    </div>
+
+    <div class="overflow-auto">
+        <table class="table table-bordered game-board-table">
+            <tbody>
+            @for (var y = 0; y < Model.Brain.Height; y++)
+            {
+                <tr>
+                    @for (var x = 0; x < Model.Brain.Width; x++)
+                    {
+                        var gamePiece = Model.Brain[x, y];
+                        <td class="text-center @Utils.GetBoardCellBackgroundClass(x, y)">
+                            @switch (gamePiece?.Player)
+                            {
+                                case EPlayerColor.Black:
+                                    @switch (gamePiece.Value.IsCrowned)
+                                    {
+                                        case false:
+                                            <img src="/images/CheckersPieceBlack.png" alt="Black"/>
+                                            break;
+                                        case true:
+                                            <img src="/images/CheckersPieceBlackKing.png" alt="Black Crowned"/>
+                                            break;
+                                    }
+                                    break;
+                                case EPlayerColor.White:
+                                    @switch (gamePiece.Value.IsCrowned)
+                                    {
+                                        case false:
+                                            <img src="/images/CheckersPieceWhite.png" alt="White"/>
+                                            break;
+                                        case true:
+                                            <img src="/images/CheckersPieceWhiteKing.png" alt="White Crowned"/>
+                                            break;
+                                    }
+                                    break;
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 </div>

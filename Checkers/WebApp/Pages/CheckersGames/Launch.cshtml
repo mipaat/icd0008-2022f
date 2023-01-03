@@ -2,6 +2,6 @@
 @using Domain.Model.Helpers
 @model Launch
 
-<a id="shared-launch" asp-page="./Play" asp-route-id="@Model.Id" class="btn btn-primary">Launch game in shared window</a>
-<a id="black-launch" asp-page="./Play" asp-route-id="@Model.Id" asp-route-playerId="@Player.GetId(EPlayerColor.Black)" class="btn btn-primary">Launch Black player's window</a>
-<a id="white-launch" asp-page="./Play" asp-route-id="@Model.Id" asp-route-playerId="@Player.GetId(EPlayerColor.White)" class="btn btn-primary">Launch White player's window</a>
+<a id="shared-launch" asp-page="./Play" asp-route-id="@Model.Id" class="btn btn-primary">Play in shared window</a>
+<a id="black-launch" asp-page="./Play" asp-route-id="@Model.Id" asp-route-playerId="@Player.GetId(EPlayerColor.Black)" class="btn btn-primary">Play as @Model.CheckersGame.BlackPlayer</a>
+<a id="white-launch" asp-page="./Play" asp-route-id="@Model.Id" asp-route-playerId="@Player.GetId(EPlayerColor.White)" class="btn btn-primary">Play as @Model.CheckersGame.WhitePlayer</a>
