@@ -28,8 +28,6 @@ public class ConsoleGame
 
     private static ConsoleKeyInfoBasic QuitButton { get; } = new(ConsoleKey.Q);
 
-    private bool DrawResolutionRequired => _checkersBrain.DrawResolutionExpected;
-
     private void Refresh()
     {
         using var repoCtx = GetRepoCtx();
@@ -148,66 +146,162 @@ public class ConsoleGame
             }
     }
 
+    private Player? ThisPlayer
+    {
+        get
+        {
+            var result = _playMode != null ? _checkersBrain.Player(_playMode.Value) : null;
+            result ??= _checkersBrain.BlackPlayer.IsAi ^ _checkersBrain.WhitePlayer.IsAi
+                ? _checkersBrain.BlackPlayer.IsAi ? _checkersBrain.WhitePlayer : _checkersBrain.BlackPlayer
+                : null;
+            return result;
+        }
+    }
+
+    private bool ForceDrawAllowed =>
+        _checkersBrain.WhitePlayer.IsAi || _checkersBrain.BlackPlayer.IsAi || _playMode == null;
+
+    private bool DrawResolutionRequired => ThisPlayer != null
+        ? _checkersBrain.DrawResolutionExpectedFrom(ThisPlayer.Color)
+        : _checkersBrain.DrawResolutionExpected;
+
+    private string GetDrawControlsText()
+    {
+        if (ForceDrawAllowed) return "End game with draw: D";
+        if (DrawResolutionRequired) return "Accept opponent's proposal to end game with draw: D";
+        if (_checkersBrain.CheckersGame.DrawProposedBy == null) return "Offer to end game with draw: D";
+        return "";
+    }
+
     private void AddCommonInfoHeaderToRenderQueue()
     {
         _consoleWindow.AddLine($"{_checkersBrain.WhitePlayer} VS {_checkersBrain.BlackPlayer}");
-        var thisPlayer = _playMode != null ? _checkersBrain.Player(_playMode.Value) : null;
-        thisPlayer ??= _checkersBrain.BlackPlayer.IsAi ^ _checkersBrain.WhitePlayer.IsAi
-            ? _checkersBrain.BlackPlayer.IsAi ? _checkersBrain.WhitePlayer : _checkersBrain.BlackPlayer
-            : null;
-        if (thisPlayer != null)
+        var controls = "Quit: Q";
+        if (!(_checkersBrain.BlackPlayer.IsAi && _checkersBrain.WhitePlayer.IsAi)) controls += ", Forfeit: F";
+        controls += ", " + GetDrawControlsText();
+
+        if (ThisPlayer != null)
         {
-            _consoleWindow.AddLine($"You are: {thisPlayer}");
-            if (_checkersBrain.CurrentTurnPlayer == thisPlayer)
+            _consoleWindow.AddLine($"You are: {ThisPlayer}");
+            if (_checkersBrain.CurrentTurnPlayer == ThisPlayer)
             {
                 _consoleWindow.AddLine("Your turn!");
+                if (_checkersBrain.EndTurnAllowed) controls += ", End turn: E";
+                _consoleWindow.AddLine(controls);
             }
             else
             {
                 _consoleWindow.AddLine("Opponent's turn, waiting...");
-                _consoleWindow.AddLine("Press Q if you want to quit");
+                _consoleWindow.AddLine(controls);
             }
         }
         else
         {
             _consoleWindow.AddLine($"Current turn: {_checkersBrain.CurrentTurnPlayer}");
+            _consoleWindow.AddLine(controls);
         }
     }
 
-    private void RunAiTurn()
+    private bool AwaitOtherTurnEnd(ref bool timerElapsed, Timer timer, bool refreshBoard)
+    {
+        var forfeitInput = new ConsoleKeyInfoBasic(ConsoleKey.F);
+        var drawInput = new ConsoleKeyInfoBasic(ConsoleKey.D);
+
+        while (!timerElapsed)
+        {
+            if (refreshBoard)
+            {
+                AddCommonInfoHeaderToRenderQueue();
+                AddBoardToRenderQueue();
+                _consoleWindow.Render();
+            }
+
+            var input = _consoleWindow.AwaitKeyInput(100);
+
+            if (IsQuitInput(input))
+            {
+                timer.Stop();
+                return true;
+            }
+
+            if (forfeitInput.Equals(input.KeyInfo))
+            {
+                timer.Stop();
+                _checkersBrain.Forfeit(_playMode);
+                using var repoCtx = GetRepoCtx();
+                repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+                return false;
+            }
+
+            if (drawInput.Equals(input.KeyInfo))
+            {
+                timer.Stop();
+                HandleDrawInput();
+                return false;
+            }
+        }
+
+        timer.Stop();
+        return false;
+    }
+
+    private bool RunAiTurn()
     {
         AddCommonInfoHeaderToRenderQueue();
         AddBoardToRenderQueue();
         _consoleWindow.Render();
-        var timer = new Timer(1000);
+
+        var aiColor = _checkersBrain.CurrentTurnPlayerColor;
+
+        var timer = new Timer(2000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
-        var aiColor = _checkersBrain.CurrentTurnPlayerColor;
         timer.Start();
-        while (_checkersBrain.CurrentTurnPlayerColor == aiColor && !_checkersBrain.Ended) _checkersBrain.MoveAi();
 
-        while (!timerElapsed)
+        Task.Run(() =>
+            {
+                var checkersBrain = _checkersBrain;
+                while (checkersBrain.CurrentTurnPlayerColor == aiColor && !checkersBrain.Ended && !timerElapsed)
+                {
+                    checkersBrain.MoveAi();
+                    if (!timerElapsed)
+                    {
+                        using var repoCtx = GetRepoCtx();
+                        repoCtx.CheckersGameRepository.Upsert(checkersBrain.CheckersGame);
+                    }
+                }
+            }
+        );
+
+        return AwaitOtherTurnEnd(ref timerElapsed, timer, false);
+    }
+
+    private void HandleDrawInput()
+    {
+        using var repoCtx = GetRepoCtx();
+
+        if (ForceDrawAllowed)
         {
+            _checkersBrain.Draw();
+        }
+        else if (DrawResolutionRequired)
+        {
+            _checkersBrain.AcceptDraw(ThisPlayer?.Color);
+        }
+        else if (_checkersBrain.CheckersGame.DrawProposedBy == null)
+        {
+            _checkersBrain.ProposeDraw(ThisPlayer?.Color);
         }
 
-        using var repoCtx = GetRepoCtx();
         repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
     }
 
     private bool HandlePlayerTurn()
     {
-        var controls = "Quit: Q, Forfeit: F";
-        if (_checkersBrain.EndTurnAllowed) controls += ", End turn: E";
-        if (_checkersBrain.CheckersGame.DrawProposedBy == null) controls += ", Propose Draw: D";
-
         AddCommonInfoHeaderToRenderQueue();
-        _consoleWindow.AddLine(controls);
-
-        if (DrawResolutionRequired) _consoleWindow.AddLine("Accept opponent's proposal to end game with draw: D");
-
         AddBoardToRenderQueue();
-        var prompt = "Type coordinate pairs (e.g A4D7) to move!";
 
+        var prompt = "Type coordinate pairs (e.g A4D7) to move!";
         var input = _consoleWindow
             .RenderAndAwaitTextInput(
                 prompt,
@@ -226,18 +320,13 @@ public class ConsoleGame
         if (_checkersBrain.Ended) return false;
         if (previousDrawProposer != _checkersBrain.CheckersGame.DrawProposedBy) return HandlePlayerTurn();
 
-        using var repoCtx = GetRepoCtx();
-
         if (normalizedInputText == "d")
         {
-            if (_checkersBrain.DrawResolutionExpected)
-                _checkersBrain.AcceptDraw();
-            else
-                _checkersBrain.ProposeDraw();
-
-            repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
+            HandleDrawInput();
             return false;
         }
+
+        using var repoCtx = GetRepoCtx();
 
         if (DrawResolutionRequired)
         {
@@ -274,37 +363,12 @@ public class ConsoleGame
 
     private bool AwaitOtherPlayerMove()
     {
-        var forfeitInput = new ConsoleKeyInfoBasic(ConsoleKey.F);
         var timer = new Timer(2000);
         var timerElapsed = false;
         timer.Elapsed += (_, _) => timerElapsed = true;
         timer.Start();
-        while (!timerElapsed)
-        {
-            AddCommonInfoHeaderToRenderQueue();
-            AddBoardToRenderQueue();
-            _consoleWindow.Render();
 
-            var input = _consoleWindow.AwaitKeyInput(100);
-
-            if (IsQuitInput(input))
-            {
-                timer.Stop();
-                return true;
-            }
-
-            if (forfeitInput.Equals(input.KeyInfo))
-            {
-                timer.Stop();
-                _checkersBrain.Forfeit(_playMode);
-                using var repoCtx = GetRepoCtx();
-                repoCtx.CheckersGameRepository.Upsert(_checkersBrain.CheckersGame);
-                return false;
-            }
-        }
-
-        timer.Stop();
-        return false;
+        return AwaitOtherTurnEnd(ref timerElapsed, timer, true);
     }
 
     private bool ShowEndScreen()
@@ -339,7 +403,7 @@ public class ConsoleGame
                 {
                     if (_checkersBrain.IsAiTurn)
                     {
-                        RunAiTurn();
+                        shouldQuit = RunAiTurn();
                     }
                     else
                     {
