@@ -17,6 +17,7 @@ builder.Services.AddRazorPages()
     {
         options.ModelBinderProviders.Insert(0, new CustomModelBinderProvider<CompletionFilter>());
         options.ModelBinderProviders.Insert(0, new CustomModelBinderProvider<AiTypeFilter>());
+        options.ModelBinderProviders.Insert(0, new CustomModelBinderProvider<SavedFilter>());
     });
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 // builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));

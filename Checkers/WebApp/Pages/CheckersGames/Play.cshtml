@@ -4,6 +4,12 @@
 @using WebApp.MyLibraries
 @model Play
 
+<div>
+    @ShouldDistinguishPlayer
+    @(Model.PlayerId != null)
+    @IsOnlyAiGame
+    @IsAiGame
+</div>
 <form method="GET" action="">
     <input value="@Model.GameId" name="id" type="hidden">
     @if (Model.PlayerId != null)
@@ -159,7 +165,7 @@
         return Model.FromSet && Model.FromX == x && Model.FromY == y;
     }
 
-    bool ShouldDistinguishPlayer => Model.PlayerId != null || !IsOnlyAiGame;
+    bool ShouldDistinguishPlayer => Model.PlayerId != null || (!IsOnlyAiGame && IsAiGame);
     bool IsAiGame => Model.Player.IsAi || Model.Brain.OtherPlayer(Model.Player).IsAi;
     bool IsOnlyAiGame => Model.Player.IsAi && Model.Brain.OtherPlayer(Model.Player).IsAi;
     bool DrawProposed => Model.Brain.CheckersGame.DrawProposedBy != null;

@@ -12,6 +12,14 @@
     <hr/>
     <dl class="row">
         <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Entity.CheckersGameId)
+        </dt>
+        <dd class="col-sm-10">
+            <a asp-page="/CheckersGames/Details" asp-route-id="@Model.Entity.CheckersGameId">
+                @Html.DisplayFor(model => model.Entity.CheckersGameId)
+            </a>
+        </dd>
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)
         </dt>
         <dd class="col-sm-10">

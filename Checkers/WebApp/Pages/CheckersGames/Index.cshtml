@@ -41,7 +41,7 @@
 </form>
 
 <p>
-    <a asp-page="Create">Create New</a>
+    <a class="btn btn-primary mt-2" asp-page="Create">Create New</a>
 </p>
 <table class="table">
     <thead>
@@ -49,22 +49,16 @@
         <th>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Entities[0].Id)
+            @Html.DisplayNameFor(model => model.Entities[0].WhitePlayer)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Entities[0].WhitePlayerName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].BlackPlayerName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].WhiteAiType)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].BlackAiType)
+            @Html.DisplayNameFor(model => model.Entities[0].BlackPlayer)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.Entities[0].CheckersRuleset)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Entities[0].LastPlayed) (UTC)
         </th>
         <th>
             @Html.DisplayNameFor(model => model.Entities[0].StartedAt) (UTC)
@@ -89,24 +83,18 @@
                 <a asp-page="./Launch" asp-route-id="@item.Id" class="btn btn-primary">@GameLaunchButtonText(item)</a>
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Id)
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayer.Id">@item.WhitePlayer</a>
             </td>
             <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.WhitePlayer.Id">@item.WhitePlayerName</a>
-            </td>
-            <td>
-                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayer.Id">@item.BlackPlayerName</a>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.WhiteAiType)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.BlackAiType)
+                <a asp-page="./Play" asp-route-id="@item.Id" asp-route-playerId="@item.BlackPlayer.Id">@item.BlackPlayer</a>
             </td>
             <td>
                 <a asp-page="/CheckersRulesets/Details" asp-route-id="@item.CheckersRulesetId">
                     @(item.CheckersRuleset!.ToString())
                 </a>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastPlayed)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StartedAt)

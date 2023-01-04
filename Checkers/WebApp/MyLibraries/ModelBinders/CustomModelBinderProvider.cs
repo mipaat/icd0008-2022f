@@ -9,7 +9,8 @@ public class CustomModelBinderProvider<T> : IModelBinderProvider
     private static List<ICustomModelBinder> ModelBinders => new()
     {
         new CompletionFilterModelBinder(),
-        new AiTypeModelBinder()
+        new AiTypeModelBinder(),
+        new SavedFilterModelBinder()
     };
 
     public IModelBinder? GetBinder(ModelBinderProviderContext context)

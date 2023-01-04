@@ -51,6 +51,8 @@ public class Player
         };
     }
 
+    public bool HasDistinguishingCharacteristic => IsAi || Name is { Length: > 0 };
+
     public override string ToString()
     {
         var result = new StringBuilder(Color.ToString());

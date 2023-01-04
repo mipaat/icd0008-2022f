@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -7,21 +8,31 @@ namespace Domain.Model;
 
 public class CheckersState : AbstractDatabaseEntity
 {
+    [DisplayName("CheckersGame ID")]
     public int CheckersGameId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
+    [DisplayName("Created at")] public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
 
     [ExpectedNotNull]
     [JsonIgnore]
     [NotMapped]
     public GamePiece?[,]? GamePieces { get; set; }
 
+    [DisplayName("Game pieces (serialized)")]
     public string SerializedGamePieces { get; set; } = default!;
 
-    public int WhiteMoves { get; set; }
-    public int BlackMoves { get; set; }
-    [PreferNotNull] public int? LastMovedToX { get; set; }
-    [PreferNotNull] public int? LastMovedToY { get; set; }
+    [DisplayName("White moves")] public int WhiteMoves { get; set; }
+    [DisplayName("Black moves")] public int BlackMoves { get; set; }
+
+    [DisplayName("Last move end X")]
+    [PreferNotNull]
+    public int? LastMovedToX { get; set; }
+
+    [DisplayName("Last move end Y")]
+    [PreferNotNull]
+    public int? LastMovedToY { get; set; }
+
+    [DisplayName("Last move end state")]
     [PreferNotNull] public EMoveState? LastMoveState { get; set; }
 
     public void SerializeGamePieces()

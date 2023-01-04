@@ -6,14 +6,30 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>
+    CheckersStates
+</h1>
+<h2 class="alert-warning">
+    Modifying these might corrupt their related CheckersGame!
+</h2>
 
-<p>
-    <a asp-page="Create">Create New</a>
-</p>
+@if (Model.CheckersGameId != null)
+{
+    <div class="fs-4 mb-3">
+        Showing CheckersStates for:
+        <div class="small card card-body bg-light">@Model.CheckersGame!.ToString(true)</div>
+    </div>
+}
+
 <table class="table">
     <thead>
     <tr>
+        @if (Model.CheckersGameId == null)
+        {
+            <th>
+                @Html.DisplayNameFor(model => model.Entities[0].CheckersGameId)
+            </th>
+        }
         <th>
             @Html.DisplayNameFor(model => model.Entities[0].CreatedAt) (UTC)
         </th>
@@ -26,15 +42,7 @@
         <th>
             @Html.DisplayNameFor(model => model.Entities[0].BlackMoves)
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].LastMovedToX)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].LastMovedToY)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Entities[0].LastMoveState)
-        </th>
+        <th>Last move end</th>
         <th></th>
     </tr>
     </thead>
@@ -43,6 +51,12 @@
     {
         <tr>
             @{ var item = Model.Entities[i]; }
+            @if (Model.CheckersGameId == null)
+            {
+                <td>
+                    <a asp-page="/CheckersGames/Details" asp-route-id="@Model.CheckersGameId">@Html.DisplayFor(modelItem => item.CheckersGameId)</a>
+                </td>
+            }
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedAt)
             </td>
@@ -86,13 +100,7 @@
                 @Html.DisplayFor(modelItem => item.BlackMoves)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.LastMovedToX)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastMovedToY)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastMoveState)
+                @Utils.GetCheckersStateLastMovedToString(item)
             </td>
             <td class="d-flex flex-column align-items-center">
                 <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a>

@@ -58,4 +58,10 @@ public static class Utils
     {
         return CheckersBrain.IsSquareBlack(x, y) ? "checkers-cell-black" : "checkers-cell-white";
     }
+
+    public static string GetCheckersStateLastMovedToString(CheckersState checkersState)
+    {
+        if (checkersState.LastMovedToX == null && checkersState.LastMovedToY == null) return "No last move";
+        return $"(X: {checkersState.LastMovedToX}, Y: {checkersState.LastMovedToY}), {checkersState.LastMoveState}";
+    }
 }

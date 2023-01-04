@@ -14,8 +14,8 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="Entity.CheckersGameId" class="control-label"></label>
-                <select asp-for="Entity.CheckersGameId" class="form-control" asp-items="ViewBag.CheckersGameId"></select>
+                <label asp-for="Entity.CheckersGameId" class="control-label">CheckersGame</label>
+                <select asp-for="Entity.CheckersGameId" class="form-control" asp-items="@Model.CheckersGameSelectListItems"></select>
                 <span asp-validation-for="Entity.CheckersGameId" class="text-danger"></span>
             </div>
             <div class="form-group">

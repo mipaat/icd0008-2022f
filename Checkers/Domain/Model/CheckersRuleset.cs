@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text;
 
 namespace Domain.Model;
@@ -9,7 +10,7 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
 
     private string? _title;
     private int _width = 8;
-    public bool BuiltIn { get; init; }
+    [DisplayName("Built-in")] public bool BuiltIn { get; init; }
     public bool Saved { get; init; } = true;
 
     public int Width
@@ -45,14 +46,20 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
 
     public string TitleText => Title ?? $"No title! ({Width}x{Height})";
     public string? Description { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
-    public DateTime LastModified { get; set; } = DateTime.Now.ToUniversalTime();
+    [DisplayName("Created at")] public DateTime CreatedAt { get; set; } = DateTime.Now.ToUniversalTime();
+    [DisplayName("Last modified")] public DateTime LastModified { get; set; } = DateTime.Now.ToUniversalTime();
 
-    public bool BlackMovesFirst { get; set; } = true;
+    [DisplayName("First move by black")] public bool BlackMovesFirst { get; set; } = true;
+
+    [DisplayName("Must capture if possible")]
     public bool MustCapture { get; set; } = true;
-    public bool CanCaptureBackwards { get; set; }
+
+    [DisplayName("Can capture backwards")] public bool CanCaptureBackwards { get; set; }
+
+    [DisplayName("Can capture backwards during multi-capture")]
     public bool CanCaptureBackwardsDuringMultiCapture { get; set; }
-    public bool FlyingKings { get; set; }
+
+    [DisplayName("Flying Kings")] public bool FlyingKings { get; set; }
 
     public object Clone()
     {

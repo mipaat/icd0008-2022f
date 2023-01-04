@@ -1,3 +1,4 @@
+using DAL.Filters;
 using Domain.Model;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,7 @@ public sealed class CheckersRulesetRepository : AbstractDbRepository<CheckersRul
 
     public ICollection<CheckersRuleset> GetAllSaved()
     {
-        return RunPreFetchActions(Queryable.Where(cr => cr.Saved)).ToList();
+        return GetAll(new FilterFunc<CheckersRuleset>(
+            iq => iq.Where(cr => cr.Saved), true));
     }
 }

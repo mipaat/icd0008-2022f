@@ -1,4 +1,6 @@
 @page
+@using WebApp.MyLibraries
+@using DAL.Filters
 @model IndexModel
 
 @{
@@ -7,11 +9,25 @@
 
 <h1>Index</h1>
 
+<form method="GET" class="d-flex gap-4">
+    @{
+        const string savedFilter = nameof(Model.SavedFilter);
+        const string rulesetQuery = nameof(Model.RulesetQuery);
+    }
+    <div>
+        <label for="@rulesetQuery">Search by summary text</label><br/>
+        <input id="@rulesetQuery" type="search" name="@rulesetQuery" value="@Model.RulesetQuery"/>
+        <button type="submit">Search</button>
+    </div>
+    <div>
+        <label for="@savedFilter">Filter by completion</label><br/>
+        <select id="@savedFilter" asp-items="@Utils.GetSelectOptions(SavedFilter.Values, Model.SavedFilter)" name="@savedFilter"></select>
+        <button type="submit">Filter</button>
+    </div>
+</form>
+
 <p>
-    <a asp-page="Create">Create New</a>
-</p>
-<p>
-    <a asp-page="" asp-route-showNonSaved="@(!Model.ShowNonSaved)">@(Model.ShowNonSaved ? "Show only saved rulesets" : "Show non-saved rulesets as well")</a>
+    <a class="btn btn-primary mt-2" asp-page="Create">Create New</a>
 </p>
 <table class="table">
     <thead>
@@ -22,7 +38,7 @@
         <th>
             @Html.DisplayNameFor(model => model.Entities[0].BuiltIn)
         </th>
-        @if (Model.ShowNonSaved)
+        @if (Model.SavedFilter == SavedFilter.All)
         {
             <th>
                 @Html.DisplayNameFor(model => model.Entities[0].Saved)
@@ -74,8 +90,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.BuiltIn)
             </td>
-
-            @if (Model.ShowNonSaved)
+            @if (Model.SavedFilter == SavedFilter.All)
             {
                 <td>
                     @Html.DisplayFor(modelItem => item.Saved)

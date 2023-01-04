@@ -23,12 +23,19 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
     protected abstract DbSet<T> ThisDbSet { get; }
     protected IQueryable<T> Queryable => ThisDbSet;
 
+    protected ICollection<T> GetAll(IQueryable<T> queryable, params FilterFunc<T>[] filters)
+    {
+        var realFilters = DefaultFilters?.ToList() ?? new List<FilterFunc<T>>();
+        realFilters.AddRange(filters);
+        return RunFilters(
+                RunPreFetchActions(RunFilters(queryable, FilterFunc.GetQueryConvertible(realFilters))),
+                FilterFunc.GetNonQueryConvertible(realFilters))
+            .ToList();
+    }
+
     public virtual ICollection<T> GetAll(params FilterFunc<T>[] filters)
     {
-        return RunFilters(
-            RunPreFetchActions(RunFilters(Queryable, FilterFunc.GetQueryConvertible(filters))),
-            FilterFunc.GetNonQueryConvertible(filters))
-            .ToList();
+        return GetAll(Queryable, filters);
     }
 
     public virtual T? GetById(int id)
@@ -136,4 +143,6 @@ public abstract class AbstractDbRepository<T> : IRepository<T> where T : class, 
 
         return queryable;
     }
+
+    protected virtual List<FilterFunc<T>>? DefaultFilters { get; } = null;
 }

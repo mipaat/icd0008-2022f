@@ -27,6 +27,11 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
         return GetAll(false, filters);
     }
 
+    protected override List<FilterFunc<CheckersGame>> DefaultFilters => new()
+    {
+        new FilterFunc<CheckersGame>(iq => iq.OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt), false)
+    };
+
     public ICollection<CheckersGame> GetAll(bool includeAllCheckersStates,
         params FilterFunc<CheckersGame>[] filters)
     {
@@ -34,15 +39,7 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
             ? Queryable.Include(cg => cg.CheckersStates)!
             : Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
         var checkersRulesetIncluded = checkersStatesIncluded.Include(cg => cg.CheckersRuleset);
-        return
-            RunFilters(
-                    RunPreFetchActions(
-                        RunFilters(checkersRulesetIncluded, FilterFunc.GetQueryConvertible(filters))
-                    ),
-                    FilterFunc.GetNonQueryConvertible(filters)
-                )
-                .OrderByDescending(cg => cg.CurrentCheckersState!.CreatedAt)
-                .ToList();
+        return GetAll(checkersRulesetIncluded, filters);
     }
 
     public override CheckersGame? GetById(int id)

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Domain.Model.Helpers;
 
@@ -8,30 +9,41 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
     private Player? _blackPlayer;
 
     private Player? _whitePlayer;
+    [DisplayName("White player name")]
     public string? WhitePlayerName { get; set; }
+    [DisplayName("Black player name")]
     public string? BlackPlayerName { get; set; }
+    [DisplayName("White player AI type")]
     public EAiType? WhiteAiType { get; set; }
+    [DisplayName("Black player AI type")]
     public EAiType? BlackAiType { get; set; }
 
+    [DisplayName("CheckersRuleset ID")]
     public int CheckersRulesetId { get; set; }
     [ExpectedNotNull] [JsonIgnore] public CheckersRuleset? CheckersRuleset { get; set; }
 
     [ExpectedNotNull] [JsonIgnore] public ICollection<CheckersState>? CheckersStates { get; set; }
 
+    [DisplayName("Current CheckersState")]
     [ExpectedNotNull]
     [JsonIgnore]
     public CheckersState? CurrentCheckersState => CheckersStates?.MaxBy(c => c.CreatedAt);
 
+    [DisplayName("Started at")]
     public DateTime StartedAt { get; set; }
+    [DisplayName("Ended at")]
     public DateTime? EndedAt { get; set; }
     public EPlayerColor? Winner { get; set; }
+    [DisplayName("Draw proposed by")]
     public EPlayerColor? DrawProposedBy { get; set; }
 
+    [DisplayName("Last played")]
     public DateTime LastPlayed => CurrentCheckersState?.CreatedAt ?? EndedAt ?? StartedAt;
 
     public bool Tied => Ended && Winner == null;
     public bool Ended => EndedAt != null;
 
+    [DisplayName("White Player")]
     public Player WhitePlayer
     {
         get
@@ -42,6 +54,7 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
         }
     }
 
+    [DisplayName("Black Player")]
     public Player BlackPlayer
     {
         get
@@ -52,6 +65,7 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
         }
     }
 
+    [DisplayName("Winner")]
     public Player? WinnerPlayer => Winner != null ? Player(Winner.Value) : null;
 
     public object Clone()
@@ -92,8 +106,32 @@ public class CheckersGame : AbstractDatabaseEntity, ICloneable
 
     public override string ToString()
     {
-        var result = $"CheckersGame(ID: {Id}, Started at {StartedAt}";
-        result += EndedAt == null ? "" : $", Ended at {EndedAt}";
+        return ToString(false);
+    }
+
+    public string ToString(bool extended)
+    {
+        var result = $"CheckersGame(ID: {Id}";
+        if (extended)
+        {
+            if (BlackPlayer.HasDistinguishingCharacteristic || WhitePlayer.HasDistinguishingCharacteristic)
+            {
+                result += $", {BlackPlayer} VS {WhitePlayer}";
+            }
+            result += $", Started at {StartedAt}";
+            if (EndedAt != null)
+            {
+                if (Tied)
+                {
+                    result += $", TIED at {EndedAt}";
+                }
+                else
+                {
+                    result += $", {Winner} WON at {EndedAt}";
+                }
+            }
+        }
+
         result += ")";
         return result;
     }
