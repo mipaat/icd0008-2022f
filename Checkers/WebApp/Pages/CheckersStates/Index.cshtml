@@ -3,7 +3,7 @@
 @model IndexModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "CheckersStates";
 }
 
 <h1>
@@ -17,7 +17,7 @@
 {
     <div class="fs-4 mb-3">
         Showing CheckersStates for:
-        <div class="small card card-body bg-light">@Model.CheckersGame!.ToString(true)</div>
+        <a asp-page="/CheckersGames/Details" asp-route-id="@Model.CheckersGameId" class="small card card-body bg-light">@Model.CheckersGame!.ToString(true)</a>
     </div>
 }
 

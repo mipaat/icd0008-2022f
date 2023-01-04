@@ -38,7 +38,7 @@
             @Html.DisplayNameFor(model => model.Entity.CheckersRulesetId)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Entity.CheckersRulesetId)
+            <a asp-page="/CheckersRulesets/Details" asp-route-id="@Model.Entity.CheckersRulesetId">@Html.DisplayFor(model => model.Entity.CheckersRulesetId)</a>
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Entity.LastPlayed) (UTC)

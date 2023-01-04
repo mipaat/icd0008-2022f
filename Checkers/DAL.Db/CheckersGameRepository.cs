@@ -50,7 +50,7 @@ public sealed class CheckersGameRepository : AbstractDbRepository<CheckersGame>,
     public CheckersGame? GetById(int id, bool includeAllCheckersStates)
     {
         var checkersStatesIncluded = includeAllCheckersStates
-            ? Queryable.Include(cg => cg.CheckersStates)!
+            ? Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt))
             : Queryable.Include(cg => cg.CheckersStates!.OrderByDescending(cs => cs.CreatedAt).Take(1));
         var entity = checkersStatesIncluded
             .Include(cg => cg.CheckersRuleset)

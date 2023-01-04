@@ -4,12 +4,6 @@
 @using WebApp.MyLibraries
 @model Play
 
-<div>
-    @ShouldDistinguishPlayer
-    @(Model.PlayerId != null)
-    @IsOnlyAiGame
-    @IsAiGame
-</div>
 <form method="GET" action="">
     <input value="@Model.GameId" name="id" type="hidden">
     @if (Model.PlayerId != null)
@@ -56,6 +50,9 @@
             {
                 <div class="btn btn-light btn-outline-dark fake-button">
                     @Model.Player VS @Model.Brain.OtherPlayer(Model.Player)
+                </div>
+                <div class="btn btn-light btn-outline-dark fake-button">
+                    @($"{Model.Brain.CurrentTurnPlayerColor}'s turn".ToUpper())
                 </div>
             }
             @if (CanForceDraw)
