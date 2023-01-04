@@ -320,7 +320,7 @@ public class MainMenuCreator
                 return result;
             })
         {
-            CustomCallBack = GetDeleteDbEntityMenuItemCallback(checkersRulesetReal)
+            CustomCallBack = !checkersRulesetReal.BuiltIn ? GetDeleteDbEntityMenuItemCallback(checkersRulesetReal) : null
         };
     }
 
