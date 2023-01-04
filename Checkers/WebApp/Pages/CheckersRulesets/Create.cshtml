@@ -14,12 +14,14 @@
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input class="d-none" asp-for="@Model.RedirectToCheckersGame"/>
+            <input class="d-none" asp-for="@Model.AllowSaved"/>
             <div class="form-group form-check d-none">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="CheckersRuleset.BuiltIn"/> @Html.DisplayNameFor(model => model.CheckersRuleset.BuiltIn)
                 </label>
             </div>
-            <div class="form-group form-check d-none">
+            <div class="form-group form-check @AllowSaved">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="CheckersRuleset.Saved" checked="checked"/> @Html.DisplayNameFor(model => model.CheckersRuleset.Saved)
                 </label>
@@ -92,4 +94,9 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
+
+@functions
+{
+    string AllowSaved => Model.AllowSaved ? "" : " d-none";
 }

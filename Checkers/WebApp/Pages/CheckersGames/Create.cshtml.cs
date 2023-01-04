@@ -1,4 +1,5 @@
 using DAL;
+using Domain.Model;
 using Domain.Model.Helpers;
 using GameBrain;
 using Microsoft.AspNetCore.Mvc;
@@ -13,26 +14,26 @@ public class CreateModel : PageModelDb
     {
     }
 
-    public IEnumerable<SelectListItem> CheckersRulesets
-    {
-        get
-        {
-            var result = new List<SelectListItem>();
-            foreach (var checkersRuleset in Ctx.CheckersRulesetRepository.GetAllSaved())
-                result.Add(new SelectListItem(checkersRuleset.TitleText, checkersRuleset.Id.ToString()));
-
-            return result;
-        }
-    }
-
     [BindProperty] public string? WhitePlayerName { get; set; }
     [BindProperty] public string? BlackPlayerName { get; set; }
     [BindProperty] public EAiType? WhiteAiType { get; set; }
     [BindProperty] public EAiType? BlackAiType { get; set; }
     [BindProperty] public int CheckersRulesetId { get; set; }
 
-    public IActionResult OnGet()
+    public CheckersRuleset CheckersRuleset { get; set; } = default!;
+
+    public IEnumerable<SelectListItem> CheckersRulesetSelectListItems => new List<SelectListItem>
     {
+        new SelectListItem(CheckersRuleset.ToString(), CheckersRuleset.Id.ToString(), true)
+    };
+
+    public IActionResult OnGet(int? selectedCheckersRulesetId)
+    {
+        if (selectedCheckersRulesetId == null) return RedirectToPage("/CheckersRulesets/Select");
+        CheckersRulesetId = selectedCheckersRulesetId.Value;
+        var checkersRuleset = Ctx.CheckersRulesetRepository.GetById(CheckersRulesetId);
+        if (checkersRuleset == null) return NotFound();
+        CheckersRuleset = checkersRuleset;
         return Page();
     }
 
@@ -41,7 +42,8 @@ public class CreateModel : PageModelDb
     {
         if (!ModelState.IsValid) return Page();
 
-        var checkersRuleset = Ctx.CheckersRulesetRepository.GetById(CheckersRulesetId)?.GetClone(false);
+        var checkersRuleset = Ctx.CheckersRulesetRepository.GetById(CheckersRulesetId);
+        if (checkersRuleset?.Saved == true) checkersRuleset = checkersRuleset.GetClone(false); 
 
         if (checkersRuleset == null) return Page();
 

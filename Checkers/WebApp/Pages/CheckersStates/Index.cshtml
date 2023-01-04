@@ -94,9 +94,9 @@
             <td>
                 @Html.DisplayFor(modelItem => item.LastMoveState)
             </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a> |
+            <td class="d-flex flex-column align-items-center">
+                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a>
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a>
                 <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>

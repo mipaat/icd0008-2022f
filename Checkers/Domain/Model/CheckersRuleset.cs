@@ -59,6 +59,8 @@ public class CheckersRuleset : AbstractDatabaseEntity, ICloneable
         return GetClone();
     }
 
+    public bool IsEditable => Saved && !BuiltIn;
+
     public static bool IsDimensionValid(int dimension)
     {
         return IsDimensionValid(dimension, out _);

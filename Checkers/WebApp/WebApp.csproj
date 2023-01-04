@@ -7,24 +7,24 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DAL.Db\DAL.Db.csproj"/>
-        <ProjectReference Include="..\GameBrain\GameBrain.csproj"/>
-        <ProjectReference Include="..\Common\Common.csproj"/>
+        <ProjectReference Include="..\DAL.Db\DAL.Db.csproj" />
+        <ProjectReference Include="..\GameBrain\GameBrain.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0"/>
-        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot\images"/>
+        <Folder Include="wwwroot\images" />
     </ItemGroup>
 
 </Project>

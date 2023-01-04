@@ -1,0 +1,82 @@
+﻿@page
+@model Select
+
+@{
+    ViewData["Title"] = "Select a Ruleset";
+}
+
+<div class="text-center mb-3">
+    <div class="h1 mb-4">Select a ruleset</div>
+    <form method="get" action="">
+        <label for="query">Search by summary text</label>
+        <input id="query" type="text" asp-for="Query"/>
+        <button class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+<div class="text-center d-flex gap-3 overflow-auto pb-4">
+    <div style="flex: 0 0.01 14em">
+        <a class="btn btn-primary align-self-center" asp-page="/CheckersRulesets/Create" asp-route-RedirectToCheckersGame="@true.ToString()" asp-route-allowSaved="@true.ToString()">CREATE NEW</a>
+    </div>
+    @for (var i = 0; i < Model.Entities.Count; i++)
+    {
+        <div style="flex: 0 0.01 14em">
+            @{ var item = Model.Entities[i]; }
+            <div>
+                <div class="fw-bold btn-light rounded-3 mb-2">@item.TitleText</div>
+                <a class="btn btn-primary" asp-page=""
+                   asp-route-id="@item.Id">
+                    Select
+                </a>
+                <a class="btn btn-primary" asp-page=""
+                   asp-route-id="@item.Id"
+                   asp-route-edit="@true.ToString()">
+                    Edit
+                </a>
+                <div>
+                    <a data-bs-toggle="collapse"
+                       class="collapse expand-@i show"
+                       id="expander-@i"
+                       href=".expand-@i"
+                       role="button"
+                       aria-expanded="false"
+                       aria-controls="expanded-@i expander-@i compacter-@i">
+                        Expand
+                    </a>
+                    <a data-bs-toggle="collapse"
+                       class="collapse expand-@i"
+                       id="compacter-@i"
+                       href=".expand-@i"
+                       role="button"
+                       aria-expanded="true"
+                       aria-controls="expanded-@i expander-@i compacter-@i">
+                        Show less
+                    </a>
+                </div>
+            </div>
+            <div class="collapse expand-@i" id="expanded-@i">
+                <div class="card card-body bg-light d-flex flex-column gap-1">
+                    <div>@item.Width X @item.Height</div>
+                    @if (item.Description is {Length: > 0 })
+                    {
+                        <div>@item.Description</div>
+                    }
+                    <div>@(item.BlackMovesFirst ? "Black moves first" : "White moves first")</div>
+                    <div>@(item.MustCapture ? "Must capture piece(s) if possible" : "Ignoring available captures is allowed")</div>
+                    @if (item.CanCaptureBackwards)
+                    {
+                        <div>Can capture backwards</div>
+                    }
+                    @if (!item.CanCaptureBackwards && item.CanCaptureBackwardsDuringMultiCapture)
+                    {
+                        <div>Can capture backwards only during multi-capture</div>
+                    }
+                    @if (item.FlyingKings)
+                    {
+                        <div>Kings can move across multiple cells</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

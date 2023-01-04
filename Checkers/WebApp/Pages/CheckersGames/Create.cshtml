@@ -34,9 +34,10 @@
                 <select asp-for="@Model.BlackAiType" class="form-control" asp-items="@Utils.GetSelectOptionsNullable(Model.WhiteAiType)"></select>
                 <span asp-validation-for="@Model.BlackAiType" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="@Model.CheckersRulesetId" class="control-label">Ruleset</label>
-                <select asp-for="@Model.CheckersRulesetId" class="form-control" asp-items="@Model.CheckersRulesets"></select>
+                <select asp-for="@Model.CheckersRulesetId" class="form-control" asp-items="@Model.CheckersRulesetSelectListItems" readonly="readonly"></select>
+                <span asp-validation-for="@Model.CheckersRulesetId" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary"/>

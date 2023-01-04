@@ -214,7 +214,7 @@ public class MainMenuCreator
         var checkersRulesetReal = checkersRuleset ?? new CheckersRuleset();
         return new MenuItem(
             menuItemText ??
-            checkersRulesetReal.ToString(), m =>
+            checkersRulesetReal + (checkersRulesetReal.BuiltIn ? " (Built-in)" : ""), m =>
             {
                 var previousCursorPosition = 0;
                 var result = EMenuFunction.Refresh;
@@ -287,7 +287,7 @@ public class MainMenuCreator
                                 })
                             };
 
-                            if (!checkersRulesetReal.BuiltIn)
+                            if (checkersRulesetReal.IsEditable)
                             {
                                 rulesetMenuItems.Add(new MenuItem("Save", _ =>
                                 {

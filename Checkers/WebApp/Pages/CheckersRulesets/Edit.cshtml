@@ -13,12 +13,13 @@
     <div class="col-md-4">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group form-check">
+            <input class="d-none" asp-for="@Model.RedirectToCheckersGame"/>
+            <div class="form-group form-check d-none">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Entity.BuiltIn"/> @Html.DisplayNameFor(model => model.Entity.BuiltIn)
                 </label>
             </div>
-            <div class="form-group form-check">
+            <div class="form-group form-check d-none">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Entity.Saved"/> @Html.DisplayNameFor(model => model.Entity.Saved)
                 </label>
@@ -43,12 +44,12 @@
                 <input asp-for="Entity.Description" class="form-control"/>
                 <span asp-validation-for="Entity.Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group d-none">
                 <label asp-for="Entity.CreatedAt" class="control-label">@Html.DisplayNameFor(model => model.Entity.CreatedAt) (UTC)</label>
                 <input asp-for="Entity.CreatedAt" class="form-control"/>
                 <span asp-validation-for="Entity.CreatedAt" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group d-none">
                 <label asp-for="Entity.LastModified" class="control-label">@Html.DisplayNameFor(model => model.Entity.LastModified) (UTC)</label>
                 <input asp-for="Entity.LastModified" class="form-control"/>
                 <span asp-validation-for="Entity.LastModified" class="text-danger"></span>

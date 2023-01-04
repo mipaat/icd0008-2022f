@@ -12,11 +12,12 @@ public abstract class EditModel<T> : EntityModel<T> where T : class, IDatabaseEn
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see https://aka.ms/RazorPagesCRUD.
-    public IActionResult OnPost()
+    public virtual IActionResult OnPost()
     {
         if (!ModelState.IsValid) return Page();
 
-        Repository.Update(Entity);
+        Repository.Upsert(Entity);
+        Success = true;
 
         return RedirectToPage("./Index");
     }

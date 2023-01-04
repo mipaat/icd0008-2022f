@@ -114,12 +114,15 @@
             <td>
                 @Html.DisplayFor(modelItem => item.FlyingKings)
             </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.Id">Details</a>
-                @if (item.Saved && !item.BuiltIn)
+            <td class="d-flex flex-column align-items-center text-nowrap">
+                @if (item.IsEditable)
                 {
-                    @: |
+                    <a asp-page="./Edit" asp-route-id="@item.Id">Edit</a>
+                }
+                <a asp-page="./Edit" asp-route-id="@item.Id" asp-route-createCopy="@true.ToString()" asp-route-saved="@true.ToString()">Edit copy</a>
+                <a asp-page="./Details" asp-route-id="@item.Id">Details</a>
+                @if (item.IsEditable)
+                {
                     <a asp-page="./Delete" asp-route-id="@item.Id">Delete</a>
                 }
             </td>

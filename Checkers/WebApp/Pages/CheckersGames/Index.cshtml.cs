@@ -7,13 +7,11 @@ using WebApp.MyLibraries.PageModels;
 
 namespace WebApp.Pages.CheckersGames;
 
-public class IndexModel : RepositoryModel<CheckersGame>
+public class IndexModel : IndexModel<CheckersGame>
 {
     public IndexModel(IRepositoryContext ctx) : base(ctx)
     {
     }
-
-    public IList<CheckersGame> Entities { get; set; } = default!;
 
     [BindProperty(SupportsGet = true)] public AiTypeFilter AiTypeFilter { get; set; } = default!;
     [BindProperty(SupportsGet = true)] public string? RulesetQuery { get; set; }
@@ -23,21 +21,15 @@ public class IndexModel : RepositoryModel<CheckersGame>
 
     protected override IRepository<CheckersGame> Repository => Ctx.CheckersGameRepository;
 
-    public IActionResult OnGet()
+    protected override IEnumerable<FilterFunc<CheckersGame>> Filters => new List<FilterFunc<CheckersGame>>
     {
-        var result = Repository.GetAll(
-            CompletionFilter.FilterFunc,
-            AiTypeFilter.FilterFunc).AsEnumerable();
-
-        if (PlayerNameQuery != null)
-            result = result.Where(cg =>
-                Utils.StringAnyContain(PlayerNameQuery, cg.WhitePlayerName, cg.BlackPlayerName));
-
-        if (RulesetQuery != null)
-            result = result.Where(cg => Utils.StringAnyContain(RulesetQuery, cg.CheckersRuleset?.ToString()));
-
-        Entities = result.ToList();
-
-        return Page();
-    }
+        CompletionFilter.FilterFunc,
+        AiTypeFilter.FilterFunc,
+        new(iq => iq.Where(
+                cg => Utils.StringAnyContain(PlayerNameQuery, cg.WhitePlayerName, cg.BlackPlayerName)),
+            false),
+        new(iq => iq.Where(
+                cg => Utils.StringAnyContain(RulesetQuery, cg.CheckersRuleset!.ToString())),
+            false)
+    };
 }
